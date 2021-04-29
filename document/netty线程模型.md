@@ -1,0 +1,7 @@
+即Netty建议使用它自身提供的业务线程池来驱动非I/O的耗时业务逻辑，如果业务逻辑执行时间很短或者是完全异步的，那么不需要使用额外的非I/O线程池。而且具体用法是Netty在添加handler时，在ChannelPipeline接口提供了一个重载的addLast方法，专用于为对应handler添加Netty业务线程池，如下：
+
+![img](https://mmbiz.qpic.cn/mmbiz_png/PN8ICUJ8dHDhyBSspiaxDfZrwzzNtYuauZeoLg1xob1G8K1982cpRWxF2LWALFleo7EdqNh5Gbf36ccHeEpav7g/640?wx_fmt=png)
+
+其最终的内部实现如下：
+
+![img](https://mmbiz.qpic.cn/mmbiz_png/PN8ICUJ8dHDhyBSspiaxDfZrwzzNtYuauwL9ZF4mREAqryaiaB2epcmiczztadhnJ2fwJA5l7EYD3JlSc0CsaBq8A/640?wx_fmt=png)
