@@ -57,11 +57,13 @@ import static io.netty.channel.ChannelHandlerMask.MASK_READ;
 import static io.netty.channel.ChannelHandlerMask.MASK_USER_EVENT_TRIGGERED;
 import static io.netty.channel.ChannelHandlerMask.MASK_WRITE;
 import static io.netty.channel.ChannelHandlerMask.mask;
-
+//
 abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, ResourceLeakHint {
 
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(AbstractChannelHandlerContext.class);
+    //
     volatile AbstractChannelHandlerContext next;
+    //
     volatile AbstractChannelHandlerContext prev;
 
     private static final AtomicIntegerFieldUpdater<AbstractChannelHandlerContext> HANDLER_STATE_UPDATER =
@@ -86,13 +88,17 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
     private static final int INIT = 0;
 
     private final DefaultChannelPipeline pipeline;
+    //
     private final String name;
+    //
     private final boolean ordered;
+    //
     private final int executionMask;
 
     // Will be set to null if no child executor should be used, otherwise it will be set to the
     // child executor.
     final EventExecutor executor;
+    //
     private ChannelFuture succeededFuture;
 
     // Lazily instantiated tasks used to trigger events to a handler with different executor.

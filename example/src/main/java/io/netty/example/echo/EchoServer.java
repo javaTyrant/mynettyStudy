@@ -29,6 +29,9 @@ import io.netty.handler.logging.LoggingHandler;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.SelfSignedCertificate;
+import io.netty.handler.timeout.IdleStateHandler;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * Echoes back any received data from a client.
@@ -37,7 +40,7 @@ public final class EchoServer {
 
     static final boolean SSL = System.getProperty("ssl") != null;
     static final int PORT = Integer.parseInt(System.getProperty("port", "8007"));
-
+    //ChannelHandlerContext的构造在哪里?如果是我设计我会放到哪里呢.肯定是在pipeline里吧.
     public static void main(String[] args) throws Exception {
         // Configure SSL.
         final SslContext sslCtx;
@@ -55,20 +58,22 @@ public final class EchoServer {
         try {
             ServerBootstrap b = new ServerBootstrap();
             b.group(bossGroup, workerGroup)
-             .channel(NioServerSocketChannel.class)
-             .option(ChannelOption.SO_BACKLOG, 100)
-             .handler(new LoggingHandler(LogLevel.INFO))
-             .childHandler(new ChannelInitializer<SocketChannel>() {
-                 @Override
-                 public void initChannel(SocketChannel ch) throws Exception {
-                     ChannelPipeline p = ch.pipeline();
-                     if (sslCtx != null) {
-                         p.addLast(sslCtx.newHandler(ch.alloc()));
-                     }
-                     //p.addLast(new LoggingHandler(LogLevel.INFO));
-                     p.addLast(serverHandler);
-                 }
-             });
+                    .channel(NioServerSocketChannel.class)
+                    .option(ChannelOption.SO_BACKLOG, 100)
+                    .handler(new LoggingHandler(LogLevel.INFO))
+                    .childHandler(new ChannelInitializer<SocketChannel>() {
+                        @Override
+                        public void initChannel(SocketChannel ch) throws Exception {
+                            ChannelPipeline p = ch.pipeline();
+                            if (sslCtx != null) {
+                                p.addLast(sslCtx.newHandler(ch.alloc()));
+                            }
+                            //p.addLast(new LoggingHandler(LogLevel.INFO));
+                            p.addLast(new IdleStateHandler(30, 0, 0, TimeUnit.SECONDS));
+                            p.addLast(serverHandler);
+                            p.addLast(new HeartBeatServerHandler());
+                        }
+                    });
 
             // Start the server.
             ChannelFuture f = b.bind(PORT).sync();

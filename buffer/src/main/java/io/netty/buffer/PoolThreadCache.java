@@ -46,7 +46,9 @@ final class PoolThreadCache {
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(PoolThreadCache.class);
     private static final int INTEGER_SIZE_MINUS_ONE = Integer.SIZE - 1;
 
+    //堆内存
     final PoolArena<byte[]> heapArena;
+    //直接内存
     final PoolArena<ByteBuffer> directArena;
 
     // Hold the caches for the different size classes, which are tiny, small and normal.

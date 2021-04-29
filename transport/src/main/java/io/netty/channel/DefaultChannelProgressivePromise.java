@@ -28,8 +28,9 @@ import io.netty.util.concurrent.GenericFutureListener;
  */
 public class DefaultChannelProgressivePromise
         extends DefaultProgressivePromise<Void> implements ChannelProgressivePromise, FlushCheckpoint {
-
+    //
     private final Channel channel;
+    //
     private long checkpoint;
 
     /**

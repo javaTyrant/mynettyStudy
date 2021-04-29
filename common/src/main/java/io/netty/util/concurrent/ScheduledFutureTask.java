@@ -44,14 +44,15 @@ final class ScheduledFutureTask<V> extends PromiseTask<V> implements ScheduledFu
     // set once when added to priority queue
     private long id;
 
+    //到期时间
     private long deadlineNanos;
     /* 0 - no repeat, >0 - repeat at fixed rate, <0 - repeat with fixed delay */
     private final long periodNanos;
-
+    //
     private int queueIndex = INDEX_NOT_IN_QUEUE;
 
     ScheduledFutureTask(AbstractScheduledEventExecutor executor,
-            Runnable runnable, long nanoTime) {
+                        Runnable runnable, long nanoTime) {
 
         super(executor, runnable);
         deadlineNanos = nanoTime;
@@ -59,7 +60,7 @@ final class ScheduledFutureTask<V> extends PromiseTask<V> implements ScheduledFu
     }
 
     ScheduledFutureTask(AbstractScheduledEventExecutor executor,
-            Runnable runnable, long nanoTime, long period) {
+                        Runnable runnable, long nanoTime, long period) {
 
         super(executor, runnable);
         deadlineNanos = nanoTime;
@@ -67,7 +68,7 @@ final class ScheduledFutureTask<V> extends PromiseTask<V> implements ScheduledFu
     }
 
     ScheduledFutureTask(AbstractScheduledEventExecutor executor,
-            Callable<V> callable, long nanoTime, long period) {
+                        Callable<V> callable, long nanoTime, long period) {
 
         super(executor, callable);
         deadlineNanos = nanoTime;
@@ -75,7 +76,7 @@ final class ScheduledFutureTask<V> extends PromiseTask<V> implements ScheduledFu
     }
 
     ScheduledFutureTask(AbstractScheduledEventExecutor executor,
-            Callable<V> callable, long nanoTime) {
+                        Callable<V> callable, long nanoTime) {
 
         super(executor, callable);
         deadlineNanos = nanoTime;
@@ -89,6 +90,7 @@ final class ScheduledFutureTask<V> extends PromiseTask<V> implements ScheduledFu
         return period;
     }
 
+    //返回自己
     ScheduledFutureTask<V> setId(long id) {
         if (this.id == 0L) {
             this.id = id;
@@ -115,9 +117,12 @@ final class ScheduledFutureTask<V> extends PromiseTask<V> implements ScheduledFu
     }
 
     public long delayNanos() {
-        return deadlineToDelayNanos(deadlineNanos());
+        long nanos = deadlineToDelayNanos(deadlineNanos());
+        System.out.println("获取delayNanos" + nanos);
+        return nanos;
     }
 
+    //截止日期 - 目前的nanoTime 大于0说明没有到执行的时候.
     static long deadlineToDelayNanos(long deadlineNanos) {
         return deadlineNanos == 0L ? 0L : Math.max(0L, deadlineNanos - nanoTime());
     }
@@ -156,23 +161,28 @@ final class ScheduledFutureTask<V> extends PromiseTask<V> implements ScheduledFu
     public void run() {
         assert executor().inEventLoop();
         try {
+            //延迟的时间.也就是等待的时间
+            System.out.println("延迟的时间....." + delayNanos());
             if (delayNanos() > 0L) {
                 // Not yet expired, need to add or remove from queue
-                if (isCancelled()) {
+                if (isCancelled()) {//被取消了.
                     scheduledExecutor().scheduledTaskQueue().removeTyped(this);
                 } else {
+                    //加入队列
                     scheduledExecutor().scheduleFromEventLoop(this);
                 }
                 return;
             }
+            //是不是周期性的任务.
             if (periodNanos == 0) {
                 if (setUncancellableInternal()) {
+                    //延迟时间已经到了,执行任务
                     V result = runTask();
                     setSuccessInternal(result);
                 }
             } else {
                 // check if is done as it may was cancelled
-                if (!isCancelled()) {
+                if (!isCancelled()) {//没有取消的话,也要执行
                     runTask();
                     if (!executor().isShutdown()) {
                         if (periodNanos > 0) {
@@ -219,10 +229,10 @@ final class ScheduledFutureTask<V> extends PromiseTask<V> implements ScheduledFu
         buf.setCharAt(buf.length() - 1, ',');
 
         return buf.append(" deadline: ")
-                  .append(deadlineNanos)
-                  .append(", period: ")
-                  .append(periodNanos)
-                  .append(')');
+                .append(deadlineNanos)
+                .append(", period: ")
+                .append(periodNanos)
+                .append(')');
     }
 
     @Override

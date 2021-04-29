@@ -35,6 +35,7 @@ public class DefaultEventLoop extends SingleThreadEventLoop {
     }
 
     public DefaultEventLoop(EventLoopGroup parent) {
+        //默认的线程构造器
         this(parent, new DefaultThreadFactory(DefaultEventLoop.class));
     }
 
@@ -48,10 +49,13 @@ public class DefaultEventLoop extends SingleThreadEventLoop {
 
     @Override
     protected void run() {
-        for (;;) {
+        //死循环执行
+        for (; ; ) {
+            //先取任务
             Runnable task = takeTask();
             if (task != null) {
                 task.run();
+                //更新最好执行的时间.
                 updateLastExecutionTime();
             }
 

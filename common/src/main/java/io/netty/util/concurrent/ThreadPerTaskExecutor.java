@@ -20,7 +20,9 @@ import io.netty.util.internal.ObjectUtil;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadFactory;
 
+//每个执行器一个线程
 public final class ThreadPerTaskExecutor implements Executor {
+    //thread factory
     private final ThreadFactory threadFactory;
 
     public ThreadPerTaskExecutor(ThreadFactory threadFactory) {
@@ -29,6 +31,7 @@ public final class ThreadPerTaskExecutor implements Executor {
 
     @Override
     public void execute(Runnable command) {
+        //new thread就完事了.线程是保存在newChild里的,所以不会无限new
         threadFactory.newThread(command).start();
     }
 }

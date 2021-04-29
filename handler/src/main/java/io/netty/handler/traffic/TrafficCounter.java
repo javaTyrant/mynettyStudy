@@ -163,7 +163,6 @@ public class TrafficCounter {
 
     /**
      * Class to implement monitoring at fix delay
-     *
      */
     private final class TrafficMonitoringTask implements Runnable {
         @Override
@@ -192,7 +191,7 @@ public class TrafficCounter {
             monitorActive = true;
             monitor = new TrafficMonitoringTask();
             scheduledFuture =
-                executor.scheduleAtFixedRate(monitor, 0, localCheckInterval, TimeUnit.MILLISECONDS);
+                    executor.scheduleAtFixedRate(monitor, 0, localCheckInterval, TimeUnit.MILLISECONDS);
         }
     }
 
@@ -242,13 +241,10 @@ public class TrafficCounter {
      * Constructor with the {@link AbstractTrafficShapingHandler} that hosts it, the {@link ScheduledExecutorService}
      * to use, its name, the checkInterval between two computations in milliseconds.
      *
-     * @param executor
-     *            the underlying executor service for scheduling checks, might be null when used
-     * from {@link GlobalChannelTrafficCounter}.
-     * @param name
-     *            the name given to this monitor.
-     * @param checkInterval
-     *            the checkInterval in millisecond between two computations.
+     * @param executor      the underlying executor service for scheduling checks, might be null when used
+     *                      from {@link GlobalChannelTrafficCounter}.
+     * @param name          the name given to this monitor.
+     * @param checkInterval the checkInterval in millisecond between two computations.
      */
     public TrafficCounter(ScheduledExecutorService executor, String name, long checkInterval) {
 
@@ -263,15 +259,11 @@ public class TrafficCounter {
      * Constructor with the {@link AbstractTrafficShapingHandler} that hosts it, the Timer to use, its
      * name, the checkInterval between two computations in millisecond.
      *
-     * @param trafficShapingHandler
-     *            the associated AbstractTrafficShapingHandler.
-     * @param executor
-     *            the underlying executor service for scheduling checks, might be null when used
-     * from {@link GlobalChannelTrafficCounter}.
-     * @param name
-     *            the name given to this monitor.
-     * @param checkInterval
-     *            the checkInterval in millisecond between two computations.
+     * @param trafficShapingHandler the associated AbstractTrafficShapingHandler.
+     * @param executor              the underlying executor service for scheduling checks, might be null when used
+     *                              from {@link GlobalChannelTrafficCounter}.
+     * @param name                  the name given to this monitor.
+     * @param checkInterval         the checkInterval in millisecond between two computations.
      */
     public TrafficCounter(
             AbstractTrafficShapingHandler trafficShapingHandler, ScheduledExecutorService executor,
@@ -321,8 +313,7 @@ public class TrafficCounter {
     /**
      * Computes counters for Read.
      *
-     * @param recv
-     *            the size in bytes to read
+     * @param recv the size in bytes to read
      */
     void bytesRecvFlowControl(long recv) {
         currentReadBytes.addAndGet(recv);
@@ -332,8 +323,7 @@ public class TrafficCounter {
     /**
      * Computes counters for Write.
      *
-     * @param write
-     *            the size in bytes to write
+     * @param write the size in bytes to write
      */
     void bytesWriteFlowControl(long write) {
         currentWrittenBytes.addAndGet(write);
@@ -343,8 +333,7 @@ public class TrafficCounter {
     /**
      * Computes counters for Real Write.
      *
-     * @param write
-     *            the size in bytes to write
+     * @param write the size in bytes to write
      */
     void bytesRealWriteFlowControl(long write) {
         realWrittenBytes.addAndGet(write);
@@ -352,7 +341,7 @@ public class TrafficCounter {
 
     /**
      * @return the current checkInterval between two computations of traffic counter
-     *         in millisecond.
+     * in millisecond.
      */
     public long checkInterval() {
         return checkInterval.get();
@@ -464,12 +453,9 @@ public class TrafficCounter {
      * Returns the time to wait (if any) for the given length message, using the given limitTraffic and the max wait
      * time.
      *
-     * @param size
-     *            the recv size
-     * @param limitTraffic
-     *            the traffic limit in bytes per second.
-     * @param maxTime
-     *            the max time in ms to wait in case of excess of traffic.
+     * @param size         the recv size
+     * @param limitTraffic the traffic limit in bytes per second.
+     * @param maxTime      the max time in ms to wait in case of excess of traffic.
      * @return the current time to wait (in ms) if needed for Read operation.
      */
     @Deprecated
@@ -481,13 +467,10 @@ public class TrafficCounter {
      * Returns the time to wait (if any) for the given length message, using the given limitTraffic and the max wait
      * time.
      *
-     * @param size
-     *            the recv size
-     * @param limitTraffic
-     *            the traffic limit in bytes per second
-     * @param maxTime
-     *            the max time in ms to wait in case of excess of traffic.
-     * @param now the current time
+     * @param size         the recv size
+     * @param limitTraffic the traffic limit in bytes per second
+     * @param maxTime      the max time in ms to wait in case of excess of traffic.
+     * @param now          the current time
      * @return the current time to wait (in ms) if needed for Read operation.
      */
     public long readTimeToWait(final long size, final long limitTraffic, final long maxTime, final long now) {
@@ -499,7 +482,9 @@ public class TrafficCounter {
         long sum = currentReadBytes.get();
         long localReadingTime = readingTime;
         long lastRB = lastReadBytes;
+        //间隔
         final long interval = now - lastTimeCheck;
+        //
         long pastDelay = Math.max(lastReadingTime - lastTimeCheck, 0);
         if (interval > AbstractTrafficShapingHandler.MINIMAL_WAIT) {
             // Enough interval time to compute shaping
@@ -518,12 +503,12 @@ public class TrafficCounter {
             return 0;
         }
         // take the last read interval check to get enough interval time
-        long lastsum = sum + lastRB;
-        long lastinterval = interval + checkInterval.get();
-        long time = lastsum * 1000 / limitTraffic - lastinterval + pastDelay;
+        long lastSum = sum + lastRB;
+        long lastInterval = interval + checkInterval.get();
+        long time = lastSum * 1000 / limitTraffic - lastInterval + pastDelay;
         if (time > AbstractTrafficShapingHandler.MINIMAL_WAIT) {
             if (logger.isDebugEnabled()) {
-                logger.debug("Time: " + time + ':' + lastsum + ':' + lastinterval + ':' + pastDelay);
+                logger.debug("Time: " + time + ':' + lastSum + ':' + lastInterval + ':' + pastDelay);
             }
             if (time > maxTime && now + time - localReadingTime > maxTime) {
                 time = maxTime;
@@ -539,12 +524,9 @@ public class TrafficCounter {
      * Returns the time to wait (if any) for the given length message, using the given limitTraffic and
      * the max wait time.
      *
-     * @param size
-     *            the write size
-     * @param limitTraffic
-     *            the traffic limit in bytes per second.
-     * @param maxTime
-     *            the max time in ms to wait in case of excess of traffic.
+     * @param size         the write size
+     * @param limitTraffic the traffic limit in bytes per second.
+     * @param maxTime      the max time in ms to wait in case of excess of traffic.
      * @return the current time to wait (in ms) if needed for Write operation.
      */
     @Deprecated
@@ -556,13 +538,10 @@ public class TrafficCounter {
      * Returns the time to wait (if any) for the given length message, using the given limitTraffic and
      * the max wait time.
      *
-     * @param size
-     *            the write size
-     * @param limitTraffic
-     *            the traffic limit in bytes per second.
-     * @param maxTime
-     *            the max time in ms to wait in case of excess of traffic.
-     * @param now the current time
+     * @param size         the write size
+     * @param limitTraffic the traffic limit in bytes per second.
+     * @param maxTime      the max time in ms to wait in case of excess of traffic.
+     * @param now          the current time
      * @return the current time to wait (in ms) if needed for Write operation.
      */
     public long writeTimeToWait(final long size, final long limitTraffic, final long maxTime, final long now) {

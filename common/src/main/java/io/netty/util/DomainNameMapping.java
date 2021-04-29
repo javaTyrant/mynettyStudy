@@ -38,8 +38,11 @@ import static io.netty.util.internal.StringUtil.commonSuffixOfLength;
 @Deprecated
 public class DomainNameMapping<V> implements Mapping<String, V> {
 
+    //默认值
     final V defaultValue;
+    //map
     private final Map<String, V> map;
+    //不变的map
     private final Map<String, V> unmodifiableMap;
 
     /**
