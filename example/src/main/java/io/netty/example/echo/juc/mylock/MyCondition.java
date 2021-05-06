@@ -12,7 +12,7 @@ public interface MyCondition {
 
     void awaitUninterruptibly();
 
-    long awaitNonos(long nanosTimeout) throws InterruptedException;
+    long awaitNanos(long nanosTimeout) throws InterruptedException;
 
     boolean await(long time, TimeUnit unit) throws InterruptedException;
 

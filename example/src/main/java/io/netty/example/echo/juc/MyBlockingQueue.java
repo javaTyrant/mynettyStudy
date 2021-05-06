@@ -7,6 +7,7 @@ import java.util.Queue;
  * @since 2021/4/30
  **/
 public interface MyBlockingQueue<E> extends Queue<E> {
+
     public static void main(String[] args) {
 
     }
