@@ -1,7 +1,5 @@
 package io.netty.example.echo.juc.mylock;
 
-import sun.misc.Unsafe;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -15,6 +13,7 @@ import static io.netty.example.echo.juc.UnsafeUtil.createUnsafe;
  * @author lufengxiang
  * @since 2021/5/6
  **/
+@SuppressWarnings("unused")
 public class MyAbstractQueuedSynchronizer
         extends MyAbstractOwnableSynchronizer
         implements Serializable {
@@ -89,7 +88,7 @@ public class MyAbstractQueuedSynchronizer
     private static final long tailOffset;
     private static final long waitStatusOffset;
     private static final long nextOffset;
-    private final long spinForTimeoutThreshold = 1000l;
+    private final long spinForTimeoutThreshold = 1000L;
     private static final sun.misc.Unsafe unsafe;
 
     static {
@@ -105,20 +104,24 @@ public class MyAbstractQueuedSynchronizer
         }
     }
 
-    private final boolean compareAndSetHead(Node update) {
+    private boolean compareAndSetHead(Node update) {
         return unsafe.compareAndSwapObject(this, headOffset, null, update);
     }
 
-    private final boolean compareAndSetTail(Node expect, Node update) {
+    private boolean compareAndSetTail(Node expect, Node update) {
         return unsafe.compareAndSwapObject(this, tailOffset, expect, update);
     }
 
-    private static final boolean compareAndSetWaitStatus(Node node, int expect, int update) {
+    private static boolean compareAndSetWaitStatus(Node node, int expect, int update) {
         return unsafe.compareAndSwapInt(node, waitStatusOffset, expect, update);
     }
 
-    private static final boolean compareAndSetNext(Node node, Node expect, Node update) {
+    private static boolean compareAndSetNext(Node node, Node expect, Node update) {
         return unsafe.compareAndSwapObject(node, nextOffset, expect, update);
+    }
+
+    protected final boolean compareAndSetState(int expect, int update) {
+        return unsafe.compareAndSwapInt(this, stateOffset, expect, update);
     }
 
     public class ConditionObject implements MyCondition, Serializable {
@@ -318,6 +321,9 @@ public class MyAbstractQueuedSynchronizer
             }
             if (node.nextWaiter != null) {
                 unlinkCancelledWaiters();
+            }
+            if (interruptMode != 0) {
+                reportInterruptAfterWait(interruptMode);
             }
             return !timedout;
         }
@@ -580,12 +586,6 @@ public class MyAbstractQueuedSynchronizer
             }
             throw t;
         }
-    }
-
-    public static void main(String[] args) {
-        System.out.println(true | true);
-        System.out.println(true | false);
-        System.out.println(false | false);
     }
 
     private void cancelAcquire(Node node) {
@@ -871,7 +871,9 @@ public class MyAbstractQueuedSynchronizer
                 return node;
             }
         }
+        //cas失败了,会走到这一步
         enq(node);
+        //死循环去报成功,返回node
         return node;
     }
 

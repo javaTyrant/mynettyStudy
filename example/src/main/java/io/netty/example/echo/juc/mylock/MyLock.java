@@ -10,15 +10,20 @@ import java.util.concurrent.locks.Condition;
 public interface MyLock {
     //
     void lock();
+
     //
     void lockInterruptibly() throws InterruptedException;
+
     //
     boolean tryLock();
+
     //
     boolean tryLock(long time, TimeUnit unit) throws InterruptedException;
+
     //
     void unlock();
+
     //
-    Condition newCondition();
+    MyCondition newCondition();
 
 }

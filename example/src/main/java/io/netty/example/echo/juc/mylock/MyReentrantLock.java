@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.AbstractQueuedSynchronizer;
 import java.util.concurrent.locks.Condition;
 
 /**
@@ -13,6 +12,7 @@ import java.util.concurrent.locks.Condition;
  * @author lufengxiang
  * @since 2021/4/30
  **/
+@SuppressWarnings("unused")
 public class MyReentrantLock implements MyLock, java.io.Serializable {
     private static final long serialVersionUID = 7373984872572414699L;
 
@@ -49,7 +49,7 @@ public class MyReentrantLock implements MyLock, java.io.Serializable {
     }
 
     @Override//todo aqs写完再替换condition实现
-    public Condition newCondition() {
+    public MyCondition newCondition() {
         return sync.newCondition();
     }
 
@@ -71,10 +71,10 @@ public class MyReentrantLock implements MyLock, java.io.Serializable {
 
     protected Collection<Thread> getWaitingThreads(Condition condition) {
         if (condition == null) throw new NullPointerException();
-        if (!(condition instanceof AbstractQueuedSynchronizer.ConditionObject)) {
+        if (!(condition instanceof MyAbstractQueuedSynchronizer.ConditionObject)) {
             throw new IllegalArgumentException("not owner");
         }
-        return sync.getWaitingThreads((AbstractQueuedSynchronizer.ConditionObject) condition);
+        return sync.getWaitingThreads((MyAbstractQueuedSynchronizer.ConditionObject) condition);
     }
 
     public final boolean hasQueuedThread(Thread thread) {
@@ -87,10 +87,10 @@ public class MyReentrantLock implements MyLock, java.io.Serializable {
 
     public boolean hasWaiters(Condition condition) {
         if (condition == null) throw new NullPointerException();
-        if (!(condition instanceof AbstractQueuedSynchronizer.ConditionObject)) {
+        if (!(condition instanceof MyAbstractQueuedSynchronizer.ConditionObject)) {
             throw new IllegalArgumentException("not owner");
         }
-        return sync.hasWaiters((AbstractQueuedSynchronizer.ConditionObject) condition);
+        return sync.hasWaiters((MyAbstractQueuedSynchronizer.ConditionObject) condition);
     }
 
     public final boolean isFair() {
@@ -105,7 +105,7 @@ public class MyReentrantLock implements MyLock, java.io.Serializable {
         return sync.isLocked();
     }
 
-    abstract static class Sync extends AbstractQueuedSynchronizer {
+    abstract static class Sync extends MyAbstractQueuedSynchronizer {
         abstract void lock();
 
         //尝试非公平的获取
@@ -138,7 +138,7 @@ public class MyReentrantLock implements MyLock, java.io.Serializable {
             if (Thread.currentThread() != getExclusiveOwnerThread()) {
                 throw new IllegalMonitorStateException();
             }
-            boolean free = true;
+            boolean free = false;
             if (c == 0) {
                 free = true;
                 setExclusiveOwnerThread(null);
