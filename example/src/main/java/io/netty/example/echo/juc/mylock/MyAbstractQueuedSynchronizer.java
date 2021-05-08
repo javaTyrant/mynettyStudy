@@ -60,8 +60,8 @@ public class MyAbstractQueuedSynchronizer
         Node() {
         }
 
-        Node(Thread thread, Node nextWaiter) {
-            this.nextWaiter = nextWaiter;
+        Node(Thread thread, Node mode) {
+            this.nextWaiter = mode;
             this.thread = thread;
         }
 
@@ -135,6 +135,7 @@ public class MyAbstractQueuedSynchronizer
         public ConditionObject() {
 
         }
+
         //添加等待节点
         private Node addConditionWaiter() {
             Node t = lastWaiter;
@@ -225,7 +226,9 @@ public class MyAbstractQueuedSynchronizer
             if (Thread.interrupted()) {
                 throw new InterruptedException();
             }
+            //加入等待队列
             Node node = addConditionWaiter();
+            System.out.println("node" + node);
             int savedState = fullyRelease(node);
             int interruptMode = 0;
             while (!isOnSyncQueue(node)) {
@@ -1060,12 +1063,12 @@ public class MyAbstractQueuedSynchronizer
             if (t == null) {
                 if (compareAndSetHead(new Node())) {
                     tail = head;
-                } else {
-                    node.prev = t;
-                    if (compareAndSetTail(t, node)) {
-                        t.next = node;
-                        return t;
-                    }
+                }
+            } else {
+                node.prev = t;
+                if (compareAndSetTail(t, node)) {
+                    t.next = node;
+                    return t;
                 }
             }
         }
