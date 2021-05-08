@@ -9,6 +9,15 @@ import java.util.concurrent.TimeUnit;
  * @since 2021/4/29
  **/
 public class MyThreadPoolTest {
+    //start的语义:
+    //Causes this thread to begin execution; the Java Virtual Machine calls the run method of this thread.
+    //The result is that two threads are running concurrently:
+    // the current thread (which returns from the call to the start method) and the other thread (which executes its run method).
+    //It is never legal to start a thread more than once. In particular, a thread may not be restarted once it has completed execution.
+    //Throws:
+    //IllegalThreadStateException – if the thread was already started.
+    //See Also:
+    //run(), stop()
     public static void main(String[] args) {
         MyThreadPoolExecutor threadPoolExecutor = new MyThreadPoolExecutor(4, 8, 10,
                 TimeUnit.SECONDS, new ArrayBlockingQueue<>(4));

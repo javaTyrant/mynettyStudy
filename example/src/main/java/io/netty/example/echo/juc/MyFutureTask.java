@@ -13,6 +13,7 @@ import java.util.concurrent.locks.LockSupport;
  * @author lufengxiang
  * @since 2021/4/19
  **/
+@SuppressWarnings("unused")
 public class MyFutureTask<V> implements RunnableFuture<V> {
     private volatile int state;
     private static final int NEW = 0;
@@ -339,8 +340,7 @@ public class MyFutureTask<V> implements RunnableFuture<V> {
             Class<?> unsafeClass = Class.forName("sun.misc.Unsafe");
             Field field = unsafeClass.getDeclaredField("theUnsafe");
             field.setAccessible(true);
-            Unsafe unsafe = (Unsafe) field.get(null);
-            return unsafe;
+            return (Unsafe) field.get(null);
         } catch (Exception e) {
             e.printStackTrace();
         }

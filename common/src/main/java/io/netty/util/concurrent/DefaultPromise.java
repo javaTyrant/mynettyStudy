@@ -254,6 +254,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
             while (!isDone()) {
                 incWaiters();
                 try {
+                    //native method
                     wait();
                 } finally {
                     decWaiters();
@@ -405,6 +406,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
 
     @Override
     public Promise<V> sync() throws InterruptedException {
+        //
         await();
         rethrowIfFailed();
         return this;
