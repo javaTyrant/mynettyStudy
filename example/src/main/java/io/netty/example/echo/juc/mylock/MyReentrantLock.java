@@ -23,6 +23,10 @@ public class MyReentrantLock implements MyLock, java.io.Serializable {
         sync = new NonfairSync();
     }
 
+    public MyReentrantLock(boolean fair) {
+        sync = fair ? new FairSync() : new NonfairSync();
+    }
+
     @Override
     public void lock() {
         sync.lock();
@@ -30,7 +34,9 @@ public class MyReentrantLock implements MyLock, java.io.Serializable {
 
     @Override
     public void lockInterruptibly() throws InterruptedException {
+        //aqs
         sync.acquireInterruptibly(1);
+        System.out.println("返回lock结果");
     }
 
     @Override
@@ -85,7 +91,7 @@ public class MyReentrantLock implements MyLock, java.io.Serializable {
         return sync.hasQueuedThreads();
     }
 
-    public boolean hasWaiters(Condition condition) {
+    public boolean hasWaiters(MyCondition condition) {
         if (condition == null) throw new NullPointerException();
         if (!(condition instanceof MyAbstractQueuedSynchronizer.ConditionObject)) {
             throw new IllegalArgumentException("not owner");
@@ -108,6 +114,9 @@ public class MyReentrantLock implements MyLock, java.io.Serializable {
     abstract static class Sync extends MyAbstractQueuedSynchronizer {
         abstract void lock();
 
+        Sync() {
+        }
+
         //尝试非公平的获取
         final boolean nonfairTryAcquire(int acquires) {
             final Thread current = Thread.currentThread();
@@ -128,6 +137,8 @@ public class MyReentrantLock implements MyLock, java.io.Serializable {
                 }
                 //更新数量
                 setState(nextc);
+                //少了个返回值,干!!!
+                return true;
             }
             //获取锁失败
             return false;
@@ -175,6 +186,15 @@ public class MyReentrantLock implements MyLock, java.io.Serializable {
     }
 
     static final class FairSync extends Sync {
+        FairSync() {
+
+        }
+
+        @Override
+        final void lock() {
+            acquire(1);
+        }
+
         @Override
         protected boolean tryAcquire(int arg) {
             final Thread current = Thread.currentThread();
@@ -196,26 +216,33 @@ public class MyReentrantLock implements MyLock, java.io.Serializable {
             return false;
         }
 
-        @Override
-        void lock() {
-            acquire(1);
-        }
+
     }
 
     static final class NonfairSync extends Sync {
-        @Override
-        protected boolean tryAcquire(int accquires) {
-            return nonfairTryAcquire(accquires);
+        private static final long serialVersionUID = 7316153563782823691L;
+
+        NonfairSync() {
+
         }
 
         @Override
-        void lock() {
+        final void lock() {
             if (compareAndSetState(0, 1)) {
                 setExclusiveOwnerThread(Thread.currentThread());
             } else {
                 acquire(1);
             }
         }
+
+        @Override
+        protected boolean tryAcquire(int acquires) {
+            boolean b = nonfairTryAcquire(acquires);
+            System.out.println("获取到锁了吗" + b + "," + Thread.currentThread().getName());
+            return b;
+        }
+
+
     }
 
     @Override

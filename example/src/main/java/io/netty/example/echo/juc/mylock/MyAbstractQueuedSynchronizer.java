@@ -132,6 +132,9 @@ public class MyAbstractQueuedSynchronizer
         private static final int REINTERRUPT = 1;
         private static final int THROW_IE = -1;
 
+        public ConditionObject() {
+
+        }
         //添加等待节点
         private Node addConditionWaiter() {
             Node t = lastWaiter;
@@ -156,8 +159,9 @@ public class MyAbstractQueuedSynchronizer
             do {
                 if ((firstWaiter = first.nextWaiter) == null) {
                     lastWaiter = null;
-                    first.nextWaiter = null;
                 }
+                //又写错地方了
+                first.nextWaiter = null;
             } while (!transferForSignal(first) && (first = firstWaiter) != null);
         }
 
@@ -225,7 +229,9 @@ public class MyAbstractQueuedSynchronizer
             int savedState = fullyRelease(node);
             int interruptMode = 0;
             while (!isOnSyncQueue(node)) {
+                System.out.println("准备暂停线程了");
                 LockSupport.park(this);
+                System.out.println("恢复执行了");
                 if ((interruptMode = checkInterruptWhileWaiting(node)) != 0) {
                     break;
                 }
@@ -449,9 +455,11 @@ public class MyAbstractQueuedSynchronizer
         if (Thread.interrupted()) {
             throw new InterruptedException();
         }
+        //tryAcquire由子类来实现
         if (!tryAcquire(arg)) {
             doAcquireInterruptibly(arg);
         }
+        System.out.println("获取锁成功...");
     }
 
     public final void acquireShared(int arg) {
@@ -535,17 +543,23 @@ public class MyAbstractQueuedSynchronizer
     }
 
     private void doAcquireInterruptibly(int arg) throws InterruptedException {
+        //添加等待节点
         final Node node = addWaiter(Node.EXCLUSIVE);
+        //默认是失败的,如果成功了,更新下
         boolean failed = true;
         try {
+            //死循环
             for (; ; ) {
+                //获取前节点
                 final Node p = node.predecessor();
+                //乐观获取一次
                 if (p == head && tryAcquire(arg)) {
                     setHead(node);
                     p.next = null;
                     failed = false;
                     return;
                 }
+                //和acquire比这里是有区别的.
                 if (shouldParkAfterFailedAcquire(p, node) && parkAndCheckInterrupt()) {
                     throw new InterruptedException();
                 }
@@ -588,6 +602,7 @@ public class MyAbstractQueuedSynchronizer
         }
     }
 
+    //取消获取的时候的逻辑:
     private void cancelAcquire(Node node) {
         if (node == null) {
             return;
@@ -603,6 +618,7 @@ public class MyAbstractQueuedSynchronizer
             compareAndSetNext(pred, predNext, null);
         } else {
             int ws;
+            //判断逻辑:
             if (pred != head && ((ws = pred.waitStatus) == Node.SIGNAL ||
                     (ws <= 0 && compareAndSetWaitStatus(pred, ws, Node.SIGNAL))) &&
                     pred.thread != null) {
@@ -623,18 +639,20 @@ public class MyAbstractQueuedSynchronizer
         return Thread.interrupted();
     }
 
-    //前置节点和当前节点
+    //前置节点和当前节点.节点的signal是何时赋值的呢?
     private boolean shouldParkAfterFailedAcquire(Node pred, Node node) {
         //获取前置节点的等待状态
         int ws = pred.waitStatus;
-        //如果是signal.返回true.
+        //如果是signal.返回true.如果之前的节点是Signal说明当前的节点需要unpark.为什么返回true呢?
         if (ws == Node.SIGNAL) {
+            //是不是还没有park过,所以要park一下,后面才有unpark的语义.
             return true;
         }
         //大于0是取消了.
         if (ws > 0) {
             //过滤掉取消的节点
             do {
+                //把pred.prev同时设置给node.prev和pred
                 node.prev = pred = pred.prev;
             } while (pred.waitStatus > 0);
             //连接
@@ -956,8 +974,9 @@ public class MyAbstractQueuedSynchronizer
             Node h = head;
             if (h != null && h.waitStatus != 0) {
                 unparkSuccessor(h);
-                return true;
             }
+            //写上面的括号里了.
+            return true;
         }
         return false;
     }
@@ -1019,12 +1038,15 @@ public class MyAbstractQueuedSynchronizer
     }
 
 
+    //
     final boolean transferForSignal(Node node) {
         if (!compareAndSetWaitStatus(node, Node.CONDITION, 0)) {
             return false;
         }
+        //node入队列
         Node p = enq(node);
         int ws = p.waitStatus;
+        //如果ws <= 0.且cas成功.返回true.否则设置singal失败,则unpark线程.
         if (ws > 0 || !compareAndSetWaitStatus(p, ws, Node.SIGNAL)) {
             LockSupport.unpark(node.thread);
         }

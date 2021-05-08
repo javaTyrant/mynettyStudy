@@ -263,7 +263,7 @@ public class MyThreadPoolExecutor extends AbstractExecutorService {
                     mainLock.unlock();
                 }
                 if (workerAdded) {
-                    //启动线程.会执行worker的run方法.
+                    //启动线程.调用worker的run方法.
                     t.start();
                     workerStarted = true;
                 }
@@ -297,15 +297,21 @@ public class MyThreadPoolExecutor extends AbstractExecutorService {
     }
 
     final void runWorker(Worker w) {
+        //获取当前线程
         Thread wt = Thread.currentThread();
+        //获取第一个任务
         Runnable task = w.firstTask;
+        //第一个任务置空
         w.firstTask = null;
+        //线程解锁why
         w.unlock();
         boolean completedAbruptly = true;
         try {
             //getTask,如果getTask为null.那么就退出while循环.
             while (task != null || (task = getTask()) != null) {
+                //加锁
                 w.lock();
+                //状态校验
                 if ((runStateAtLeast(ctl.get(), STOP)
                         || (Thread.interrupted() &&
                         runStateAtLeast(ctl.get(), STOP))) && !wt.isInterrupted()) {
@@ -315,6 +321,7 @@ public class MyThreadPoolExecutor extends AbstractExecutorService {
                     beforeExecute(wt, task);
                     Throwable thrown = null;
                     try {
+                        //执行任务
                         task.run();
                         //优化jdk的写法
                     } catch (RuntimeException | Error x) {
@@ -328,6 +335,7 @@ public class MyThreadPoolExecutor extends AbstractExecutorService {
                     }
                 } finally {
                     task = null;
+                    //是线程安全的吗?被lock保护.
                     w.completedTasks++;
                     w.unlock();
                 }
@@ -361,6 +369,7 @@ public class MyThreadPoolExecutor extends AbstractExecutorService {
         } finally {
             mainLock.unlock();
         }
+        //只打断一个线程.
         tryTerminate();
         int c = ctl.get();
         if (runStateLessThan(c, STOP)) {
@@ -385,7 +394,7 @@ public class MyThreadPoolExecutor extends AbstractExecutorService {
                     (runStateOf(c) == SHUTDOWN && !workQueue.isEmpty())) {
                 return;
             }
-            //如果工作线程不等于0,打断一个线程why?
+            //如果工作线程不等于0,打断一个线程why?一个一个清理.
             if (workerCountOf(c) != 0) {
                 interruptIdleWorkers(ONLY_ONE);
             }
@@ -518,6 +527,9 @@ public class MyThreadPoolExecutor extends AbstractExecutorService {
         try {
             for (Worker w : workers) {
                 Thread t = w.thread;
+                //这里是会把所有的空闲都打断的,那么如何保证核心线程不被打断呢?调用的地方肯定会判断.如果线程池关闭
+                //那么,肯定是都要打断的.
+                //如果能获取到锁就说明是空闲的线程,否则这个线程就被占用了.
                 if (!t.isInterrupted() && w.tryLock()) {
                     try {
                         t.interrupt();
@@ -879,21 +891,30 @@ public class MyThreadPoolExecutor extends AbstractExecutorService {
         }
     }
 
+    //worker的结构:
     private final class Worker extends AbstractQueuedSynchronizer implements Runnable {
         //
         private static final long serialVersionUID = 6138294804551838833L;
+        //执行线程
         final Thread thread;
+        //第一个任务
         Runnable firstTask;
+        //完成的数量
         volatile long completedTasks;
 
         Worker(Runnable firstTask) {
             setState(-1);
             this.firstTask = firstTask;
+            //new 线程.可以自定义线程工厂
             this.thread = getThreadFactory().newThread(this);
+            System.out.println(this.thread.getName());
         }
 
+        //让内部的线程执行run方法
         @Override
         public void run() {
+            //调用runWorker.什么时候调用runworker呢?
+            System.out.println("被执行了" + Thread.currentThread().getName());
             runWorker(this);
         }
 
