@@ -1,4 +1,6 @@
-package io.netty.example.echo.juc;
+package io.netty.example.echo.juc.test;
+
+import io.netty.example.echo.juc.MyArrayBlockingQueue;
 
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;

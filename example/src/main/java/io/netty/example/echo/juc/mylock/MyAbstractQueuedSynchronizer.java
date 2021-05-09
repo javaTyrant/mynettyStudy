@@ -37,10 +37,12 @@ public class MyAbstractQueuedSynchronizer
         //the next acquireShared should unconditionally propagate
         static final int PROPAGATE = -3;
 
+        //volatile类型变量
         volatile int waitStatus;
         volatile Node prev;
         volatile Node next;
         volatile Thread thread;
+        //为什么nextWaiter不需要加volatile呢
         Node nextWaiter;
 
         final boolean isShared() {
@@ -124,6 +126,8 @@ public class MyAbstractQueuedSynchronizer
         return unsafe.compareAndSwapInt(this, stateOffset, expect, update);
     }
 
+
+    //ConditionObject
     public class ConditionObject implements MyCondition, Serializable {
         private static final long serialVersionUID = 1173984872572414699L;
         private transient Node firstWaiter;

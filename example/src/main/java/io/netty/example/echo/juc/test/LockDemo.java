@@ -1,4 +1,4 @@
-package io.netty.example.echo.juc.mylock;
+package io.netty.example.echo.juc.test;
 
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;

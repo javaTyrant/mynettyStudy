@@ -1,4 +1,4 @@
-package io.netty.example.echo.juc;
+package io.netty.example.echo.juc.test;
 
 import java.util.concurrent.locks.LockSupport;
 

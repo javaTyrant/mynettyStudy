@@ -1,4 +1,6 @@
-package io.netty.example.echo.juc;
+package io.netty.example.echo.juc.test;
+
+import io.netty.example.echo.juc.MyFutureTask;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
