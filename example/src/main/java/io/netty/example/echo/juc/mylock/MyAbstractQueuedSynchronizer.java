@@ -88,7 +88,7 @@ public class MyAbstractQueuedSynchronizer
     private static final long tailOffset;
     private static final long waitStatusOffset;
     private static final long nextOffset;
-    private final long spinForTimeoutThreshold = 1000L;
+    static final long spinForTimeoutThreshold = 1000L;
     private static final sun.misc.Unsafe unsafe;
 
     static {
@@ -144,12 +144,16 @@ public class MyAbstractQueuedSynchronizer
                 unlinkCancelledWaiters();
                 t = lastWaiter;
             }
+            //构造一个等待节点
             Node node = new Node(Thread.currentThread(), Node.CONDITION);
+            //如果last不存在
             if (t == null) {
                 firstWaiter = node;
             } else {
+                //如果有last,就放入last后面
                 t.nextWaiter = node;
             }
+            //
             lastWaiter = node;
             return node;
         }
@@ -158,12 +162,15 @@ public class MyAbstractQueuedSynchronizer
         //通知
         private void doSignal(Node first) {
             do {
+                //如何这个节点的下一个等待者是空
                 if ((firstWaiter = first.nextWaiter) == null) {
+                    //
                     lastWaiter = null;
                 }
                 //又写错地方了
                 first.nextWaiter = null;
-            } while (!transferForSignal(first) && (first = firstWaiter) != null);
+            } while (!transferForSignal(first) &&
+                    (first = firstWaiter) != null);
         }
 
         private void doSignalAll(Node first) {
@@ -222,6 +229,22 @@ public class MyAbstractQueuedSynchronizer
         }
 
         @Override
+        public void awaitUninterruptibly() {
+            Node node = addConditionWaiter();
+            int savedState = fullyRelease(node);
+            boolean interrupted = false;
+            while (!isOnSyncQueue(node)) {
+                LockSupport.park(this);
+                if (Thread.interrupted()) {
+                    interrupted = true;
+                }
+            }
+            if (acquireQueued(node, savedState) || interrupted) {
+                selfInterrupt();
+            }
+        }
+
+        @Override
         public void await() throws InterruptedException {
             if (Thread.interrupted()) {
                 throw new InterruptedException();
@@ -229,10 +252,12 @@ public class MyAbstractQueuedSynchronizer
             //加入等待队列
             Node node = addConditionWaiter();
             System.out.println("node" + node);
+            //释放锁:返回修改后的state值.
             int savedState = fullyRelease(node);
             int interruptMode = 0;
+            //
             while (!isOnSyncQueue(node)) {
-                System.out.println("准备暂停线程了");
+                System.out.println("准备暂停线程了:" + Thread.currentThread().getName());
                 LockSupport.park(this);
                 System.out.println("恢复执行了");
                 if ((interruptMode = checkInterruptWhileWaiting(node)) != 0) {
@@ -247,22 +272,6 @@ public class MyAbstractQueuedSynchronizer
             }
             if (interruptMode != 0) {
                 reportInterruptAfterWait(interruptMode);
-            }
-        }
-
-        @Override
-        public void awaitUninterruptibly() {
-            Node node = addConditionWaiter();
-            int savedState = fullyRelease(node);
-            boolean interrupted = false;
-            while (!isOnSyncQueue(node)) {
-                LockSupport.park(this);
-                if (Thread.interrupted()) {
-                    interrupted = true;
-                }
-            }
-            if (acquireQueued(node, savedState) || interrupted) {
-                selfInterrupt();
             }
         }
 
@@ -372,7 +381,9 @@ public class MyAbstractQueuedSynchronizer
         }
 
         private int checkInterruptWhileWaiting(Node node) {
-            return Thread.interrupted() ? (transferAfterCancelledWait(node) ? THROW_IE : REINTERRUPT) : 0;
+            return Thread.interrupted() ?
+                    (transferAfterCancelledWait(node) ? THROW_IE : REINTERRUPT) :
+                    0;
         }
 
         private void reportInterruptAfterWait(int interruptMode) throws InterruptedException {
@@ -674,6 +685,7 @@ public class MyAbstractQueuedSynchronizer
         node.prev = null;
     }
 
+    //
     protected boolean tryAcquire(int arg) {
         throw new UnsupportedOperationException();
     }
@@ -918,7 +930,8 @@ public class MyAbstractQueuedSynchronizer
                 if (nanosTimeout <= 0L) {
                     return false;
                 }
-                if (shouldParkAfterFailedAcquire(p, node) && nanosTimeout > spinForTimeoutThreshold) {
+                if (shouldParkAfterFailedAcquire(p, node) &&
+                        nanosTimeout > spinForTimeoutThreshold) {
                     LockSupport.parkNanos(this, nanosTimeout);
                 }
                 if (Thread.interrupted()) {
@@ -932,6 +945,7 @@ public class MyAbstractQueuedSynchronizer
         }
     }
 
+    //节点是否在SyncQueue里.
     final boolean isOnSyncQueue(Node node) {
         if (node.waitStatus == Node.CONDITION || node.prev == null) {
             return false;
@@ -942,6 +956,7 @@ public class MyAbstractQueuedSynchronizer
         return findNodeFromTail(node);
     }
 
+    //从尾部往前找
     private boolean findNodeFromTail(Node node) {
         Node t = tail;
         for (; ; ) {
@@ -955,9 +970,11 @@ public class MyAbstractQueuedSynchronizer
         }
     }
 
+    //
     private int fullyRelease(Node node) {
         boolean failed = true;
         try {
+            //获取现在的state的状态,大于0
             int savedState = getState();
             if (release(savedState)) {
                 failed = false;
@@ -1016,23 +1033,30 @@ public class MyAbstractQueuedSynchronizer
         throw new UnsupportedOperationException();
     }
 
+    //唤醒后面的节点
     private void unparkSuccessor(Node node) {
+        //先获取node的状态
         int ws = node.waitStatus;
+        //如果小于0,cas修改成0
         if (ws < 0) {
             compareAndSetWaitStatus(node, ws, 0);
         }
+        //获取node的下一个节点
         Node s = node.next;
+        //
         if (s == null || s.waitStatus > 0) {
             s = null;
-            //从尾部开始
+            //从尾部开始:从tail往前找.t不能是node.不能唤醒自己.
             for (Node t = tail; t != null && t != node; t = t.prev) {
                 if (t.waitStatus <= 0) {
+                    //一直找到第一个要唤醒的节点
                     s = t;
                 }
             }
-            if (s != null) {
-                LockSupport.unpark(s.thread);
-            }
+        }
+        //抄到上面的循环里了,导致一直没有unpark.干
+        if (s != null) {
+            LockSupport.unpark(s.thread);
         }
     }
 
