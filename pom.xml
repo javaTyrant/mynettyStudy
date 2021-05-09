@@ -381,13 +381,14 @@
     <!-- keep in sync with PlatformDependent#ALLOWED_LINUX_OS_CLASSIFIERS -->
     <os.detection.classifierWithLikes>fedora,suse,arch</os.detection.classifierWithLikes>
     <tcnative.artifactId>netty-tcnative</tcnative.artifactId>
-    <tcnative.version>2.0.38.Final</tcnative.version>
-    <tcnative.classifier>windows-x86_64</tcnative.classifier>
+    <tcnative.version>2.0.36.Final</tcnative.version>
+<!--    <tcnative.classifier>windows-x86_64</tcnative.classifier>-->
+    <tcnative.classifier>linux-x86_64</tcnative.classifier>
     <conscrypt.groupId>org.conscrypt</conscrypt.groupId>
     <conscrypt.artifactId>conscrypt-openjdk-uber</conscrypt.artifactId>
     <conscrypt.version>2.5.1</conscrypt.version>
     <conscrypt.classifier />
-    <jni.classifier>${os.detected.name}-${os.detected.arch}</jni.classifier>
+<!--    <jni.classifier>${os.detected.name}-${os.detected.arch}</jni.classifier>-->
     <logging.config>${project.basedir}/../common/src/test/resources/logback-test.xml</logging.config>
     <logging.logLevel>debug</logging.logLevel>
     <log4j2.version>2.6.2</log4j2.version>
@@ -952,65 +953,65 @@
           </execution>
         </executions>
       </plugin>
-      <plugin>
-        <artifactId>maven-checkstyle-plugin</artifactId>
-        <version>3.1.0</version>
-        <executions>
-          <execution>
-            <id>check-style</id>
-            <goals>
-              <goal>check</goal>
-            </goals>
-            <phase>validate</phase>
-            <configuration>
-              <consoleOutput>true</consoleOutput>
-              <logViolationsToConsole>true</logViolationsToConsole>
-              <failsOnError>true</failsOnError>
-              <failOnViolation>true</failOnViolation>
-              <configLocation>io/netty/checkstyle.xml</configLocation>
-              <sourceDirectories>
-                <sourceDirectory>${project.build.sourceDirectory}</sourceDirectory>
-                <sourceDirectory>${project.build.testSourceDirectory}</sourceDirectory>
-              </sourceDirectories>
-            </configuration>
-          </execution>
-          <execution>
-            <id>nohttp-checkstyle-validation</id>
-            <phase>validate</phase>
-            <configuration>
-              <!-- skip>false</skip -->
-              <configLocation>nohttp-checkstyle.xml</configLocation>
-              <suppressionsLocation>nohttp-checkstyle-suppressions.xml</suppressionsLocation>
-              <!-- propertyExpansion>main.basedir=${main.basedir}</propertyExpansion -->
-              <encoding>UTF-8</encoding>
-              <sourceDirectories>${basedir}</sourceDirectories>
-              <includes>**/*</includes>
-              <excludes>nohttp-checkstyle-suppressions.xml,**/.git/**/*,**/.idea/**/*,**/target/**/,**/.flattened-pom.xml,**/*.class</excludes>
-            </configuration>
-            <goals>
-              <goal>check</goal>
-            </goals>
-            <inherited>false</inherited>
-          </execution>
-        </executions>
-        <dependencies>
-          <dependency>
-            <groupId>com.puppycrawl.tools</groupId>
-            <artifactId>checkstyle</artifactId>
-            <version>8.29</version>
-          </dependency>
-          <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>netty-build-common</artifactId>
-            <version>${netty.build.version}</version>
-          </dependency>
-          <dependency>
-            <groupId>io.spring.nohttp</groupId>
-            <artifactId>nohttp-checkstyle</artifactId>
-            <version>0.0.5.RELEASE</version>
-          </dependency>
-        </dependencies>
-      </plugin>
+<!--      <plugin>-->
+<!--        <artifactId>maven-checkstyle-plugin</artifactId>-->
+<!--        <version>3.1.0</version>-->
+<!--        <executions>-->
+<!--          <execution>-->
+<!--            <id>check-style</id>-->
+<!--            <goals>-->
+<!--              <goal>check</goal>-->
+<!--            </goals>-->
+<!--            <phase>validate</phase>-->
+<!--            <configuration>-->
+<!--              <consoleOutput>true</consoleOutput>-->
+<!--              <logViolationsToConsole>true</logViolationsToConsole>-->
+<!--              <failsOnError>true</failsOnError>-->
+<!--              <failOnViolation>true</failOnViolation>-->
+<!--              <configLocation>io/netty/checkstyle.xml</configLocation>-->
+<!--              <sourceDirectories>-->
+<!--                <sourceDirectory>${project.build.sourceDirectory}</sourceDirectory>-->
+<!--                <sourceDirectory>${project.build.testSourceDirectory}</sourceDirectory>-->
+<!--              </sourceDirectories>-->
+<!--            </configuration>-->
+<!--          </execution>-->
+<!--          <execution>-->
+<!--            <id>nohttp-checkstyle-validation</id>-->
+<!--            <phase>validate</phase>-->
+<!--            <configuration>-->
+<!--              &lt;!&ndash; skip>false</skip &ndash;&gt;-->
+<!--              <configLocation>nohttp-checkstyle.xml</configLocation>-->
+<!--              <suppressionsLocation>nohttp-checkstyle-suppressions.xml</suppressionsLocation>-->
+<!--              &lt;!&ndash; propertyExpansion>main.basedir=${main.basedir}</propertyExpansion &ndash;&gt;-->
+<!--              <encoding>UTF-8</encoding>-->
+<!--              <sourceDirectories>${basedir}</sourceDirectories>-->
+<!--              <includes>**/*</includes>-->
+<!--              <excludes>nohttp-checkstyle-suppressions.xml,**/.git/**/*,**/.idea/**/*,**/target/**/,**/.flattened-pom.xml,**/*.class</excludes>-->
+<!--            </configuration>-->
+<!--            <goals>-->
+<!--              <goal>check</goal>-->
+<!--            </goals>-->
+<!--            <inherited>false</inherited>-->
+<!--          </execution>-->
+<!--        </executions>-->
+<!--        <dependencies>-->
+<!--          <dependency>-->
+<!--            <groupId>com.puppycrawl.tools</groupId>-->
+<!--            <artifactId>checkstyle</artifactId>-->
+<!--            <version>8.29</version>-->
+<!--          </dependency>-->
+<!--          <dependency>-->
+<!--            <groupId>${project.groupId}</groupId>-->
+<!--            <artifactId>netty-build-common</artifactId>-->
+<!--            <version>${netty.build.version}</version>-->
+<!--          </dependency>-->
+<!--          <dependency>-->
+<!--            <groupId>io.spring.nohttp</groupId>-->
+<!--            <artifactId>nohttp-checkstyle</artifactId>-->
+<!--            <version>0.0.5.RELEASE</version>-->
+<!--          </dependency>-->
+<!--        </dependencies>-->
+<!--      </plugin>-->
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>xml-maven-plugin</artifactId>
