@@ -282,9 +282,11 @@ public class MyAbstractQueuedSynchronizer
 
         @Override
         public long awaitNanos(long nanosTimeout) throws InterruptedException {
+            //线程状态校验
             if (Thread.interrupted()) {
                 throw new InterruptedException();
             }
+            //
             Node node = addConditionWaiter();
             int savedState = fullyRelease(node);
             final long deadline = System.nanoTime() + nanosTimeout;
@@ -295,6 +297,7 @@ public class MyAbstractQueuedSynchronizer
                     break;
                 }
                 if (nanosTimeout >= spinForTimeoutThreshold) {
+                    //会自动唤醒吧.
                     LockSupport.parkNanos(this, nanosTimeout);
                 }
                 if ((interruptMode = checkInterruptWhileWaiting(node)) != 0) {

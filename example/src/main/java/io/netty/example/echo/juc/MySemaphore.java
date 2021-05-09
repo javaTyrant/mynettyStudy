@@ -1,4 +1,6 @@
-package io.netty.example.echo.juc.mylock;
+package io.netty.example.echo.juc;
+
+import io.netty.example.echo.juc.mylock.MyAbstractQueuedSynchronizer;
 
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
