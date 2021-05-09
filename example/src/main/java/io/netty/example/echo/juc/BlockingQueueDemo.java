@@ -14,6 +14,7 @@ public class BlockingQueueDemo {
         ExecutorService service = Executors.newFixedThreadPool(2);
         service.execute(() -> {
             try {
+                //没有值的时候进入等待队列
                 System.out.println("返回值:" + queues.take());
             } catch (InterruptedException ignore) {
 
@@ -22,6 +23,7 @@ public class BlockingQueueDemo {
         Thread.sleep(10000);
         service.execute(() -> {
             try {
+                //有值的时候唤醒等待队列
                 queues.put(1);
             } catch (InterruptedException e) {
                 e.printStackTrace();

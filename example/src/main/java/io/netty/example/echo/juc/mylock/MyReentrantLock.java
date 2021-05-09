@@ -144,7 +144,9 @@ public class MyReentrantLock implements MyLock, java.io.Serializable {
             return false;
         }
 
+        //释放锁的操作,也就是修改state的过程.
         protected final boolean tryRelease(int releases) {
+            //
             int c = getState() - releases;
             if (Thread.currentThread() != getExclusiveOwnerThread()) {
                 throw new IllegalMonitorStateException();

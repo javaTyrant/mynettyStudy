@@ -202,7 +202,9 @@ public class MyArrayBlockingQueue<E> extends AbstractQueue<E> implements MyBlock
         }
     }
 
+
     public E take() throws InterruptedException {
+        //加锁了,变量的访问也只能有锁的访问.实例变量.
         final MyReentrantLock lock = this.lock;
         System.out.println("开始加锁");
         //这个方法影响到了count的获取
