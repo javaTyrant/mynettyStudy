@@ -9,7 +9,9 @@
 *.iws
 .idea/
 .shelf/
-
+all/
+tarball/
+*.xml
 # Geany project file
 .geany
 
@@ -46,6 +48,4 @@ mainframer
 # exclude vscode files
 .vscode/
 *.factorypath
-/all
-/tarball
-pom.xml
+
