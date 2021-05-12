@@ -31,7 +31,7 @@ import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.MyConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import static io.netty.handler.codec.stomp.StompHeaders.*;
@@ -40,7 +40,7 @@ import static io.netty.handler.codec.stomp.StompHeaders.*;
 public class StompChatHandler extends SimpleChannelInboundHandler<StompFrame> {
 
     private final ConcurrentMap<String, Set<StompSubscription>> chatDestinations =
-            new ConcurrentHashMap<String, Set<StompSubscription>>();
+            new MyConcurrentHashMap<String, Set<StompSubscription>>();
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, StompFrame inboundFrame) throws Exception {

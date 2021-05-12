@@ -13,7 +13,8 @@ import static java.util.concurrent.TimeUnit.NANOSECONDS;
  * 延时队列的核心原理
  * 这个延时队列有什么问题呢?
  * netty是如何优化的?
- *
+ * 延时队列为什么不允许为null呢,因为没有超期的元素的时候会返回null
+ * 如果是null,就不知道这个null的具体含义了.
  * @author lufengxiang
  * @since 2021/5/7
  **/
@@ -21,11 +22,12 @@ import static java.util.concurrent.TimeUnit.NANOSECONDS;
 @SuppressWarnings("unused")
 public class MyDelayQueue<E extends Delayed> extends AbstractQueue<E>
         implements MyBlockingQueue<E> {
-    //
+    //可重入锁.
     private final transient MyReentrantLock lock = new MyReentrantLock();
     //
     private final PriorityQueue<E> q = new PriorityQueue<>();
-    //做什么用的呢?
+    //做什么用的呢?minimize unnecessary timed waiting.如何减少等待的时间呢
+    //await变种的区别.
     /**
      * Thread designated to wait for the element at the head of
      * the queue.  This variant of the Leader-Follower pattern
@@ -66,7 +68,9 @@ public class MyDelayQueue<E extends Delayed> extends AbstractQueue<E>
         try {
             q.offer(e);
             if (q.peek() == e) {
+                //如果是堆顶元素,leader设为空
                 leader = null;
+                //signal一下.太棒了.
                 available.signal();
             }
             return true;
@@ -88,6 +92,7 @@ public class MyDelayQueue<E extends Delayed> extends AbstractQueue<E>
         lock.lock();
         try {
             E first = q.peek();
+            //如果大于0,就返回null.没有等待.
             if (first == null || first.getDelay(NANOSECONDS) > 0)
                 return null;
             else
@@ -96,11 +101,17 @@ public class MyDelayQueue<E extends Delayed> extends AbstractQueue<E>
             lock.unlock();
         }
     }
-
-    //a b两个线程来take.a先到.
+    //精彩的回答.还要再体会下这个leader的设计.
+    //如果有新的节点到堆顶了.
+    //the leader is not used for minimizing awaitNanos, it is used for avoiding unnecessary wake up & sleep.
+    // If you let all threads available.awaitNanos(delay) in take method,
+    // they will be called up simultaneously but only one can really get element from the queue,
+    // the others will fall into sleeping again, which is unnecessary and resource-wasting.
+    // a b两个线程来take.a先到.
     // 此时leader为空,所以leader = 线程a
     // 线程a开始等待.
     // 此时线程b也到了,leader不为空.直接等待.
+    // 如果没有leader:
     public E take() throws InterruptedException {
         final MyReentrantLock lock = this.lock;
         lock.lockInterruptibly();

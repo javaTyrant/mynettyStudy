@@ -43,7 +43,7 @@ public class MyThreadPoolExecutor extends AbstractExecutorService {
     private static final int TERMINATED = 3 << COUNT_BITS;
 
     //核心配置参数
-    private final BlockingQueue<Runnable> workQueue;
+    private final MyBlockingQueue<Runnable> workQueue;
     private final ReentrantLock mainLock = new ReentrantLock();
     private final HashSet<Worker> workers = new HashSet<>();
     //哪些操作会获取锁才能执行.
@@ -101,7 +101,7 @@ public class MyThreadPoolExecutor extends AbstractExecutorService {
                                 int maximumPoolSize,
                                 long keepAliveTime,
                                 TimeUnit unit,
-                                BlockingQueue<Runnable> workQueue) {
+                                MyBlockingQueue<Runnable> workQueue) {
         this(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue,
                 Executors.defaultThreadFactory(), defaultHandler);
     }
@@ -111,7 +111,7 @@ public class MyThreadPoolExecutor extends AbstractExecutorService {
                                 int maximumPoolSize,
                                 long keepAliveTime,
                                 TimeUnit unit,
-                                BlockingQueue<Runnable> workQueue,
+                                MyBlockingQueue<Runnable> workQueue,
                                 ThreadFactory threadFactory) {
         this(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue,
                 threadFactory, defaultHandler);
@@ -122,7 +122,7 @@ public class MyThreadPoolExecutor extends AbstractExecutorService {
                                 int maximumPoolSize,
                                 long keepAliveTime,
                                 TimeUnit unit,
-                                BlockingQueue<Runnable> workQueue,
+                                MyBlockingQueue<Runnable> workQueue,
                                 MyRejectedExecutionHandler handler) {
         this(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue,
                 Executors.defaultThreadFactory(), handler);
@@ -133,7 +133,7 @@ public class MyThreadPoolExecutor extends AbstractExecutorService {
                                 int maximumPoolSize,
                                 long keepAliveTime,
                                 TimeUnit unit,
-                                BlockingQueue<Runnable> workQueue,
+                                MyBlockingQueue<Runnable> workQueue,
                                 ThreadFactory threadFactory,
                                 MyRejectedExecutionHandler handler) {
         if (corePoolSize < 0 ||
@@ -187,7 +187,7 @@ public class MyThreadPoolExecutor extends AbstractExecutorService {
         handler.rejectedExecution(task, this);
     }
 
-    public BlockingQueue<Runnable> getQueue() {
+    public MyBlockingQueue<Runnable> getQueue() {
         return workQueue;
     }
 
@@ -595,7 +595,7 @@ public class MyThreadPoolExecutor extends AbstractExecutorService {
     }
 
     private List<Runnable> drainQueue() {
-        BlockingQueue<Runnable> q = workQueue;
+        MyBlockingQueue<Runnable> q = workQueue;
         ArrayList<Runnable> taskList = new ArrayList<>();
         //Removes all available elements from this queue and adds them to the given collection
         q.drainTo(taskList);
@@ -784,7 +784,7 @@ public class MyThreadPoolExecutor extends AbstractExecutorService {
     }
 
     public void purge() {
-        final BlockingQueue<Runnable> q = workQueue;
+        final MyBlockingQueue<Runnable> q = workQueue;
         try {
             q.removeIf(r -> r instanceof Future<?> && ((Future<?>) r).isCancelled());
         } catch (ConcurrentModificationException fallThrough) {

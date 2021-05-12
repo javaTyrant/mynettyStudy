@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.AbstractQueuedSynchronizer;
 import java.util.concurrent.locks.LockSupport;
 
 import static io.netty.example.echo.juc.UnsafeUtil.createUnsafe;
@@ -801,6 +802,12 @@ public class MyAbstractQueuedSynchronizer
             }
         }
         return list;
+    }
+
+    public final int getWaitQueueLength(MyAbstractQueuedSynchronizer.ConditionObject condition) {
+        if (!owns(condition))
+            throw new IllegalArgumentException("Not owner");
+        return condition.getWaitQueueLength();
     }
 
     public final Collection<Thread> getExclusiveQueuedThreads() {
