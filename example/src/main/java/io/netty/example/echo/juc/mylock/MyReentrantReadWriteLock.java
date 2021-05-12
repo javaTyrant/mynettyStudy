@@ -464,6 +464,7 @@ public class MyReentrantReadWriteLock
         private static final long serialVersionUID = -5992448646407690164L;
         private final Sync sync;
 
+
         protected ReadLock(MyReentrantReadWriteLock lock) {
             sync = lock.sync;
         }
