@@ -485,28 +485,37 @@ public class MyAbstractQueuedSynchronizer
     }
 
     public final void acquireShared(int arg) {
+        //尝试获取
         if (tryAcquireShared(arg) < 0) {
+            //如果小于0不返回,doAcquireShared.
             doAcquireShared(arg);
         }
     }
 
+    //响应中断的获取.
     public final void acquireSharedInterruptibly(int arg) throws InterruptedException {
         if (Thread.interrupted()) {
             throw new InterruptedException();
         }
+        //如果没有许可
         if (tryAcquireShared(arg) < 0) {
             doAcquireSharedInterruptibly(arg);
         }
     }
-
+    //中断获取
     private void doAcquireSharedInterruptibly(int arg) throws InterruptedException {
+        //先添加等待节点
         final Node node = addWaiter(Node.SHARED);
         boolean failed = true;
         try {
             for (; ; ) {
+                //获取前一个节点
                 final Node p = node.predecessor();
+                //如果p是head
                 if (p == head) {
+                    //尝试获取共享锁.死循环获取
                     int r = tryAcquireShared(arg);
+                    //如果获取到了
                     if (r >= 0) {
                         setHeadAndPropagate(node, r);
                         p.next = null;
@@ -514,6 +523,9 @@ public class MyAbstractQueuedSynchronizer
                         return;
                     }
                 }
+                //响应中断.如果为true才走后面的方法.什么时候决定要park线程呢.
+                //如果前一个节点是signal
+                //什么时候节点会被设置成signal呢?
                 if (shouldParkAfterFailedAcquire(p, node) &&
                         parkAndCheckInterrupt()) {
                     throw new InterruptedException();
@@ -541,6 +553,7 @@ public class MyAbstractQueuedSynchronizer
             boolean interrupted = false;
             for (; ; ) {
                 final Node p = node.predecessor();
+                //一直等待当前的节点是头结点为止.
                 if (p == head) {
                     int r = tryAcquireShared(arg);
                     if (r >= 0) {
@@ -656,7 +669,9 @@ public class MyAbstractQueuedSynchronizer
     }
 
     private boolean parkAndCheckInterrupt() {
+        //park当前的线程
         LockSupport.park(this);
+        //线程被唤醒之后返回线程是否被打断过.
         //currentThread().isInterrupted(true);native方法
         return Thread.interrupted();
     }
@@ -679,7 +694,7 @@ public class MyAbstractQueuedSynchronizer
             } while (pred.waitStatus > 0);
             //连接
             pred.next = node;
-        } else {
+        } else {//如果ws<=0.如果前置节点的等待状态小于等于0
             //cas设置pred的等待状态.设置为signal.
             compareAndSetWaitStatus(pred, ws, Node.SIGNAL);
         }

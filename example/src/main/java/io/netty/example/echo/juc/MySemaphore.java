@@ -23,25 +23,57 @@ public class MySemaphore {
         sync = fair ? new FairSync(permits) : new NonFairSync(permits);
     }
 
+    //信号量:共享的获取
     public void acquire() throws InterruptedException {
         sync.acquireSharedInterruptibly(1);
     }
 
+    //获取允许,阻塞直到完成
     public void acquireUninterruptibly() {
         sync.acquireShared(1);
     }
 
+    //获取一定数量的许可
     public void acquire(int permits) throws InterruptedException {
         if (permits < 0) throw new IllegalArgumentException();
         sync.acquireSharedInterruptibly(permits);
     }
 
+    //不打断:直到等到有许可为止.
     public void acquireUninterruptibly(int permits) {
         if (permits < 0) throw new IllegalArgumentException();
         sync.acquireShared(permits);
     }
 
+    /**
+     * <p>
+     *     1.立马返回.
+     * </p>
+     * Acquires a permit from this semaphore, only if one is available at the
+     * time of invocation.
+     *
+     * <p>Acquires a permit, if one is available and returns immediately,
+     * with the value {@code true},
+     * reducing the number of available permits by one.
+     *
+     * <p>If no permit is available then this method will return
+     * immediately with the value {@code false}.
+     *
+     * <p>Even when this semaphore has been set to use a
+     * fair ordering policy, a call to {@code tryAcquire()} <em>will</em>
+     * immediately acquire a permit if one is available, whether or not
+     * other threads are currently waiting.
+     * This &quot;barging&quot; behavior can be useful in certain
+     * circumstances, even though it breaks fairness. If you want to honor
+     * the fairness setting, then use
+     * {@link #tryAcquire(long, TimeUnit) tryAcquire(0, TimeUnit.SECONDS) }
+     * which is almost equivalent (it also detects interruption).
+     *
+     * @return {@code true} if a permit was acquired and {@code false}
+     *         otherwise
+     */
     public boolean tryAcquire() {
+        //tryAcquire为什么要用非公平的实现
         return sync.nonfairTryAcquireShared(1) >= 0;
     }
 
@@ -110,9 +142,13 @@ public class MySemaphore {
         }
 
         final int nonfairTryAcquireShared(int acquires) {
+            //死循环获取
             for (; ; ) {
+                //获取可用数量
                 int available = getState();
+                //剩余的许可
                 int remaining = available - acquires;
+                //如果剩余的大于0就直接返回.如果小于0,则cas设置为true才返回.
                 if (remaining < 0 ||
                         compareAndSetState(available, remaining)) {
                     return remaining;
@@ -180,6 +216,7 @@ public class MySemaphore {
         }
     }
 
+    //不公平的
     static final class NonFairSync extends Sync {
 
         NonFairSync(int permits) {
@@ -187,6 +224,7 @@ public class MySemaphore {
         }
 
         protected int tryAcquireShared(int acquires) {
+            //不公平的获取.
             return nonfairTryAcquireShared(acquires);
         }
     }
