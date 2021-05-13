@@ -17,7 +17,7 @@ public class MyDelayQueueDemo {
     public static void main(String[] args) throws InterruptedException {
         MyDelayQueueDemo test = new MyDelayQueueDemo();
         //初始化线程池
-        MyBlockingQueue<Runnable> arrayBlockingQueue = new MyArrayBlockingQueue<>(10);
+        BlockingQueue<Runnable> arrayBlockingQueue = new ArrayBlockingQueue<>(10);
         MyThreadPoolExecutor threadPool = new MyThreadPoolExecutor
                 (5, 10, 10, TimeUnit.MILLISECONDS,
                         arrayBlockingQueue, Executors.defaultThreadFactory(),

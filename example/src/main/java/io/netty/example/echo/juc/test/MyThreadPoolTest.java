@@ -3,6 +3,7 @@ package io.netty.example.echo.juc.test;
 import io.netty.example.echo.juc.MyArrayBlockingQueue;
 import io.netty.example.echo.juc.MyThreadPoolExecutor;
 
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -21,7 +22,7 @@ public class MyThreadPoolTest {
     //run(), stop()
     public static void main(String[] args) {
         MyThreadPoolExecutor threadPoolExecutor = new MyThreadPoolExecutor(4, 8, 10,
-                TimeUnit.SECONDS, new MyArrayBlockingQueue<>(4));
+                TimeUnit.SECONDS, new ArrayBlockingQueue<>(4));
         for (int i = 0; i < 8; i++) {
             int finalI = i;
             //会开启四个核心线程

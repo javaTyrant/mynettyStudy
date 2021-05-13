@@ -43,7 +43,7 @@ public class MyThreadPoolExecutor extends AbstractExecutorService {
     private static final int TERMINATED = 3 << COUNT_BITS;
 
     //核心配置参数
-    private final MyBlockingQueue<Runnable> workQueue;
+    private final BlockingQueue<Runnable> workQueue;
     private final ReentrantLock mainLock = new ReentrantLock();
     private final HashSet<Worker> workers = new HashSet<>();
     //哪些操作会获取锁才能执行.
@@ -101,7 +101,7 @@ public class MyThreadPoolExecutor extends AbstractExecutorService {
                                 int maximumPoolSize,
                                 long keepAliveTime,
                                 TimeUnit unit,
-                                MyBlockingQueue<Runnable> workQueue) {
+                                BlockingQueue<Runnable> workQueue) {
         this(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue,
                 Executors.defaultThreadFactory(), defaultHandler);
     }
@@ -111,7 +111,7 @@ public class MyThreadPoolExecutor extends AbstractExecutorService {
                                 int maximumPoolSize,
                                 long keepAliveTime,
                                 TimeUnit unit,
-                                MyBlockingQueue<Runnable> workQueue,
+                                BlockingQueue<Runnable> workQueue,
                                 ThreadFactory threadFactory) {
         this(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue,
                 threadFactory, defaultHandler);
@@ -122,7 +122,7 @@ public class MyThreadPoolExecutor extends AbstractExecutorService {
                                 int maximumPoolSize,
                                 long keepAliveTime,
                                 TimeUnit unit,
-                                MyBlockingQueue<Runnable> workQueue,
+                                BlockingQueue<Runnable> workQueue,
                                 MyRejectedExecutionHandler handler) {
         this(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue,
                 Executors.defaultThreadFactory(), handler);
@@ -133,7 +133,7 @@ public class MyThreadPoolExecutor extends AbstractExecutorService {
                                 int maximumPoolSize,
                                 long keepAliveTime,
                                 TimeUnit unit,
-                                MyBlockingQueue<Runnable> workQueue,
+                                BlockingQueue<Runnable> workQueue,
                                 ThreadFactory threadFactory,
                                 MyRejectedExecutionHandler handler) {
         if (corePoolSize < 0 ||
@@ -183,15 +183,15 @@ public class MyThreadPoolExecutor extends AbstractExecutorService {
         }
     }
 
-    private void reject(Runnable task) {
+    public void reject(Runnable task) {
         handler.rejectedExecution(task, this);
     }
 
-    public MyBlockingQueue<Runnable> getQueue() {
+    public BlockingQueue<Runnable> getQueue() {
         return workQueue;
     }
 
-    private boolean remove(Runnable task) {
+    public boolean remove(Runnable task) {
         boolean removed = workQueue.remove(task);
         tryTerminate();
         return removed;
@@ -387,7 +387,7 @@ public class MyThreadPoolExecutor extends AbstractExecutorService {
         }
     }
 
-    private void tryTerminate() {
+    public void tryTerminate() {
         for (; ; ) {
             int c = ctl.get();
             if (isRunning(c) || runStateAtLeast(c, TIDYING) ||
@@ -595,7 +595,7 @@ public class MyThreadPoolExecutor extends AbstractExecutorService {
     }
 
     private List<Runnable> drainQueue() {
-        MyBlockingQueue<Runnable> q = workQueue;
+        BlockingQueue<Runnable> q = workQueue;
         ArrayList<Runnable> taskList = new ArrayList<>();
         //Removes all available elements from this queue and adds them to the given collection
         q.drainTo(taskList);
@@ -628,6 +628,14 @@ public class MyThreadPoolExecutor extends AbstractExecutorService {
     public boolean isTerminating() {
         int c = ctl.get();
         return !isRunning(c) && runStateLessThan(c, TERMINATED);
+    }
+
+    boolean isStopped() {
+        return runStateAtLeast(ctl.get(), STOP);
+    }
+    final boolean isRunningOrShutdown(boolean shutdownOK) {
+        int rs = runStateOf(ctl.get());
+        return rs == RUNNING || (rs == SHUTDOWN && shutdownOK);
     }
 
     @Override
@@ -784,7 +792,7 @@ public class MyThreadPoolExecutor extends AbstractExecutorService {
     }
 
     public void purge() {
-        final MyBlockingQueue<Runnable> q = workQueue;
+        final BlockingQueue<Runnable> q = workQueue;
         try {
             q.removeIf(r -> r instanceof Future<?> && ((Future<?>) r).isCancelled());
         } catch (ConcurrentModificationException fallThrough) {
