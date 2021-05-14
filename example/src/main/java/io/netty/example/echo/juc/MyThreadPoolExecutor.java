@@ -296,6 +296,7 @@ public class MyThreadPoolExecutor extends AbstractExecutorService {
         }
     }
 
+    //调用链
     final void runWorker(Worker w) {
         //获取当前线程
         Thread wt = Thread.currentThread();
@@ -530,11 +531,12 @@ public class MyThreadPoolExecutor extends AbstractExecutorService {
                 //这里是会把所有的空闲都打断的,那么如何保证核心线程不被打断呢?调用的地方肯定会判断.如果线程池关闭
                 //那么,肯定是都要打断的.
                 //如果能获取到锁就说明是空闲的线程,否则这个线程就被占用了.
-                if (!t.isInterrupted() && w.tryLock()) {
+                if (!t.isInterrupted() && w.tryLock()) {//为什么worker要实现aqs就一目了然了.
                     try {
                         t.interrupt();
                     } catch (SecurityException ignore) {
                     } finally {
+                        //worker解锁.
                         w.unlock();
                     }
                 }
@@ -717,7 +719,9 @@ public class MyThreadPoolExecutor extends AbstractExecutorService {
     }
 
     void ensurePrestart() {
+        //获取线程数量
         int wc = workerCountOf(ctl.get());
+        //如果小于核心线程或者没有线程,添加一个线程.
         if (wc < corePoolSize) {
             addWorker(null, true);
         } else if (wc == 0) {
@@ -899,17 +903,18 @@ public class MyThreadPoolExecutor extends AbstractExecutorService {
         }
     }
 
-    //worker的结构:
+    //worker的结构:Worker也是Aqs.
     private final class Worker extends AbstractQueuedSynchronizer implements Runnable {
         //
         private static final long serialVersionUID = 6138294804551838833L;
         //执行线程
         final Thread thread;
-        //第一个任务
+        //第一个任务:什么时候赋值的?
         Runnable firstTask;
         //完成的数量
         volatile long completedTasks;
 
+        //构造器赋值.addWorker的时候会加一个.
         Worker(Runnable firstTask) {
             setState(-1);
             this.firstTask = firstTask;
@@ -959,6 +964,10 @@ public class MyThreadPoolExecutor extends AbstractExecutorService {
             return tryAcquire(1);
         }
 
+        //解锁,release1.
+        //1.runWorker的时候要先解锁
+        //2.runWorker跑完一个任务要解锁
+        //3.打断空闲线程结束后要解锁.
         public void unlock() {
             release(1);
         }
