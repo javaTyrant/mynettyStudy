@@ -8,7 +8,6 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.*;
-import com.google.common.eventbus.Subscribe;
 import com.google.common.reflect.TypeToken;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -37,26 +36,33 @@ public class SubscriberRegistry {
     }
 
 
+    //注册:核心方法.把订阅者放入eventSubscribers.
     void register(Object listener) {
+        //找到对象所有被注解标记的方法.
         Multimap<Class<?>, Subscriber> listenerMethods = findAllSubscribers(listener);
-
+        //Class Subscriber映射.如何遍历Multimap.key,vaule
         for (Map.Entry<Class<?>, Collection<Subscriber>> entry : listenerMethods.asMap().entrySet()) {
             Class<?> eventType = entry.getKey();
+            //
             Collection<Subscriber> eventMethodsInListener = entry.getValue();
-
+            //从缓存取.是一个set.
             CopyOnWriteArraySet<Subscriber> eventSubscribers = subscribers.get(eventType);
-
+            //如果空
             if (eventSubscribers == null) {
+                //线程安全.因为subscribers是多线程使用的.
                 CopyOnWriteArraySet<Subscriber> newSet = new CopyOnWriteArraySet<>();
+                //返回不会空的那个.
                 eventSubscribers =
                         MoreObjects.firstNonNull(subscribers.putIfAbsent(eventType, newSet), newSet);
             }
-
+            //加入到缓存里.
             eventSubscribers.addAll(eventMethodsInListener);
         }
     }
 
+    //注销操作.
     void unregister(Object listener) {
+        //
         Multimap<Class<?>, Subscriber> listenerMethods = findAllSubscribers(listener);
 
         for (Map.Entry<Class<?>, Collection<Subscriber>> entry : listenerMethods.asMap().entrySet()) {
@@ -78,23 +84,33 @@ public class SubscriberRegistry {
         }
     }
 
+    //缓存:
     private static final LoadingCache<Class<?>, ImmutableList<Method>> subscriberMethodsCache =
+            //用了guava的cache
             CacheBuilder.newBuilder()
                     .weakKeys()
                     .build(
                             new CacheLoader<Class<?>, ImmutableList<Method>>() {
                                 @Override
                                 public ImmutableList<Method> load(Class<?> concreteClass) throws Exception {
+                                    //
                                     return getAnnotatedMethodsNotCached(concreteClass);
                                 }
                             });
 
+    //找到所有的注册者/
     private Multimap<Class<?>, Subscriber> findAllSubscribers(Object listener) {
+        //创建一个map,一个key可以对象多个value.
         Multimap<Class<?>, Subscriber> methodsInListener = HashMultimap.create();
+        //获取对象的类文件
         Class<?> clazz = listener.getClass();
+        //获取对象所有被标记的方法.
         for (Method method : getAnnotatedMethods(clazz)) {
+            //
             Class<?>[] parameterTypes = method.getParameterTypes();
+            //第一个参数就是类型.b
             Class<?> eventType = parameterTypes[0];
+            //create操作.bus listener method.
             methodsInListener.put(eventType, Subscriber.create(bus, listener, method));
         }
         return methodsInListener;
@@ -140,26 +156,36 @@ public class SubscriberRegistry {
         }
     }
 
+    //
     private static ImmutableList<Method> getAnnotatedMethods(Class<?> clazz) {
+        //先从缓存里获取.
         return subscriberMethodsCache.getUnchecked(clazz);
     }
 
+    //
     private static ImmutableList<Method> getAnnotatedMethodsNotCached(Class<?> clazz) {
+        //
         Set<? extends Class<?>> supertypes = TypeToken.of(clazz).getTypes().rawTypes();
+        //
         Map<SubscriberRegistry.MethodIdentifier, Method> identifiers = Maps.newHashMap();
+        //
         for (Class<?> supertype : supertypes) {
+            //
             for (Method method : supertype.getDeclaredMethods()) {
+                //
                 if (method.isAnnotationPresent(Subscribe.class) && !method.isSynthetic()) {
                     // TODO(cgdecker): Should check for a generic parameter type and error out
                     Class<?>[] parameterTypes = method.getParameterTypes();
+                    //
                     checkArgument(
                             parameterTypes.length == 1,
                             "Method %s has @Subscribe annotation but has %s parameters."
                                     + "Subscriber methods must have exactly 1 parameter.",
                             method,
                             parameterTypes.length);
-
+                    //封装一下
                     SubscriberRegistry.MethodIdentifier ident = new SubscriberRegistry.MethodIdentifier(method);
+                    //没有在添加进去.
                     if (!identifiers.containsKey(ident)) {
                         identifiers.put(ident, method);
                     }
@@ -174,11 +200,14 @@ public class SubscriberRegistry {
         return MoreObjects.firstNonNull(subscribers.get(eventType), ImmutableSet.<Subscriber>of());
     }
 
-
+    //
     private static final class MethodIdentifier {
+        //方法名
         private final String name;
+        //方法参数
         private final List<Class<?>> parameterTypes;
 
+        //name和参数
         MethodIdentifier(Method method) {
             this.name = method.getName();
             this.parameterTypes = Arrays.asList(method.getParameterTypes());

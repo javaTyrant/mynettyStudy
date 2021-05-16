@@ -10,19 +10,26 @@ import java.util.concurrent.Executor;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
+ * 订阅者
  * @author lufengxiang
  * @since 2021/5/14
  **/
 public class Subscriber {
+    //
     static Subscriber create(EventBus bus, Object listener, Method method) {
+        //判断是否线程安全.
         return isDeclaredThreadSafe(method)
                 ? new Subscriber(bus, listener, method)
                 : new Subscriber.SynchronizedSubscriber(bus, listener, method);
     }
 
+    //属于哪个evetnbus
     private EventBus bus;
+    //对象
     final Object target;
+    //方法
     private final Method method;
+    //执行器
     private final Executor executor;
 
     private Subscriber(EventBus bus, Object target, Method method) {
@@ -88,9 +95,11 @@ public class Subscriber {
      * com.google.common.eventbus.AllowConcurrentEvents} annotation.
      */
     private static boolean isDeclaredThreadSafe(Method method) {
+        //判断是否有AllowConcurrentEvents注解.
         return method.getAnnotation(AllowConcurrentEvents.class) != null;
     }
 
+    //加锁的
     static final class SynchronizedSubscriber extends Subscriber {
 
         private SynchronizedSubscriber(EventBus bus, Object target, Method method) {

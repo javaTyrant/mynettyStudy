@@ -30,8 +30,9 @@ public class EventBus {
 
     private final SubscriberExceptionHandler exceptionHandler;
 
+    //负责注册.
     private final SubscriberRegistry subscribers = new SubscriberRegistry(this);
-
+    //负责分发事件
     private final Dispatcher dispatcher;
 
     public EventBus() {
@@ -57,7 +58,16 @@ public class EventBus {
 
     }
 
+    final Executor executor() {
+        return executor;
+    }
+
+    public final String identifier() {
+        return identifier;
+    }
+
     public void register(Object object) {
+        //委托给:SubscriberRegistry
         subscribers.register(object);
     }
 
@@ -66,22 +76,18 @@ public class EventBus {
     }
 
     public void post(Object event) {
+        //迭代器模式.根据event获取订阅者.
         Iterator<Subscriber> eventSubscribers = subscribers.getSubscribers(event);
+        //如果还有下一个.
         if (eventSubscribers.hasNext()) {
             dispatcher.dispatch(event, eventSubscribers);
+            //什么情况走到这个分支呢?最后一个吗?判断是否是deadevent.
         } else if (!(event instanceof DeadEvent)) {
             // the event had no subscribers and was not itself a DeadEvent
             post(new DeadEvent(this, event));
         }
     }
 
-    final Executor executor() {
-        return executor;
-    }
-
-    public final String identifier() {
-        return identifier;
-    }
 
     void handleSubscriberException(Throwable e, SubscriberExceptionContext context) {
         checkNotNull(e);
