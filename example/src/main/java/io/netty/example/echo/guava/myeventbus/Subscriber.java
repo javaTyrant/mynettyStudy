@@ -1,7 +1,6 @@
 package io.netty.example.echo.guava.myeventbus;
 
 import com.google.common.eventbus.AllowConcurrentEvents;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -11,6 +10,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * 订阅者
+ *
  * @author lufengxiang
  * @since 2021/5/14
  **/
@@ -24,7 +24,7 @@ public class Subscriber {
     }
 
     //属于哪个evetnbus
-    private EventBus bus;
+    private final EventBus bus;
     //对象
     final Object target;
     //方法
@@ -49,13 +49,15 @@ public class Subscriber {
                     try {
                         invokeSubscriberMethod(event);
                     } catch (InvocationTargetException e) {
+                        //异常.
                         bus.handleSubscriberException(e.getCause(), context(event));
                     }
                 });
     }
-
+    //方法是属于注册者的,所以由注册者触发.OOP.
     void invokeSubscriberMethod(Object event) throws InvocationTargetException {
         try {
+            //方法:对象-参数.
             method.invoke(target, checkNotNull(event));
         } catch (IllegalArgumentException e) {
             throw new Error("Method rejected target/argument: " + event, e);
@@ -70,6 +72,7 @@ public class Subscriber {
     }
 
     private SubscriberExceptionContext context(Object event) {
+        //封装event.属于那个eventbus.
         return new SubscriberExceptionContext(bus, event, target, method);
     }
 
@@ -79,7 +82,7 @@ public class Subscriber {
     }
 
     @Override
-    public final boolean equals(@Nullable Object obj) {
+    public final boolean equals(Object obj) {
         if (obj instanceof Subscriber) {
             Subscriber that = (Subscriber) obj;
             // Use == so that different equal instances will still receive events.

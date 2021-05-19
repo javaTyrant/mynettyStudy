@@ -34,6 +34,7 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 
 /**
+ * 如何用netty实现一个简单的redis客户端?
  * Simple Redis client that demonstrates Redis commands against a Redis server.
  */
 public class RedisClient {
@@ -41,6 +42,7 @@ public class RedisClient {
     private static final int PORT = Integer.parseInt(System.getProperty("port", "6379"));
 
     public static void main(String[] args) throws Exception {
+        //只要一个EventLoopGroup
         EventLoopGroup group = new NioEventLoopGroup();
         try {
             Bootstrap b = new Bootstrap();
@@ -50,10 +52,15 @@ public class RedisClient {
                  @Override
                  protected void initChannel(SocketChannel ch) throws Exception {
                      ChannelPipeline p = ch.pipeline();
+                     //redis解码器
                      p.addLast(new RedisDecoder());
+                     //
                      p.addLast(new RedisBulkStringAggregator());
+                     //
                      p.addLast(new RedisArrayAggregator());
+                     //
                      p.addLast(new RedisEncoder());
+                     //
                      p.addLast(new RedisClientHandler());
                  }
              });

@@ -1,4 +1,4 @@
-package io.netty.example.echo.guava;
+package io.netty.example.echo.guava.stopwatch;
 
 /**
  * 可以自己实现

@@ -17,6 +17,7 @@ public abstract class Dispatcher {
         return new PerThreadQueuedDispatcher();
     }
 
+    //静态方法创建对象.
     static Dispatcher legacyAsync() {
         return new LegacyAsyncDispatcher();
     }
@@ -41,6 +42,7 @@ public abstract class Dispatcher {
         void dispatch(Object event, Iterator<Subscriber> subscribers) {
             checkNotNull(event);
             checkNotNull(subscribers);
+            //
             Queue<Event> queueForThread = queue.get();
             //
             queueForThread.offer(new Event(event, subscribers));

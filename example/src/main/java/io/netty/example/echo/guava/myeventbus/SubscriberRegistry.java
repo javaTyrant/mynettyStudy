@@ -10,7 +10,6 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.collect.*;
 import com.google.common.reflect.TypeToken;
 import com.google.common.util.concurrent.UncheckedExecutionException;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.lang.reflect.Method;
 import java.util.*;
@@ -219,7 +218,7 @@ public class SubscriberRegistry {
         }
 
         @Override
-        public boolean equals(@Nullable Object o) {
+        public boolean equals( Object o) {
             if (o instanceof SubscriberRegistry.MethodIdentifier) {
                 SubscriberRegistry.MethodIdentifier ident = (SubscriberRegistry.MethodIdentifier) o;
                 return name.equals(ident.name) && parameterTypes.equals(ident.parameterTypes);

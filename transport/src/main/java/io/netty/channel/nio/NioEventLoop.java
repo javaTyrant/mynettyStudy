@@ -430,7 +430,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
             logger.info("Migrated " + nChannels + " channel(s) to the new Selector.");
         }
     }
-
+    //run方法被哪调用的?doStartThread()
     @Override
     protected void run() {
         int selectCnt = 0;
@@ -453,7 +453,9 @@ public final class NioEventLoop extends SingleThreadEventLoop {
                         }
                         nextWakeupNanos.set(curDeadlineNanos);
                         try {
+                            //
                             if (!hasTasks()) {
+                                //最终会在这里等待连接.有连接之后,会接着下面的处理.
                                 strategy = select(curDeadlineNanos);
                             }
                         } finally {
@@ -805,6 +807,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
         return selector.selectNow();
     }
 
+    //调用jdk的select的方法.
     private int select(long deadlineNanos) throws IOException {
         if (deadlineNanos == NONE) {
             return selector.select();

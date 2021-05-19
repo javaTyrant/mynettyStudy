@@ -12,27 +12,26 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 @SuppressWarnings("unused")
 public class MyCyclicBarrier {
-    //作用是啥?
+    //
     private static class Generation {
-        Generation() {
-        }
-
         boolean broken;
     }
-
+    //可重入锁.
     private final ReentrantLock lock = new ReentrantLock();
-
+    //条件队列
     private final Condition trip = lock.newCondition();
-
+    //参与的线程数量
     private final int parties;
-
+    //由最后一个进入 barrier 的线程执行的操作
     private final Runnable barrierCommand;
-
+    //当前代
     private Generation generation = new Generation();
-
+    // 正在等待进入屏障的线程数量
     private int count;
 
+    //
     private void nextGeneration() {
+        //通知所有.
         trip.signalAll();
         count = parties;
         generation = new Generation();
@@ -41,16 +40,18 @@ public class MyCyclicBarrier {
     private void breakBarrier() {
         generation.broken = true;
         count = parties;
+        //通知所有.
         trip.signalAll();
     }
 
-    //核心方法
-    private int dowait(boolean timed, long nanos) throws BrokenBarrierException, InterruptedException, TimeoutException {
+    //核心方法:
+    private int doWait(boolean timed, long nanos)
+            throws BrokenBarrierException, InterruptedException, TimeoutException {
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
             final Generation g = generation;
-            if (generation.broken) {
+            if (g.broken) {
                 throw new BrokenBarrierException();
             }
             if (Thread.interrupted()) {
@@ -64,21 +65,24 @@ public class MyCyclicBarrier {
                     final Runnable command = barrierCommand;
                     if (command != null) {
                         command.run();
-                        ranAction = true;
-                        nextGeneration();
-                        return 0;
                     }
+                    ranAction = true;
+                    nextGeneration();
+                    return 0;
                 } finally {
                     if (!ranAction) {
+                        //
                         breakBarrier();
                     }
                 }
             }
+            //
             for (; ; ) {
                 try {
                     if (!timed) {
+                        //await的时候.await有哪些操作,要牢记.
                         trip.await();
-                    } else {
+                    } else if (nanos > 0L) {
                         nanos = trip.awaitNanos(nanos);
                     }
                 } catch (InterruptedException e) {
@@ -99,7 +103,6 @@ public class MyCyclicBarrier {
                     breakBarrier();
                     throw new TimeoutException();
                 }
-
             }
         } finally {
             lock.unlock();
@@ -107,6 +110,8 @@ public class MyCyclicBarrier {
     }
 
     public MyCyclicBarrier(int parties, Runnable barrierAction) {
+        //给parties赋值,然后也赋值给count,任务到了的时候修改count,nextgeneration的时候
+        //再把parties赋值给count.
         this.parties = parties;
         this.barrierCommand = barrierAction;
         this.count = parties;
@@ -123,14 +128,15 @@ public class MyCyclicBarrier {
     //公开.
     public int await() throws InterruptedException, BrokenBarrierException {
         try {
-            return dowait(false, 0L);
+            return doWait(false, 0L);
         } catch (TimeoutException toe) {
             throw new Error(toe);
         }
     }
 
-    public int await(long timeout, TimeUnit unit) throws BrokenBarrierException, InterruptedException, TimeoutException {
-        return dowait(true, unit.toNanos(timeout));
+    public int await(long timeout, TimeUnit unit)
+            throws BrokenBarrierException, InterruptedException, TimeoutException {
+        return doWait(true, unit.toNanos(timeout));
     }
 
     public boolean isBroken() {
@@ -155,10 +161,12 @@ public class MyCyclicBarrier {
         }
     }
 
+    //获取等待的线程数量
     public int getNumberWaiting() {
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
+            //简单.
             return parties - count;
         } finally {
             lock.unlock();

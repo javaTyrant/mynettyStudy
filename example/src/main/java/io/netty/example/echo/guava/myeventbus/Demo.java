@@ -34,12 +34,12 @@ public class Demo {
     static class WaitToDo {
         @Subscribe
         public void doSome(Event event) {
-            System.out.println(event.getName() + "say:hello");
+            System.out.println(event.getName() + "say:hello:" + Thread.currentThread().getName());
         }
 
         @Subscribe
         public void doSome2(Event event) {
-            System.out.println(event.getName() + "say:hello2");
+            System.out.println(event.getName() + "say:hello2:"+Thread.currentThread().getName());
         }
     }
 }

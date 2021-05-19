@@ -37,9 +37,20 @@ import java.util.concurrent.TimeUnit;
  * Echoes back any received data from a client.
  */
 public final class EchoServer {
-
+    /*
+        1.bind流程
+        ...省略了直观的调用过程.
+        1.1 AbstractChannelHandlerContext.bind
+        1.2 AbstractChannelHandlerContext.invokeBind
+        1.3
+        2.accept流程
+        2.1
+        2.2
+        2.3
+     */
     static final boolean SSL = System.getProperty("ssl") != null;
     static final int PORT = Integer.parseInt(System.getProperty("port", "8007"));
+
     //ChannelHandlerContext的构造在哪里?如果是我设计我会放到哪里呢.肯定是在pipeline里吧.
     public static void main(String[] args) throws Exception {
         // Configure SSL.

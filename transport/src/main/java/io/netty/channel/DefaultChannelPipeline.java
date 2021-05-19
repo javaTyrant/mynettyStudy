@@ -57,20 +57,27 @@ public class DefaultChannelPipeline implements ChannelPipeline {
                     return new WeakHashMap<Class<?>, String>();
                 }
             };
-
+    //netty用了AtomicReferenceFieldUpdater.那么是不是应该仔细的了解下呢?
     private static final AtomicReferenceFieldUpdater<DefaultChannelPipeline, MessageSizeEstimator.Handle> ESTIMATOR =
             AtomicReferenceFieldUpdater.newUpdater(
                     DefaultChannelPipeline.class, MessageSizeEstimator.Handle.class, "estimatorHandle");
+    //
     final AbstractChannelHandlerContext head;
+    //
     final AbstractChannelHandlerContext tail;
-
+    //
     private final Channel channel;
+    //
     private final ChannelFuture succeededFuture;
+    //
     private final VoidChannelPromise voidPromise;
+    //
     private final boolean touch = ResourceLeakDetector.isEnabled();
-
+    //
     private Map<EventExecutorGroup, EventExecutor> childExecutors;
+    //
     private volatile MessageSizeEstimator.Handle estimatorHandle;
+    //
     private boolean firstRegistration = true;
 
     /**

@@ -1007,6 +1007,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
         return false;
     }
 
+    //
     private void doStartThread() {
         assert thread == null;
         //

@@ -42,7 +42,8 @@ public class EventBus {
     public EventBus(String identifier) {
         this(identifier,
                 DirectExecutor.INSTANCE,
-                Dispatcher.perThreadDispatchQueue(),
+                Dispatcher.legacyAsync(),//不保证顺序.
+                //Dispatcher.perThreadDispatchQueue(),//保证顺序.
                 LoggingHandler.INSTANCE);
     }
 

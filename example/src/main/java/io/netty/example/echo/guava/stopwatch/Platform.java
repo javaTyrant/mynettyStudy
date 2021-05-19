@@ -1,4 +1,4 @@
-package io.netty.example.echo.guava;
+package io.netty.example.echo.guava.stopwatch;
 
 import java.util.Locale;
 

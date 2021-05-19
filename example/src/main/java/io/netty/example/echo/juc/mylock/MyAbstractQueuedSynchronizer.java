@@ -254,10 +254,10 @@ public class MyAbstractQueuedSynchronizer
             if (Thread.interrupted()) {
                 throw new InterruptedException();
             }
-            //加入等待队列
+            //1.加入等待队列.
             Node node = addConditionWaiter();
             System.out.println("node" + node);
-            //释放锁:返回修改后的state值.
+            //2.释放锁:返回修改后的state值.
             int savedState = fullyRelease(node);
             int interruptMode = 0;
             //
