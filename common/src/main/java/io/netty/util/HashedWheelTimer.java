@@ -114,13 +114,13 @@ public class HashedWheelTimer implements Timer {
     private final long tickDuration;
     //内部数据结构
     private final HashedWheelBucket[] wheel;
-    //
+    //看下怎么使用位运算的.
     private final int mask;
     //
     private final CountDownLatch startTimeInitialized = new CountDownLatch(1);
-    //
+    //超时队列.注意!!!!newMpscQueue.
     private final Queue<HashedWheelTimeout> timeouts = PlatformDependent.newMpscQueue();
-    //
+    //已经被取消的队列
     private final Queue<HashedWheelTimeout> cancelledTimeouts = PlatformDependent.newMpscQueue();
     //
     private final AtomicLong pendingTimeouts = new AtomicLong(0);
@@ -418,29 +418,33 @@ public class HashedWheelTimer implements Timer {
 
     @Override
     public Timeout newTimeout(TimerTask task, long delay, TimeUnit unit) {
+        //
         ObjectUtil.checkNotNull(task, "task");
         ObjectUtil.checkNotNull(unit, "unit");
-
+        //pendingTimeouts累加
         long pendingTimeoutsCount = pendingTimeouts.incrementAndGet();
-
+        //如果大于最大值
         if (maxPendingTimeouts > 0 && pendingTimeoutsCount > maxPendingTimeouts) {
             pendingTimeouts.decrementAndGet();
             throw new RejectedExecutionException("Number of pending timeouts ("
                     + pendingTimeoutsCount + ") is greater than or equal to maximum allowed pending "
                     + "timeouts (" + maxPendingTimeouts + ")");
         }
-
+        //开始
         start();
 
         // Add the timeout to the timeout queue which will be processed on the next tick.
         // During processing all the queued HashedWheelTimeouts will be added to the correct HashedWheelBucket.
+        //获取deadline.
         long deadline = System.nanoTime() + unit.toNanos(delay) - startTime;
 
         // Guard against overflow.
         if (delay > 0 && deadline < 0) {
             deadline = Long.MAX_VALUE;
         }
+        //deadline传入timeout里
         HashedWheelTimeout timeout = new HashedWheelTimeout(this, task, deadline);
+        //timeouts添加
         timeouts.add(timeout);
         return timeout;
     }
