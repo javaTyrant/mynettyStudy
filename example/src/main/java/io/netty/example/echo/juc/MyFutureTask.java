@@ -15,14 +15,16 @@ import java.util.concurrent.locks.LockSupport;
  **/
 @SuppressWarnings("unused")
 public class MyFutureTask<V> implements RunnableFuture<V> {
+    //任务的状态
     private volatile int state;
+    //状态枚举值
     private static final int NEW = 0;
     private static final int COMPLETING = 1;
     private static final int NORMAL = 2;
     private static final int EXCEPTIONAL = 3;
     private static final int CANCELLED = 4;
     private static final int INTERRUPTING = 1;
-
+    //cas
     private static final sun.misc.Unsafe UNSAFE;
     private static final long stateOffset;
     private static final long runnerOffset;
@@ -43,8 +45,9 @@ public class MyFutureTask<V> implements RunnableFuture<V> {
         }
     }
 
+    //
     private Callable<V> callable;
-
+    //输出结果
     private Object outcome;
 
     //干活者
@@ -212,7 +215,9 @@ public class MyFutureTask<V> implements RunnableFuture<V> {
 
     @Override
     public V get() throws InterruptedException, ExecutionException {
+        //获取state
         int s = state;
+        //如果没有完成
         if (s <= COMPLETING) {
             //等待完成
             s = awaitDone(false, 0L);
@@ -272,23 +277,24 @@ public class MyFutureTask<V> implements RunnableFuture<V> {
                 //成功返回state
                 return s;
             } else if (s == COMPLETING) {
-                //完成中
+                //完成中:A hint to the scheduler that the current thread is willing to yield its current use of a processor.
                 Thread.yield();
-            } else if (q == null) {
+            } else if (q == null) {//初始化等待节点
                 //构造一个新节点
                 q = new WaitNode();
-            } else if (!queued) {
+            } else if (!queued) {//没有入队列
                 //waiters入队列:cas入队列.cas需要的对象.类对象,偏移量.比较q的地址.
                 queued = UNSAFE.compareAndSwapObject(this, waitersOffset, q.next = waiters, q);
-            } else if (timed) {
+            } else if (timed) {//是否超时控制
                 //减去消耗的时间
                 nanos = deadline - System.nanoTime();
-                //已经完成了
+                //已经超时了
                 if (nanos <= 0L) {
+                    //移除等待节点
                     removeWaiter(q);
                     return state;
                 }
-                //parkNanos.
+                //parkNanos.暂停线程.
                 LockSupport.parkNanos(this, nanos);
             }
         }

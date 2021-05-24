@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.AbstractQueuedSynchronizer;
 import java.util.concurrent.locks.LockSupport;
 
 import static io.netty.example.echo.juc.UnsafeUtil.createUnsafe;
@@ -494,6 +493,7 @@ public class MyAbstractQueuedSynchronizer
 
     //响应中断的获取.
     public final void acquireSharedInterruptibly(int arg) throws InterruptedException {
+        //比上面多了这个逻辑
         if (Thread.interrupted()) {
             throw new InterruptedException();
         }

@@ -40,7 +40,6 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * {@link Bootstrap} sub-class which allows easy bootstrap of {@link ServerChannel}
- *
  */
 public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerChannel> {
 
@@ -51,10 +50,13 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
     private final Map<ChannelOption<?>, Object> childOptions = new LinkedHashMap<ChannelOption<?>, Object>();
     private final Map<AttributeKey<?>, Object> childAttrs = new ConcurrentHashMap<AttributeKey<?>, Object>();
     private final ServerBootstrapConfig config = new ServerBootstrapConfig(this);
+    //worker线程.
     private volatile EventLoopGroup childGroup;
+    //
     private volatile ChannelHandler childHandler;
 
-    public ServerBootstrap() { }
+    public ServerBootstrap() {
+    }
 
     private ServerBootstrap(ServerBootstrap bootstrap) {
         super(bootstrap);
@@ -147,7 +149,7 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
                 if (handler != null) {
                     pipeline.addLast(handler);
                 }
-
+                //r任务.
                 ch.eventLoop().execute(new Runnable() {
                     @Override
                     public void run() {
@@ -172,12 +174,18 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
         return this;
     }
 
+    //ServerBootstrapAcceptor是用来处理当BossGroup(EventLoopGroup)里面有新的客户端连接产生时候
+    //将新连接(NioSocketChannel)交给WorkerGroup(EventLoopGroup)
     private static class ServerBootstrapAcceptor extends ChannelInboundHandlerAdapter {
-
+        //
         private final EventLoopGroup childGroup;
+        //
         private final ChannelHandler childHandler;
+        //
         private final Entry<ChannelOption<?>, Object>[] childOptions;
+        //
         private final Entry<AttributeKey<?>, Object>[] childAttrs;
+        //
         private final Runnable enableAutoReadTask;
 
         ServerBootstrapAcceptor(
@@ -201,17 +209,22 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
             };
         }
 
+        //msg的数据流.
         @Override
         @SuppressWarnings("unchecked")
         public void channelRead(ChannelHandlerContext ctx, Object msg) {
+            //
             final Channel child = (Channel) msg;
-
+            //
             child.pipeline().addLast(childHandler);
-
+            //
             setChannelOptions(child, childOptions, logger);
+            //
             setAttributes(child, childAttrs);
 
             try {
+                //childGroup的数据流:父类的childGroup传入,完美闭环.
+                //channel注册到childGroup
                 childGroup.register(child).addListener(new ChannelFutureListener() {
                     @Override
                     public void operationComplete(ChannelFuture future) throws Exception {

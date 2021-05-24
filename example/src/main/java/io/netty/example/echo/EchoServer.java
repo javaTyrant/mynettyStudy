@@ -50,7 +50,9 @@ public final class EchoServer {
      */
     static final boolean SSL = System.getProperty("ssl") != null;
     static final int PORT = Integer.parseInt(System.getProperty("port", "8007"));
-
+    //boss线程的启动:
+    //worker线程的启动:
+    //boss如何把工作转移到worker的呢?boss accept
     //ChannelHandlerContext的构造在哪里?如果是我设计我会放到哪里呢.肯定是在pipeline里吧.
     public static void main(String[] args) throws Exception {
         // Configure SSL.
@@ -62,7 +64,8 @@ public final class EchoServer {
             sslCtx = null;
         }
 
-        // Configure the server.
+        // Configure the server.MultithreadEventExecutorGroup里分配线程.
+        // children[i] = newChild(executor, args);
         EventLoopGroup bossGroup = new NioEventLoopGroup(1);
         EventLoopGroup workerGroup = new NioEventLoopGroup();
         final EchoServerHandler serverHandler = new EchoServerHandler();

@@ -16,11 +16,13 @@
 package io.netty.util.concurrent;
 
 import java.util.Arrays;
-
+//包装GenericFutureListener
 final class DefaultFutureListeners {
-
+    //数组
     private GenericFutureListener<? extends Future<?>>[] listeners;
+    //size
     private int size;
+    //
     private int progressiveSize; // the number of progressive listeners
 
     @SuppressWarnings("unchecked")

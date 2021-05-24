@@ -33,6 +33,7 @@ import static io.netty.util.internal.ObjectUtil.checkNotNull;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
+    //logger
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(DefaultPromise.class);
     private static final InternalLogger rejectedExecutionLogger =
             InternalLoggerFactory.getInstance(DefaultPromise.class.getName() + ".rejectedExecution");
@@ -463,7 +464,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
         return executor;
     }
 
-    //死锁检测的逻辑?why?e.inEventLoop()表示当前线程和executor的执行线程是同一个，
+    // 死锁检测的逻辑?why?e.inEventLoop()表示当前线程和executor的执行线程是同一个，
     // 即该线程上的一个任务等待该线程上的其他任务唤醒自己。
     // 我们知道线程的执行是线性，即前面的代码执行完毕才能执行后面的代码，因此这里产生了一个死锁。
     protected void checkDeadLock() {
@@ -589,7 +590,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
     @SuppressWarnings({"unchecked", "rawtypes"})
     private static void notifyListener0(Future future, GenericFutureListener l) {
         try {
-            //执行
+            //执行.
             l.operationComplete(future);
         } catch (Throwable t) {
             if (logger.isWarnEnabled()) {
@@ -598,15 +599,18 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
         }
     }
 
+    //添加监听者
     private void addListener0(GenericFutureListener<? extends Future<? super V>> listener) {
         //如果为空
         if (listeners == null) {
             //
             listeners = listener;
+            //数组还是单个
         } else if (listeners instanceof DefaultFutureListeners) {
-            //
+            //数组加
             ((DefaultFutureListeners) listeners).add(listener);
         } else {
+            //非数组.
             listeners = new DefaultFutureListeners((GenericFutureListener<?>) listeners, listener);
         }
     }

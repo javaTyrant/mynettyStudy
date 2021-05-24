@@ -28,7 +28,8 @@ public final class ThreadExecutorMap {
 
     private static final FastThreadLocal<EventExecutor> mappings = new FastThreadLocal<EventExecutor>();
 
-    private ThreadExecutorMap() { }
+    private ThreadExecutorMap() {
+    }
 
     /**
      * Returns the current {@link EventExecutor} that uses the {@link Thread}, or {@code null} if none / unknown.
@@ -54,6 +55,7 @@ public final class ThreadExecutorMap {
         return new Executor() {
             @Override
             public void execute(final Runnable command) {
+                //会调用threadFactory.newThread(command).start();
                 executor.execute(apply(command, eventExecutor));
             }
         };

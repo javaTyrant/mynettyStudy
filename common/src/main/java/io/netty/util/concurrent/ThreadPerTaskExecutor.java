@@ -29,6 +29,7 @@ public final class ThreadPerTaskExecutor implements Executor {
         this.threadFactory = ObjectUtil.checkNotNull(threadFactory, "threadFactory");
     }
 
+    //入参是一个runnable
     @Override
     public void execute(Runnable command) {
         //new thread就完事了.线程是保存在newChild里的,所以不会无限new

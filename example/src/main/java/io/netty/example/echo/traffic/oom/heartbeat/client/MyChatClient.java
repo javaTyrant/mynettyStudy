@@ -16,7 +16,7 @@ import java.util.concurrent.Executors;
 public class MyChatClient {
 
     private ExecutorService executor;
-//    private Future result;
+    //    private Future result;
     private static BufferedReader bufferedReader;
     private PrintTask printTask;
 
@@ -34,7 +34,7 @@ public class MyChatClient {
     }
 
     public void connect(EventLoopGroup group) {
-        try{
+        try {
             if (null == executor) {
                 executor = Executors.newSingleThreadExecutor();
 
@@ -54,7 +54,7 @@ public class MyChatClient {
             //192.168.1.102
             client.remoteAddress(new InetSocketAddress("127.0.0.1", 5566));
             client.connect().addListener((ChannelFuture future) -> {
-                if(future.isSuccess()) {
+                if (future.isSuccess()) {
 
                     // ======= 说明 ========
                     // 这个 死循环 导致了走到了channelRegistered， 后面的channelActive流程就被它堵塞了，以至于没往下走。。。
@@ -64,27 +64,23 @@ public class MyChatClient {
                     }*/
                     // ======= 说明 ========
 
-                    if(printTask == null) {
+                    if (printTask == null) {
                         printTask = new PrintTask(future.channel(), bufferedReader);
                         executor.submit(printTask);
                     } else {
                         printTask.setFuture(future.channel());
                     }
-
-
-
                 }
             });
         } catch (Exception e) {
             e.printStackTrace();
         }
-
         System.out.println("==============");
     }
 
     class PrintTask implements Runnable {
 
-//        private volatile ChannelFuture future;
+        //        private volatile ChannelFuture future;
         private volatile Channel channel;
         private final BufferedReader bufferedReader;
 
@@ -96,7 +92,7 @@ public class MyChatClient {
         @Override
         public void run() {
             while (true) {
-                try{
+                try {
                     String line = bufferedReader.readLine();
                     channel.writeAndFlush(line);
                 } catch (Exception e) {
