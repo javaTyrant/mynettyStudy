@@ -505,6 +505,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
                         ranTasks = runAllTasks(ioTime * (100 - ioRatio) / ioRatio);
                     }
                 } else {
+                    //第一次:strategy = 0.
                     ranTasks = runAllTasks(0); // This will run the minimum number of tasks
                 }
 

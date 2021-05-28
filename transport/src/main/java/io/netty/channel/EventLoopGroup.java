@@ -25,6 +25,7 @@ import io.netty.util.concurrent.EventExecutorGroup;
 public interface EventLoopGroup extends EventExecutorGroup {
     /**
      * Return the next {@link EventLoop} to use
+     * 获取下一个EventLoop来使用.
      */
     @Override
     EventLoop next();

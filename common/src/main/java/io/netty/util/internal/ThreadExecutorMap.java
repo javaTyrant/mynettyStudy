@@ -52,6 +52,7 @@ public final class ThreadExecutorMap {
     public static Executor apply(final Executor executor, final EventExecutor eventExecutor) {
         ObjectUtil.checkNotNull(executor, "executor");
         ObjectUtil.checkNotNull(eventExecutor, "eventExecutor");
+        //返回一个内部类.
         return new Executor() {
             @Override
             public void execute(final Runnable command) {
@@ -66,6 +67,7 @@ public final class ThreadExecutorMap {
      * when called from within the {@link Runnable} during execution.
      */
     public static Runnable apply(final Runnable command, final EventExecutor eventExecutor) {
+        //check
         ObjectUtil.checkNotNull(command, "command");
         ObjectUtil.checkNotNull(eventExecutor, "eventExecutor");
         return new Runnable() {
@@ -73,6 +75,7 @@ public final class ThreadExecutorMap {
             public void run() {
                 setCurrentEventExecutor(eventExecutor);
                 try {
+                    //threadFactory.newThread(command).start();
                     command.run();
                 } finally {
                     setCurrentEventExecutor(null);
