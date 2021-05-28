@@ -387,7 +387,7 @@
         <tcnative.artifactId>netty-tcnative</tcnative.artifactId>
         <tcnative.version>2.0.36.Final</tcnative.version>
         <!--    <tcnative.classifier>windows-x86_64</tcnative.classifier>-->
-        <tcnative.classifier>linux-x86_64</tcnative.classifier>
+        <tcnative.classifier>windows-x86_64</tcnative.classifier>
         <conscrypt.groupId>org.conscrypt</conscrypt.groupId>
         <conscrypt.artifactId>conscrypt-openjdk-uber</conscrypt.artifactId>
         <conscrypt.version>2.5.1</conscrypt.version>

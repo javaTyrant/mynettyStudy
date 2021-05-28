@@ -23,27 +23,38 @@ public interface ChannelInboundHandler extends ChannelHandler {
 
     /**
      * The {@link Channel} of the {@link ChannelHandlerContext} was registered with its {@link EventLoop}
+     * <p/>
+     * 当Channel 已经注册到它的EventLoop 并且能够处理I/O 时被调用.
      */
     void channelRegistered(ChannelHandlerContext ctx) throws Exception;
 
     /**
      * The {@link Channel} of the {@link ChannelHandlerContext} was unregistered from its {@link EventLoop}
+     * <p/>
+     * 当Channel 从它的EventLoop 注销并且无法处理任何I/O 时被调用
+     * channelActive
      */
     void channelUnregistered(ChannelHandlerContext ctx) throws Exception;
 
     /**
      * The {@link Channel} of the {@link ChannelHandlerContext} is now active
+     * <p/>
+     * 当Channel 处于活动状态时被调用；Channel 已经连接/绑定并且已经就绪
      */
     void channelActive(ChannelHandlerContext ctx) throws Exception;
 
     /**
      * The {@link Channel} of the {@link ChannelHandlerContext} was registered is now inactive and reached its
      * end of lifetime.
+     * <p/>
+     * 当Channel 离开活动状态并且不再连接它的远程节点时被调用
      */
     void channelInactive(ChannelHandlerContext ctx) throws Exception;
 
     /**
      * Invoked when the current {@link Channel} has read a message from the peer.
+     * </p>
+     * 当Channel上的一个读操作完成时被调用
      */
     void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception;
 
@@ -52,22 +63,36 @@ public interface ChannelInboundHandler extends ChannelHandler {
      * {@link #channelRead(ChannelHandlerContext, Object)}.  If {@link ChannelOption#AUTO_READ} is off, no further
      * attempt to read an inbound data from the current {@link Channel} will be made until
      * {@link ChannelHandlerContext#read()} is called.
+     * <p/>
+     * 当从Channel 读取数据时被调用
      */
     void channelReadComplete(ChannelHandlerContext ctx) throws Exception;
 
     /**
      * Gets called if an user event was triggered.
+     * <p/>
+     * 当ChannelnboundHandler.fireUserEventTriggered()方法被调
+     * 用时被调用，因为一个POJO 被传经了ChannelPipeline
      */
     void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception;
 
     /**
      * Gets called once the writable state of a {@link Channel} changed. You can check the state with
      * {@link Channel#isWritable()}.
+     * <p/>
+     * 当Channel 的可写状态发生改变时被调用。用户可以确保写操作不会完成
+     * 得太快（以避免发生OutOfMemoryError）或者可以在Channel 变为再
+     * 次可写时恢复写入。可以通过调用Channel 的isWritable()方法来检测
+     * Channel 的可写性。与可写性相关的阈值可以通过Channel.config().
+     * setWriteHighWaterMark()和Channel.config().setWriteLowWater-
+     * Mark()方法来设置
      */
     void channelWritabilityChanged(ChannelHandlerContext ctx) throws Exception;
 
     /**
      * Gets called if a {@link Throwable} was thrown.
+     * <p/>
+     *
      */
     @Override
     @SuppressWarnings("deprecation")

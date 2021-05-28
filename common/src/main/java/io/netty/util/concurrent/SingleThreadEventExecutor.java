@@ -77,7 +77,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
             AtomicReferenceFieldUpdater.newUpdater(
                     SingleThreadEventExecutor.class, ThreadProperties.class, "threadProperties");
 
-    //任务队列
+    //任务队列:注意看看这个队列保存了哪些任务.
     private final Queue<Runnable> taskQueue;
     //真正工作的线程
     private volatile Thread thread;

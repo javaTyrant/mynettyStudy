@@ -88,11 +88,13 @@ public interface ChannelHandlerContext extends AttributeMap, ChannelInboundInvok
 
     /**
      * Return the {@link Channel} which is bound to the {@link ChannelHandlerContext}.
+     * 获取channel.
      */
     Channel channel();
 
     /**
      * Returns the {@link EventExecutor} which is used to execute an arbitrary task.
+     * 获取执行器.
      */
     EventExecutor executor();
 
@@ -105,6 +107,7 @@ public interface ChannelHandlerContext extends AttributeMap, ChannelInboundInvok
 
     /**
      * The {@link ChannelHandler} that is bound this {@link ChannelHandlerContext}.
+     * 获取绑定的channelHandler.
      */
     ChannelHandler handler();
 

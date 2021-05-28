@@ -60,13 +60,13 @@ import static io.netty.channel.ChannelHandlerMask.mask;
 
 //
 abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, ResourceLeakHint {
-
+    //日志打印
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(AbstractChannelHandlerContext.class);
-    //
+    //下一个
     volatile AbstractChannelHandlerContext next;
-    //
+    //前一个
     volatile AbstractChannelHandlerContext prev;
-
+    //原子更新
     private static final AtomicIntegerFieldUpdater<AbstractChannelHandlerContext> HANDLER_STATE_UPDATER =
             AtomicIntegerFieldUpdater.newUpdater(AbstractChannelHandlerContext.class, "handlerState");
 
@@ -87,7 +87,7 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
      * nor {@link ChannelHandler#handlerRemoved(ChannelHandlerContext)} was called.
      */
     private static final int INIT = 0;
-
+    //
     private final DefaultChannelPipeline pipeline;
     //
     private final String name;
@@ -370,6 +370,7 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
         final Object m = next.pipeline.touch(ObjectUtil.checkNotNull(msg, "msg"), next);
         EventExecutor executor = next.executor();
         if (executor.inEventLoop()) {
+            //下一个.
             next.invokeChannelRead(m);
         } else {
             executor.execute(new Runnable() {

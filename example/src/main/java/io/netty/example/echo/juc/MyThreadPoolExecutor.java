@@ -165,7 +165,9 @@ public class MyThreadPoolExecutor extends AbstractExecutorService {
             throw new NullPointerException();
         }
         int c = ctl.get();
+        //线程数量小于核心线程数量
         if (workerCountOf(c) < corePoolSize) {
+            //添加worker
             if (addWorker(command, true)) {
                 return;
             }
@@ -635,6 +637,7 @@ public class MyThreadPoolExecutor extends AbstractExecutorService {
     boolean isStopped() {
         return runStateAtLeast(ctl.get(), STOP);
     }
+
     final boolean isRunningOrShutdown(boolean shutdownOK) {
         int rs = runStateOf(ctl.get());
         return rs == RUNNING || (rs == SHUTDOWN && shutdownOK);
@@ -918,7 +921,7 @@ public class MyThreadPoolExecutor extends AbstractExecutorService {
         Worker(Runnable firstTask) {
             setState(-1);
             this.firstTask = firstTask;
-            //new 线程.可以自定义线程工厂
+            //new 线程.可以自定义线程工厂.
             this.thread = getThreadFactory().newThread(this);
             System.out.println(this.thread.getName());
         }
