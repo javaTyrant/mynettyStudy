@@ -152,7 +152,7 @@ public class NioServerSocketChannel extends AbstractNioMessageChannel
 
         try {
             if (ch != null) {
-                //创建客户端流.
+                //创建客户端流.传一个parent.
                 buf.add(new NioSocketChannel(this, ch));
                 return 1;
             }

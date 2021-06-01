@@ -151,7 +151,7 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
                 if (handler != null) {
                     pipeline.addLast(handler);
                 }
-                //r任务.
+                //r任务.ch是什么?
                 ch.eventLoop().execute(new Runnable() {
                     @Override
                     public void run() {

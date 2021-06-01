@@ -70,6 +70,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
      * @param parent the parent of this channel. {@code null} if there's no parent.
      */
     protected AbstractChannel(Channel parent) {
+        //
         this.parent = parent;
         id = newId();
         //构造unsafe.
@@ -259,11 +260,13 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
 
     @Override
     public ChannelFuture bind(SocketAddress localAddress, ChannelPromise promise) {
+        //转交给pipeline.bind
         return pipeline.bind(localAddress, promise);
     }
 
     @Override
     public ChannelFuture connect(SocketAddress remoteAddress, ChannelPromise promise) {
+        //转交给pipeline.connect
         return pipeline.connect(remoteAddress, promise);
     }
 
@@ -345,6 +348,8 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
 
     /**
      * Create a new {@link AbstractUnsafe} instance which will be used for the life-time of the {@link Channel}
+     * <p/>
+     * 
      */
     protected abstract AbstractUnsafe newUnsafe();
 
@@ -429,9 +434,11 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
      * {@link Unsafe} implementation which sub-classes must extend and use.
      */
     protected abstract class AbstractUnsafe implements Unsafe {
-
+        //
         private volatile ChannelOutboundBuffer outboundBuffer = new ChannelOutboundBuffer(AbstractChannel.this);
+        //
         private RecvByteBufAllocator.Handle recvHandle;
+        //
         private boolean inFlush0;
         /**
          * true if the channel has never been registered, false otherwise

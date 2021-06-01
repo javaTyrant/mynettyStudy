@@ -55,7 +55,7 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
     private static final Map.Entry<ChannelOption<?>, Object>[] EMPTY_OPTION_ARRAY = new Map.Entry[0];
     @SuppressWarnings("unchecked")
     private static final Map.Entry<AttributeKey<?>, Object>[] EMPTY_ATTRIBUTE_ARRAY = new Map.Entry[0];
-    //
+    //boss
     volatile EventLoopGroup group;
     @SuppressWarnings("deprecation")
     private volatile ChannelFactory<? extends C> channelFactory;
@@ -320,7 +320,8 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
             // as the Channel is not registered yet we need to force the usage of the GlobalEventExecutor
             return new DefaultChannelPromise(new FailedChannel(), GlobalEventExecutor.INSTANCE).setFailure(t);
         }
-        //boss注册channel.先调用eventloop的register.
+        //boss注册channel.先调用eventloop的register.NioEventLoopGroup.
+        //开启boss。注册。
         ChannelFuture regFuture = config().group().register(channel);
         if (regFuture.cause() != null) {
             if (channel.isRegistered()) {

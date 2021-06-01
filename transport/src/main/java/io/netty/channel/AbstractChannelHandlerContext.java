@@ -87,7 +87,7 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
      * nor {@link ChannelHandler#handlerRemoved(ChannelHandlerContext)} was called.
      */
     private static final int INIT = 0;
-    //
+    //默认的channelPipeline.
     private final DefaultChannelPipeline pipeline;
     //
     private final String name;
@@ -369,6 +369,7 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
         //看看touch方法
         final Object m = next.pipeline.touch(ObjectUtil.checkNotNull(msg, "msg"), next);
         EventExecutor executor = next.executor();
+        //
         if (executor.inEventLoop()) {
             //下一个.
             next.invokeChannelRead(m);
@@ -794,6 +795,7 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
                 (MASK_WRITE | MASK_FLUSH) : MASK_WRITE);
         final Object m = pipeline.touch(msg, next);
         EventExecutor executor = next.executor();
+        //如果是io线程.豁然开朗,为什么要有这个模板写法了.
         if (executor.inEventLoop()) {
             if (flush) {
                 next.invokeWriteAndFlush(m, promise);
@@ -801,6 +803,7 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
                 next.invokeWrite(m, promise);
             }
         } else {
+            //如果是非io线程.
             final WriteTask task = WriteTask.newInstance(next, m, promise, flush);
             if (!safeExecute(executor, task, promise, m, !flush)) {
                 // We failed to submit the WriteTask. We need to cancel it so we decrement the pending bytes
@@ -939,7 +942,7 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
         boolean updated = HANDLER_STATE_UPDATER.compareAndSet(this, INIT, ADD_PENDING);
         assert updated; // This should always be true as it MUST be called before setAddComplete() or setRemoved().
     }
-
+    //
     final void callHandlerAdded() throws Exception {
         // We must call setAddComplete before calling handlerAdded. Otherwise if the handlerAdded method generates
         // any pipeline events ctx.handler() will miss them because the state will not allow it.

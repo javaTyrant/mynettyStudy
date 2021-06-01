@@ -85,9 +85,11 @@ public final class EchoServer {
                                 p.addLast(sslCtx.newHandler(ch.alloc()));
                             }
                             //p.addLast(new LoggingHandler(LogLevel.INFO));
+                            //如何触发的?callHandlerAdded->
                             p.addLast(new IdleStateHandler(30, 0, 0, TimeUnit.SECONDS));
                             p.addLast(serverHandler);
                             p.addLast(new HeartBeatServerHandler());
+                            //p.addLast()
                         }
                     });
 

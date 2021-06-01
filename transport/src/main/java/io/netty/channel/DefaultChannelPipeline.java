@@ -45,14 +45,14 @@ import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
  * by a {@link Channel} implementation when the {@link Channel} is created.
  */
 public class DefaultChannelPipeline implements ChannelPipeline {
-
+    //logger
     static final InternalLogger logger = InternalLoggerFactory.getInstance(DefaultChannelPipeline.class);
-
-    //
+    //头尾名称
     private static final String HEAD_NAME = generateName0(HeadContext.class);
+    //
     private static final String TAIL_NAME = generateName0(TailContext.class);
 
-    //
+    //名称缓存
     private static final FastThreadLocal<Map<Class<?>, String>> nameCaches =
             new FastThreadLocal<Map<Class<?>, String>>() {
                 @Override
@@ -127,6 +127,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
     }
 
     private AbstractChannelHandlerContext newContext(EventExecutorGroup group, String name, ChannelHandler handler) {
+        //childExecutor包装下group
         return new DefaultChannelHandlerContext(this, childExecutor(group), name, handler);
     }
 
@@ -165,11 +166,12 @@ public class DefaultChannelPipeline implements ChannelPipeline {
 
     @Override
     public final ChannelPipeline addFirst(EventExecutorGroup group, String name, ChannelHandler handler) {
+        //新的上下文.从上下文中获取executor.
         final AbstractChannelHandlerContext newCtx;
         synchronized (this) {
             checkMultiplicity(handler);
             name = filterName(name, handler);
-            //构造ctx
+            //构造新的ctx
             newCtx = newContext(group, name, handler);
 
             addFirst0(newCtx);
@@ -1480,6 +1482,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
         void execute() {
             EventExecutor executor = ctx.executor();
             if (executor.inEventLoop()) {
+                //
                 callHandlerAdded0(ctx);
             } else {
                 try {

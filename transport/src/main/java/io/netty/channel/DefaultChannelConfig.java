@@ -56,7 +56,7 @@ public class DefaultChannelConfig implements ChannelConfig {
                     DefaultChannelConfig.class, WriteBufferWaterMark.class, "writeBufferWaterMark");
 
     protected final Channel channel;
-
+    //f
     private volatile ByteBufAllocator allocator = ByteBufAllocator.DEFAULT;
     private volatile RecvByteBufAllocator rcvBufAllocator;
     private volatile MessageSizeEstimator msgSizeEstimator = DEFAULT_MSG_SIZE_ESTIMATOR;
