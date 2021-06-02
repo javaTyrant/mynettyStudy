@@ -75,8 +75,10 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
         id = newId();
         //构造unsafe.
         unsafe = newUnsafe();
+        System.out.println("unsafe创建好了...");
         //构造pipeline
         pipeline = newChannelPipeline();
+        System.out.println("pipeline创建好了...");
     }
 
     /**
@@ -88,7 +90,9 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
         this.parent = parent;
         this.id = id;
         unsafe = newUnsafe();
+        System.out.println("unsafe创建好了...");
         pipeline = newChannelPipeline();
+        System.out.println("pipeline创建好了...");
     }
 
     protected final int maxMessagesPerWrite() {
@@ -349,7 +353,6 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
     /**
      * Create a new {@link AbstractUnsafe} instance which will be used for the life-time of the {@link Channel}
      * <p/>
-     * 
      */
     protected abstract AbstractUnsafe newUnsafe();
 

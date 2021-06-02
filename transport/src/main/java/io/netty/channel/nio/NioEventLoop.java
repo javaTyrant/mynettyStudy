@@ -132,15 +132,16 @@ public final class NioEventLoop extends SingleThreadEventLoop {
     private final AtomicLong nextWakeupNanos = new AtomicLong(AWAKE);
 
     private final SelectStrategy selectStrategy;
-
+    //io任务比例.
     private volatile int ioRatio = 50;
     private int cancelledKeys;
+    //
     private boolean needsToSelectAgain;
 
     NioEventLoop(NioEventLoopGroup parent, Executor executor, SelectorProvider selectorProvider,
                  SelectStrategy strategy, RejectedExecutionHandler rejectedExecutionHandler,
                  EventLoopTaskQueueFactory queueFactory) {
-        //调用上层构造器.
+        //调用上层构造器.taskQueue,tailtaskQueue.
         super(parent, executor, false, newTaskQueue(queueFactory), newTaskQueue(queueFactory),
                 rejectedExecutionHandler);
         this.provider = ObjectUtil.checkNotNull(selectorProvider, "selectorProvider");
@@ -473,6 +474,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
                                     System.out.println("监听线程启动threadname is:" + Thread.currentThread().getName());
                                     //最终会在这里等待连接.有连接之后,会接着下面的处理.
                                     strategy = select(curDeadlineNanos);
+                                    System.out.println("监听到客户端流了...");
                                 }
                             } finally {
                                 // This update is just to help block unnecessary selector wakeups
@@ -597,6 +599,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
     }
 
     private void processSelectedKeys() {
+        //是否用优化的方法.selectedKeys数组优化.
         if (selectedKeys != null) {
             processSelectedKeysOptimized();
         } else {
@@ -616,6 +619,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
     void cancel(SelectionKey key) {
         key.cancel();
         cancelledKeys++;
+        //大于256次,则重新select.
         if (cancelledKeys >= CLEANUP_INTERVAL) {
             cancelledKeys = 0;
             needsToSelectAgain = true;
@@ -668,9 +672,9 @@ public final class NioEventLoop extends SingleThreadEventLoop {
             // null out entry in the array to allow to have it GC'ed once the Channel close
             // See https://github.com/netty/netty/issues/2363
             selectedKeys.keys[i] = null;
-
+            //获取附件.
             final Object a = k.attachment();
-
+            //
             if (a instanceof AbstractNioChannel) {
                 processSelectedKey(k, (AbstractNioChannel) a);
             } else {

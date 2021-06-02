@@ -65,7 +65,7 @@ public final class EchoServer {
         }
 
         // Configure the server.MultithreadEventExecutorGroup里分配线程.
-        // children[i] = newChild(executor, args);
+        // children[i] = newChild(executor, args);线程的分配有了,那么线程的启动呢?
         EventLoopGroup bossGroup = new NioEventLoopGroup(1);
         //
         EventLoopGroup workerGroup = new NioEventLoopGroup();

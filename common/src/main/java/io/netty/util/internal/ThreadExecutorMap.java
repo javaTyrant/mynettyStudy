@@ -23,9 +23,11 @@ import java.util.concurrent.ThreadFactory;
 
 /**
  * Allow to retrieve the {@link EventExecutor} for the calling {@link Thread}.
+ * <p/>
  */
 public final class ThreadExecutorMap {
 
+    //FastThreadLocal.
     private static final FastThreadLocal<EventExecutor> mappings = new FastThreadLocal<EventExecutor>();
 
     private ThreadExecutorMap() {
@@ -56,7 +58,7 @@ public final class ThreadExecutorMap {
         return new Executor() {
             @Override
             public void execute(final Runnable command) {
-                //会调用threadFactory.newThread(command).start();
+                //会调用threadFactory.newThread(command).start(); 注意下apply.executor:ThreadPerTaskExecutor
                 executor.execute(apply(command, eventExecutor));
             }
         };
@@ -73,6 +75,7 @@ public final class ThreadExecutorMap {
         return new Runnable() {
             @Override
             public void run() {
+                //把eventExecutor保存起来.
                 setCurrentEventExecutor(eventExecutor);
                 try {
                     //threadFactory.newThread(command).start();

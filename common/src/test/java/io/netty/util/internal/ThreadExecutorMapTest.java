@@ -25,9 +25,11 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 
 public class ThreadExecutorMapTest {
-
+    public static void main(String[] args) {
+        testDecorateExecutor();
+    }
     @Test
-    public void testDecorateExecutor() {
+    public static void testDecorateExecutor() {
         Executor executor = ThreadExecutorMap.apply(ImmediateExecutor.INSTANCE, ImmediateEventExecutor.INSTANCE);
         executor.execute(new Runnable() {
             @Override
