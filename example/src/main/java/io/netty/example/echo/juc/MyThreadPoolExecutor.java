@@ -44,10 +44,13 @@ public class MyThreadPoolExecutor extends AbstractExecutorService {
 
     //核心配置参数
     private final BlockingQueue<Runnable> workQueue;
+    //锁
     private final ReentrantLock mainLock = new ReentrantLock();
+    //
     private final HashSet<Worker> workers = new HashSet<>();
     //哪些操作会获取锁才能执行.
     private final Condition termination = mainLock.newCondition();
+    //最大线程数量.
     private int largestPoolSize;
     private long completedTaskCount;
     private volatile ThreadFactory threadFactory;
@@ -158,7 +161,16 @@ public class MyThreadPoolExecutor extends AbstractExecutorService {
         return ctl;
     }
 
-
+    //execute是如何被调用的.AbstractExecutorService.submit
+    //   public <T> Future<T> submit(Callable<T> task) {
+    //        task校验
+    //        if (task == null) throw new NullPointerException();
+    //        封装一下
+    //        RunnableFuture<T> ftask = newTaskFor(task);
+    //        执行.
+    //        execute(ftask);
+    //        return ftask;
+    //    }
     @Override
     public void execute(Runnable command) {
         if (command == null) {

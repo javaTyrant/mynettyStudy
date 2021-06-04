@@ -26,6 +26,7 @@ public class MyThreadPoolTest {
         for (int i = 0; i < 8; i++) {
             int finalI = i;
             //会开启四个核心线程
+            //threadPoolExecutor.submit()
             threadPoolExecutor.execute(() -> {
                 System.out.println("hello:" + finalI + Thread.currentThread().getName());
                 try {

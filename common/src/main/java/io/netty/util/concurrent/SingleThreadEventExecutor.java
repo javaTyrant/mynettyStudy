@@ -45,7 +45,8 @@ import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 
 /**
  * Abstract base class for {@link OrderedEventExecutor}'s that execute all its submitted tasks in a single thread.
- * <p/>单线程执行提交的任务.
+ * <p/>单线程执行提交的任务.思考下这个类的设计,以及该有哪些方法.
+ * 为什么要有这个类?开启线程,执行run.取任务.
  */
 public abstract class SingleThreadEventExecutor extends AbstractScheduledEventExecutor implements OrderedEventExecutor {
 
@@ -55,11 +56,16 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
     private static final InternalLogger logger =
             InternalLoggerFactory.getInstance(SingleThreadEventExecutor.class);
 
-    //命名规范
+    //命名规范:线程的状态.
+    //还未开始
     private static final int ST_NOT_STARTED = 1;
+    //启动了
     private static final int ST_STARTED = 2;
+    //关闭中
     private static final int ST_SHUTTING_DOWN = 3;
+    //已关闭
     private static final int ST_SHUTDOWN = 4;
+    //已终止
     private static final int ST_TERMINATED = 5;
 
     //空任务
@@ -381,6 +387,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
         if (isShutdown()) {
             reject();
         }
+        //taskQueue是否能add进去.
         return taskQueue.offer(task);
     }
 

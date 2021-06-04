@@ -47,7 +47,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
     private static final Object SUCCESS = new Object();
     //
     private static final Object UNCANCELLABLE = new Object();
-    //
+    //取消原因保存
     private static final CauseHolder CANCELLATION_CAUSE_HOLDER = new CauseHolder(
             StacklessCancellationException.newInstance(DefaultPromise.class, "cancel(...)"));
     //
@@ -63,6 +63,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
      * Threading - synchronized(this). We must support adding listeners when there is no EventExecutor.
      */
     private Object listeners;
+
     /**
      * Threading - synchronized(this). We are required to hold the monitor to use Java's underlying wait()/notifyAll().
      */
@@ -854,10 +855,12 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
     }
 
     private static boolean isDone0(Object result) {
+        //result非空且result != UNCANCELLABLE
         return result != null && result != UNCANCELLABLE;
     }
 
     private static final class CauseHolder {
+        //Throwable
         final Throwable cause;
 
         CauseHolder(Throwable cause) {
