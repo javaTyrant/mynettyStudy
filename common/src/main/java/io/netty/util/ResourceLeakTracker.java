@@ -15,7 +15,8 @@
  */
 package io.netty.util;
 
-public interface ResourceLeakTracker<T>  {
+//资源泄露跟踪器.
+public interface ResourceLeakTracker<T> {
 
     /**
      * Records the caller's current stack trace so that the {@link ResourceLeakDetector} can tell where the leaked

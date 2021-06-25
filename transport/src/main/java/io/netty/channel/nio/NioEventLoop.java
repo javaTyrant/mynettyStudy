@@ -698,6 +698,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
     private void processSelectedKey(SelectionKey k, AbstractNioChannel ch) {
         //
         final AbstractNioChannel.NioUnsafe unsafe = ch.unsafe();
+        //如果k不是有效的
         if (!k.isValid()) {
             final EventLoop eventLoop;
             try {

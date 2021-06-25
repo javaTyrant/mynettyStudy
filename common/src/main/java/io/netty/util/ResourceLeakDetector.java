@@ -171,12 +171,14 @@ public class ResourceLeakDetector<T> {
      */
     private final Set<DefaultResourceLeak<?>> allLeaks =
             Collections.newSetFromMap(new ConcurrentHashMap<DefaultResourceLeak<?>, Boolean>());
-
+    //引用队列
     private final ReferenceQueue<Object> refQueue = new ReferenceQueue<Object>();
+    //
     private final Set<String> reportedLeaks =
             Collections.newSetFromMap(new ConcurrentHashMap<String, Boolean>());
-
+    //
     private final String resourceType;
+    //
     private final int samplingInterval;
 
     /**

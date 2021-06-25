@@ -64,7 +64,7 @@ public abstract class MultithreadEventLoopGroup extends MultithreadEventExecutor
      * EventExecutorChooserFactory, Object...)
      */
     protected MultithreadEventLoopGroup(int nThreads, Executor executor, EventExecutorChooserFactory chooserFactory,
-                                     Object... args) {
+                                        Object... args) {
         super(nThreads == 0 ? DEFAULT_EVENT_LOOP_THREADS : nThreads, executor, chooserFactory, args);
     }
 
@@ -84,7 +84,9 @@ public abstract class MultithreadEventLoopGroup extends MultithreadEventExecutor
     @Override
     public ChannelFuture register(Channel channel) {
         //获取EventLoop.SingleThreadEventLoop来注册.MultithreadEventExecutorGroup.next.
-        return next().register(channel);
+        EventLoop next = next();
+        System.out.println("给客户端流" + channel + "分配了" + next);
+        return next.register(channel);
     }
 
     @Override

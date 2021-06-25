@@ -35,6 +35,7 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
     //logger
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(DefaultPromise.class);
+    //
     private static final InternalLogger rejectedExecutionLogger =
             InternalLoggerFactory.getInstance(DefaultPromise.class.getName() + ".rejectedExecution");
     //
@@ -359,7 +360,8 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
 
     @SuppressWarnings("unchecked")
     @Override
-    public V get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+    public V get(long timeout, TimeUnit unit)
+            throws InterruptedException, ExecutionException, TimeoutException {
         Object result = this.result;
         if (!isDone0(result)) {
             if (!await(timeout, unit)) {

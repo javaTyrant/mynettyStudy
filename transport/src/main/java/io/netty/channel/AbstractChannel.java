@@ -41,21 +41,31 @@ import java.util.concurrent.RejectedExecutionException;
  * A skeletal {@link Channel} implementation.
  */
 public abstract class AbstractChannel extends DefaultAttributeMap implements Channel {
-
+    //日志
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(AbstractChannel.class);
-
+    //父channel.
     private final Channel parent;
+    //channelId
     private final ChannelId id;
+    //Unsafe
     private final Unsafe unsafe;
+    //pipeline
     private final DefaultChannelPipeline pipeline;
+    //
     private final VoidChannelPromise unsafeVoidPromise = new VoidChannelPromise(this, false);
+    //
     private final CloseFuture closeFuture = new CloseFuture(this);
-
+    //本地地址
     private volatile SocketAddress localAddress;
+    //远程地址
     private volatile SocketAddress remoteAddress;
+    //事件循环
     private volatile EventLoop eventLoop;
+    //是否已经注册.
     private volatile boolean registered;
+    //
     private boolean closeInitiated;
+    //
     private Throwable initialCloseCause;
 
     /**
@@ -489,7 +499,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
                         new IllegalStateException("incompatible event loop type: " + eventLoop.getClass().getName()));
                 return;
             }
-            //eventLoop注册给抽象类的实例.
+            //eventLoop注册给抽象类的实例.eventLoop绑定给channel.
             AbstractChannel.this.eventLoop = eventLoop;
 
             //

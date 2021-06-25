@@ -28,6 +28,17 @@ import java.net.SocketAddress;
 
 
 /**
+ * 与网络套接字或能够进行 I/O 操作（如读取、写入、连接和绑定）的组件的关系。
+ * 一个channle给用户提供了:
+ * 1.流当前的状态(是开着的,还是关着的)
+ * 2.流的配置参数.
+ * 3.流支持的io操作.(比如读写连接绑定)
+ * 4.流关联的处理io事件,请求的channelpipeline.
+ * 所有的io操作都是异步的.
+ *
+ */
+
+/**
  * A nexus to a network socket or a component which is capable of I/O
  * operations such as read, write, connect, and bind.
  * <p>
@@ -90,7 +101,7 @@ public interface Channel extends AttributeMap, ChannelOutboundInvoker, Comparabl
      * Returns the parent of this channel.
      *
      * @return the parent channel.
-     *         {@code null} if this channel does not have a parent channel.
+     * {@code null} if this channel does not have a parent channel.
      */
     Channel parent();
 
@@ -126,7 +137,7 @@ public interface Channel extends AttributeMap, ChannelOutboundInvoker, Comparabl
      * information.
      *
      * @return the local address of this channel.
-     *         {@code null} if this channel is not bound.
+     * {@code null} if this channel is not bound.
      */
     SocketAddress localAddress();
 
@@ -137,12 +148,12 @@ public interface Channel extends AttributeMap, ChannelOutboundInvoker, Comparabl
      * information.
      *
      * @return the remote address of this channel.
-     *         {@code null} if this channel is not connected.
-     *         If this channel is not connected but it can receive messages
-     *         from arbitrary remote addresses (e.g. {@link DatagramChannel},
-     *         use {@link DatagramPacket#recipient()} to determine
-     *         the origination of the received message as this method will
-     *         return {@code null}.
+     * {@code null} if this channel is not connected.
+     * If this channel is not connected but it can receive messages
+     * from arbitrary remote addresses (e.g. {@link DatagramChannel},
+     * use {@link DatagramPacket#recipient()} to determine
+     * the origination of the received message as this method will
+     * return {@code null}.
      */
     SocketAddress remoteAddress();
 
@@ -242,7 +253,7 @@ public interface Channel extends AttributeMap, ChannelOutboundInvoker, Comparabl
          * Connect the {@link Channel} of the given {@link ChannelFuture} with the given remote {@link SocketAddress}.
          * If a specific local {@link SocketAddress} should be used it need to be given as argument. Otherwise just
          * pass {@code null} to it.
-         *
+         * <p>
          * The {@link ChannelPromise} will get notified once the connect operation was complete.
          */
         void connect(SocketAddress remoteAddress, SocketAddress localAddress, ChannelPromise promise);

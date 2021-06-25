@@ -21,6 +21,7 @@ package io.netty.buffer;
  */
 public interface ByteBufAllocator {
 
+    //默认的分配器
     ByteBufAllocator DEFAULT = ByteBufUtil.DEFAULT_ALLOCATOR;
 
     /**
@@ -131,4 +132,4 @@ public interface ByteBufAllocator {
      * {@code minNewCapacity} with {@code maxCapacity} as upper-bound.
      */
     int calculateNewCapacity(int minNewCapacity, int maxCapacity);
- }
+}

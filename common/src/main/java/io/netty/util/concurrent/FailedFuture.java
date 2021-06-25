@@ -24,7 +24,7 @@ import io.netty.util.internal.PlatformDependent;
  * instead of calling the constructor of this future.
  */
 public final class FailedFuture<V> extends CompleteFuture<V> {
-
+    //保存一个Throwable
     private final Throwable cause;
 
     /**

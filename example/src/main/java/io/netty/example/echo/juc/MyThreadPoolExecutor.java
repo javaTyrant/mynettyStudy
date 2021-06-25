@@ -46,7 +46,7 @@ public class MyThreadPoolExecutor extends AbstractExecutorService {
     private final BlockingQueue<Runnable> workQueue;
     //锁
     private final ReentrantLock mainLock = new ReentrantLock();
-    //
+    //工作线程
     private final HashSet<Worker> workers = new HashSet<>();
     //哪些操作会获取锁才能执行.
     private final Condition termination = mainLock.newCondition();
@@ -535,15 +535,14 @@ public class MyThreadPoolExecutor extends AbstractExecutorService {
         }
     }
 
-    //打断空闲的线程
+    //打断空闲的线程,
     private void interruptIdleWorkers(boolean onlyOne) {
         final ReentrantLock mainLock = this.mainLock;
+        //加锁了的.
         mainLock.lock();
         try {
             for (Worker w : workers) {
                 Thread t = w.thread;
-                //这里是会把所有的空闲都打断的,那么如何保证核心线程不被打断呢?调用的地方肯定会判断.如果线程池关闭
-                //那么,肯定是都要打断的.
                 //如果能获取到锁就说明是空闲的线程,否则这个线程就被占用了.
                 if (!t.isInterrupted() && w.tryLock()) {//为什么worker要实现aqs就一目了然了.
                     try {
@@ -700,7 +699,9 @@ public class MyThreadPoolExecutor extends AbstractExecutorService {
         int delta = corePoolSize - this.corePoolSize;
         //
         this.corePoolSize = corePoolSize;
+        //如果工作线程大于核心线程数量
         if (workerCountOf(ctl.get()) > corePoolSize) {
+            //会不会导致核心线程被杀?
             interruptIdleWorkers();
         } else if (delta > 0) {//如果传入的核心线程数大于线程的线程数.那么要知道加几个核心线程
             //取delta和wokQueue.size的最小值.确保workQueue的任务能被核心线程数处理
@@ -918,7 +919,7 @@ public class MyThreadPoolExecutor extends AbstractExecutorService {
         }
     }
 
-    //worker的结构:Worker也是Aqs.
+    //worker的结构:Worker也是Aqs.why?无非就是用到aqs的特性.
     private final class Worker extends AbstractQueuedSynchronizer implements Runnable {
         //
         private static final long serialVersionUID = 6138294804551838833L;
@@ -946,6 +947,7 @@ public class MyThreadPoolExecutor extends AbstractExecutorService {
             runWorker(this);
         }
 
+        //
         @Override
         protected boolean isHeldExclusively() {
             return getState() != 0;
@@ -971,6 +973,7 @@ public class MyThreadPoolExecutor extends AbstractExecutorService {
             return true;
         }
 
+        //worker加锁
         public void lock() {
             acquire(1);
         }
