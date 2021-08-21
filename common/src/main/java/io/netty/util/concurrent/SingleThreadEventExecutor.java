@@ -1057,7 +1057,6 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
                             break;
                         }
                     }
-
                     // Check if confirmShutdown() was called at the end of the loop.
                     if (success && gracefulShutdownStartTime == 0) {
                         if (logger.isErrorEnabled()) {

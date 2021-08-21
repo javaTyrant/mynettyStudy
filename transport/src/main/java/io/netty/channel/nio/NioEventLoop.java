@@ -440,13 +440,13 @@ public final class NioEventLoop extends SingleThreadEventLoop {
                 logger.warn("Failed to close the old Selector.", t);
             }
         }
-
         if (logger.isInfoEnabled()) {
             logger.info("Migrated " + nChannels + " channel(s) to the new Selector.");
         }
     }
 
     //run方法被哪调用的?doStartThread()
+    //
     @Override
     protected void run() {
         int selectCnt = 0;

@@ -47,6 +47,17 @@ public final class EchoServer {
         2.1
         2.2
         2.3
+        3.如何读数据:AdaptiveRecvByteBufAllocator
+        3.1自适应数据大小分配器.
+        3.2连续读.
+        主线:
+        1.多路复用器(Selector接收到OP_READ事件)
+        2.处理OP_READ事件:NioSocketChannel.NioSocketChannelUnsafe.read()
+        2.1
+        2.2
+        2.3
+        2.4
+        2.5
      */
     static final boolean SSL = System.getProperty("ssl") != null;
     static final int PORT = Integer.parseInt(System.getProperty("port", "8007"));

@@ -51,6 +51,7 @@ public class DefaultMaxBytesRecvByteBufAllocator implements MaxBytesRecvByteBufA
 
         @Override
         public int guess() {
+            //放大果断,缩小谨慎.
             return Math.min(individualReadMax, bytesToRead);
         }
 

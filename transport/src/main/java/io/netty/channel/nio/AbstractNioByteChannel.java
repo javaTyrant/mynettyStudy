@@ -120,8 +120,11 @@ public abstract class AbstractNioByteChannel extends AbstractNioChannel {
                     byteBuf.release();
                 }
             }
+            //记录这次读时间总共读了多少数据,计算下次分配大小
             allocHandle.readComplete();
+            //相当于完成本次读事件的处理
             pipeline.fireChannelReadComplete();
+            //
             pipeline.fireExceptionCaught(cause);
 
             // If oom will close the read event, release connection.
@@ -139,7 +142,9 @@ public abstract class AbstractNioByteChannel extends AbstractNioChannel {
                 return;
             }
             final ChannelPipeline pipeline = pipeline();
+            //
             final ByteBufAllocator allocator = config.getAllocator();
+            //
             final RecvByteBufAllocator.Handle allocHandle = recvBufAllocHandle();
             allocHandle.reset(config);
 
@@ -147,7 +152,9 @@ public abstract class AbstractNioByteChannel extends AbstractNioChannel {
             boolean close = false;
             try {
                 do {
+                    //guess
                     byteBuf = allocHandle.allocate(allocator);
+                    //
                     allocHandle.lastBytesRead(doReadBytes(byteBuf));
                     if (allocHandle.lastBytesRead() <= 0) {
                         // nothing was read. release the buffer.
