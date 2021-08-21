@@ -77,7 +77,9 @@ public final class EchoServer {
                     .handler(new LoggingHandler(LogLevel.INFO))
                     .childHandler(new ChannelInitializer<SocketChannel>() {
                         @Override
+                        //什么时候initChannel呢.
                         public void initChannel(SocketChannel ch) throws Exception {
+                            //获取channelPipeline.
                             ChannelPipeline p = ch.pipeline();
                             if (sslCtx != null) {
                                 p.addLast(sslCtx.newHandler(ch.alloc()));
