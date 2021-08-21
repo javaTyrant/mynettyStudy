@@ -40,16 +40,19 @@ import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 
 /**
+ * 这个类的设计要好好吃透啊,虽然说是责任链模式,但是细节点太多了.
  * The default {@link ChannelPipeline} implementation.  It is usually created
  * by a {@link Channel} implementation when the {@link Channel} is created.
  */
 public class DefaultChannelPipeline implements ChannelPipeline {
-
+    //logger
     static final InternalLogger logger = InternalLoggerFactory.getInstance(DefaultChannelPipeline.class);
-
+    //头尾名称
     private static final String HEAD_NAME = generateName0(HeadContext.class);
+    //
     private static final String TAIL_NAME = generateName0(TailContext.class);
 
+    //名称缓存
     private static final FastThreadLocal<Map<Class<?>, String>> nameCaches =
             new FastThreadLocal<Map<Class<?>, String>>() {
                 @Override
@@ -61,11 +64,11 @@ public class DefaultChannelPipeline implements ChannelPipeline {
     private static final AtomicReferenceFieldUpdater<DefaultChannelPipeline, MessageSizeEstimator.Handle> ESTIMATOR =
             AtomicReferenceFieldUpdater.newUpdater(
                     DefaultChannelPipeline.class, MessageSizeEstimator.Handle.class, "estimatorHandle");
-    //
+    //头
     final AbstractChannelHandlerContext head;
-    //
+    //尾
     final AbstractChannelHandlerContext tail;
-    //
+    //属于哪个channel.
     private final Channel channel;
     //
     private final ChannelFuture succeededFuture;
@@ -124,6 +127,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
     }
 
     private AbstractChannelHandlerContext newContext(EventExecutorGroup group, String name, ChannelHandler handler) {
+        //childExecutor包装下group
         return new DefaultChannelHandlerContext(this, childExecutor(group), name, handler);
     }
 
@@ -162,11 +166,12 @@ public class DefaultChannelPipeline implements ChannelPipeline {
 
     @Override
     public final ChannelPipeline addFirst(EventExecutorGroup group, String name, ChannelHandler handler) {
+        //新的上下文.从上下文中获取executor.
         final AbstractChannelHandlerContext newCtx;
         synchronized (this) {
             checkMultiplicity(handler);
             name = filterName(name, handler);
-            //构造ctx
+            //构造新的ctx
             newCtx = newContext(group, name, handler);
 
             addFirst0(newCtx);
@@ -928,6 +933,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
 
     @Override
     public final ChannelPipeline fireChannelRead(Object msg) {
+        //context里维护了链表.从头向尾一个一个触发.
         AbstractChannelHandlerContext.invokeChannelRead(head, msg);
         return this;
     }
@@ -1476,6 +1482,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
         void execute() {
             EventExecutor executor = ctx.executor();
             if (executor.inEventLoop()) {
+                //
                 callHandlerAdded0(ctx);
             } else {
                 try {

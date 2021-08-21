@@ -132,12 +132,14 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
 
     @Override
     void init(Channel channel) {
+        //
         setChannelOptions(channel, newOptionsArray(), logger);
         setAttributes(channel, newAttributesArray());
         //获取pipeline
         ChannelPipeline p = channel.pipeline();
         //
         final EventLoopGroup currentChildGroup = childGroup;
+        //
         final ChannelHandler currentChildHandler = childHandler;
         final Entry<ChannelOption<?>, Object>[] currentChildOptions = newOptionsArray(childOptions);
         final Entry<AttributeKey<?>, Object>[] currentChildAttrs = newAttributesArray(childAttrs);
@@ -150,7 +152,7 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
                 if (handler != null) {
                     pipeline.addLast(handler);
                 }
-                //r任务.
+                //r任务.ch是什么?
                 ch.eventLoop().execute(new Runnable() {
                     @Override
                     public void run() {

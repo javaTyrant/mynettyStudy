@@ -22,9 +22,10 @@ import java.util.concurrent.ThreadFactory;
 
 //每个执行器一个线程
 public final class ThreadPerTaskExecutor implements Executor {
-    //thread factory
+    //thread factory.抽象.
     private final ThreadFactory threadFactory;
 
+    //简单的传一个ThreadFactory.
     public ThreadPerTaskExecutor(ThreadFactory threadFactory) {
         this.threadFactory = ObjectUtil.checkNotNull(threadFactory, "threadFactory");
     }

@@ -28,7 +28,7 @@ public class MyAbstractQueuedSynchronizer
         static final Node SHARED = new Node();
         //独占
         static final Node EXCLUSIVE = null;
-        //几个状态的含义
+        //几个状态的含义:取消了
         static final int CANCELLED = 1;
         //successor's thread needs unparking
         static final int SIGNAL = -1;
@@ -129,11 +129,17 @@ public class MyAbstractQueuedSynchronizer
 
     //ConditionObject
     public class ConditionObject implements MyCondition, Serializable {
+        //
         private static final long serialVersionUID = 1173984872572414699L;
+        //
         private transient Node firstWaiter;
+        //
         private transient Node lastWaiter;
+        //
         public ConditionObject conditionObject;
+        //
         private static final int REINTERRUPT = 1;
+        //
         private static final int THROW_IE = -1;
 
         public ConditionObject() {

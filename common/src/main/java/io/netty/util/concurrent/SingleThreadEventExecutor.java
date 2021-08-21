@@ -77,7 +77,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
             AtomicReferenceFieldUpdater.newUpdater(
                     SingleThreadEventExecutor.class, ThreadProperties.class, "threadProperties");
 
-    //任务队列
+    //任务队列:注意看看这个队列保存了哪些任务.
     private final Queue<Runnable> taskQueue;
     //真正工作的线程
     private volatile Thread thread;
@@ -169,6 +169,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
         super(parent);
         this.addTaskWakesUp = addTaskWakesUp;
         this.maxPendingTasks = Math.max(16, maxPendingTasks);
+        //Executor和 SingleThreadEventExecutor.
         this.executor = ThreadExecutorMap.apply(executor, this);
         taskQueue = newTaskQueue(this.maxPendingTasks);
         rejectedExecutionHandler = ObjectUtil.checkNotNull(rejectedHandler, "rejectedHandler");
@@ -306,6 +307,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
         }
         long nanoTime = AbstractScheduledEventExecutor.nanoTime();
         for (; ; ) {
+            //取定时任务队列.
             Runnable scheduledTask = pollScheduledTask(nanoTime);
             if (scheduledTask == null) {
                 return true;
@@ -485,7 +487,9 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
      * the tasks in the task queue and returns if it ran longer than {@code timeoutNanos}.
      */
     protected boolean runAllTasks(long timeoutNanos) {
+        //执行定时任务.
         fetchFromScheduledTaskQueue();
+        //取出一个任务
         Runnable task = pollTask();
         if (task == null) {
             afterRunningAllTasks();
@@ -493,13 +497,15 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
         }
 
         final long deadline = timeoutNanos > 0 ? ScheduledFutureTask.nanoTime() + timeoutNanos : 0;
+        //计数
         long runTasks = 0;
         long lastExecutionTime;
+        //循环取.
         for (; ; ) {
+            //先执行一次task
             safeExecute(task);
-
+            //累加.
             runTasks++;
-
             // Check timeout every 64 tasks because nanoTime() is relatively expensive.
             // XXX: Hard-coded value - will make it configurable if it is really a problem.
             if ((runTasks & 0x3F) == 0) {
@@ -508,14 +514,13 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
                     break;
                 }
             }
-
+            //重新赋值.
             task = pollTask();
             if (task == null) {
                 lastExecutionTime = ScheduledFutureTask.nanoTime();
                 break;
             }
         }
-
         afterRunningAllTasks();
         this.lastExecutionTime = lastExecutionTime;
         return true;
@@ -854,10 +859,11 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
 
     private void execute(Runnable task, boolean immediate) {
         boolean inEventLoop = inEventLoop();
-        //任务放入队列里,说明时候取任务消费呢.taskQueue
+        //任务放入队列里,说明时候取任务消费呢.taskQueue.生产任务
         addTask(task);
         //inEventLoop为false才走这个流程.
         if (!inEventLoop) {
+            //
             startThread();
             if (isShutdown()) {
                 boolean reject = false;
@@ -1011,8 +1017,9 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
     //
     private void doStartThread() {
         assert thread == null;
-        //
+        //会创建一个线程.也是生产任务,只是这个任务是调用run方法.ThreadExecutorMap.
         executor.execute(new Runnable() {
+            //command.run()来调用.
             @Override
             public void run() {
                 //当前的线程
@@ -1026,7 +1033,9 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
                 //更新最后执行时间
                 updateLastExecutionTime();
                 try {
-                    //调用run方法
+                    //调用run方法.消费队列里的任务.
+                    System.out.println(Thread.currentThread().getName() + "的run方法被调用啦.");
+                    //NioEventLoop.run
                     SingleThreadEventExecutor.this.run();
                     success = true;
                 } catch (Throwable t) {

@@ -16,6 +16,9 @@
 package io.netty.channel;
 
 import java.net.SocketAddress;
+//ChannelOutboundHandler中的大部分方法都需要一个ChannelPromise参数，以便在操作完成时得到通知。
+//ChannelPromise是ChannelFuture的一个子类，其定义了一些可写的方法，如setSuccess()和setFailure()，
+//从而使ChannelFuture不可变
 
 /**
  * {@link ChannelHandler} which will get notified for IO-outbound-operations.

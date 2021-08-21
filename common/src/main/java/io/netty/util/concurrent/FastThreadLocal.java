@@ -122,6 +122,7 @@ public class FastThreadLocal<V> {
         variablesToRemove.remove(variable);
     }
 
+    //用了index.
     private final int index;
 
     public FastThreadLocal() {

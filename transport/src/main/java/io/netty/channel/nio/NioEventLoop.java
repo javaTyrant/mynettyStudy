@@ -59,12 +59,14 @@ public final class NioEventLoop extends SingleThreadEventLoop {
 
     private static final int CLEANUP_INTERVAL = 256; // XXX Hard-coded value, but won't need customization.
 
+    //是否禁止优化
     private static final boolean DISABLE_KEY_SET_OPTIMIZATION =
             SystemPropertyUtil.getBoolean("io.netty.noKeySetOptimization", false);
-
+    //
     private static final int MIN_PREMATURE_SELECTOR_RETURNS = 3;
+    //
     private static final int SELECTOR_AUTO_REBUILD_THRESHOLD;
-
+    //
     private final IntSupplier selectNowSupplier = new IntSupplier() {
         @Override
         public int get() throws Exception {
@@ -109,6 +111,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
 
     /**
      * The NIO {@link Selector}.
+     * 为什么需要两个selector呢?
      */
     private Selector selector;
     //
@@ -170,6 +173,11 @@ public final class NioEventLoop extends SingleThreadEventLoop {
         }
     }
 
+    //openSelector性能优化.
+    //Netty通过反射将selectedKeySet与sun.nio.ch.SelectorImpl中的两个field selectedKeys和publicSelectedKeys绑定,
+    //大家知道SelectorImpl原来的selectedKeys和publicSelectedKeys数据结构是HashSet,而HashSet的数据结构是数组+链表，
+    //新的数据结构是由2个数组A、B组成，初始大小是1024，避免了HashSet扩容带来的性能问题。
+    //除了扩容外，遍历效率也是一个原因，对于需要遍历selectedKeys的全部元素, 数组效率无疑是最高的。
     private SelectorTuple openSelector() {
         final Selector unwrappedSelector;
         try {
@@ -177,11 +185,11 @@ public final class NioEventLoop extends SingleThreadEventLoop {
         } catch (IOException e) {
             throw new ChannelException("failed to open a new selector", e);
         }
-
+        //如果禁止优化.
         if (DISABLE_KEY_SET_OPTIMIZATION) {
             return new SelectorTuple(unwrappedSelector);
         }
-
+        //获取类.
         Object maybeSelectorImplClass = AccessController.doPrivileged(new PrivilegedAction<Object>() {
             @Override
             public Object run() {
@@ -195,7 +203,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
                 }
             }
         });
-
+        //如果参数校验不通过.
         if (!(maybeSelectorImplClass instanceof Class) ||
                 // ensure the current selector implementation is what we can instrument.
                 !((Class<?>) maybeSelectorImplClass).isAssignableFrom(unwrappedSelector.getClass())) {
@@ -205,20 +213,23 @@ public final class NioEventLoop extends SingleThreadEventLoop {
             }
             return new SelectorTuple(unwrappedSelector);
         }
-
+        //转型.
         final Class<?> selectorImplClass = (Class<?>) maybeSelectorImplClass;
+        //新的数组.
         final SelectedSelectionKeySet selectedKeySet = new SelectedSelectionKeySet();
 
         Object maybeException = AccessController.doPrivileged(new PrivilegedAction<Object>() {
             @Override
             public Object run() {
                 try {
+                    //获取Field
                     Field selectedKeysField = selectorImplClass.getDeclaredField("selectedKeys");
                     Field publicSelectedKeysField = selectorImplClass.getDeclaredField("publicSelectedKeys");
-
+                    //判断是否有unsafe.
                     if (PlatformDependent.javaVersion() >= 9 && PlatformDependent.hasUnsafe()) {
                         // Let us try to use sun.misc.Unsafe to replace the SelectionKeySet.
                         // This allows us to also do this in Java9+ without any extra flags.
+                        //获取两个
                         long selectedKeysFieldOffset = PlatformDependent.objectFieldOffset(selectedKeysField);
                         long publicSelectedKeysFieldOffset =
                                 PlatformDependent.objectFieldOffset(publicSelectedKeysField);
@@ -241,7 +252,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
                     if (cause != null) {
                         return cause;
                     }
-
+                    //把原来属性设置为selectedKeySet（它是数组实现)，原来是hashmap实现
                     selectedKeysField.set(unwrappedSelector, selectedKeySet);
                     publicSelectedKeysField.set(unwrappedSelector, selectedKeySet);
                     return null;
@@ -505,6 +516,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
                         ranTasks = runAllTasks(ioTime * (100 - ioRatio) / ioRatio);
                     }
                 } else {
+                    //第一次:strategy = 0.
                     ranTasks = runAllTasks(0); // This will run the minimum number of tasks
                 }
 
@@ -714,8 +726,8 @@ public final class NioEventLoop extends SingleThreadEventLoop {
                 int ops = k.interestOps();
                 ops &= ~SelectionKey.OP_CONNECT;
                 k.interestOps(ops);
-
                 unsafe.finishConnect();
+                System.out.println(Thread.currentThread().getName() + "完成连接");
             }
 
             // Process OP_WRITE first as we may be able to write some queued buffers and so free memory.

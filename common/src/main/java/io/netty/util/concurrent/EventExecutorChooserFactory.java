@@ -33,7 +33,7 @@ public interface EventExecutorChooserFactory {
      */
     @UnstableApi
     interface EventExecutorChooser {
-
+        //两种不同的实现.取模还是位运算.
         /**
          * Returns the new {@link EventExecutor} to use.
          */

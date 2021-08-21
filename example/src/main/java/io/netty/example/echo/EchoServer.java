@@ -67,11 +67,13 @@ public final class EchoServer {
         // Configure the server.MultithreadEventExecutorGroup里分配线程.
         // children[i] = newChild(executor, args);
         EventLoopGroup bossGroup = new NioEventLoopGroup(1);
+        //
         EventLoopGroup workerGroup = new NioEventLoopGroup();
         final EchoServerHandler serverHandler = new EchoServerHandler();
         try {
             ServerBootstrap b = new ServerBootstrap();
             b.group(bossGroup, workerGroup)
+                    //反射构造channel.
                     .channel(NioServerSocketChannel.class)
                     .option(ChannelOption.SO_BACKLOG, 100)
                     .handler(new LoggingHandler(LogLevel.INFO))
@@ -85,9 +87,11 @@ public final class EchoServer {
                                 p.addLast(sslCtx.newHandler(ch.alloc()));
                             }
                             //p.addLast(new LoggingHandler(LogLevel.INFO));
+                            //如何触发的?callHandlerAdded->
                             p.addLast(new IdleStateHandler(30, 0, 0, TimeUnit.SECONDS));
                             p.addLast(serverHandler);
                             p.addLast(new HeartBeatServerHandler());
+                            //p.addLast()
                         }
                     });
 

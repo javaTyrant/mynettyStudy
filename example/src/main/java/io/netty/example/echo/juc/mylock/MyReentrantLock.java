@@ -14,8 +14,9 @@ import java.util.concurrent.locks.Condition;
  **/
 @SuppressWarnings("unused")
 public class MyReentrantLock implements MyLock, java.io.Serializable {
+    //serialId
     private static final long serialVersionUID = 7373984872572414699L;
-
+    //AQS.
     private final Sync sync;
 
     //默认是非公平的锁
@@ -39,6 +40,7 @@ public class MyReentrantLock implements MyLock, java.io.Serializable {
         System.out.println("返回lock结果");
     }
 
+    //
     @Override
     public boolean tryLock() {
         return sync.nonfairTryAcquire(1);
@@ -117,7 +119,7 @@ public class MyReentrantLock implements MyLock, java.io.Serializable {
         Sync() {
         }
 
-        //尝试非公平的获取
+        //尝试非公平的获取:获取不到立马返回.
         final boolean nonfairTryAcquire(int acquires) {
             final Thread current = Thread.currentThread();
             int c = getState();
