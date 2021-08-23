@@ -79,7 +79,7 @@ import static io.netty.buffer.PoolThreadCache.*;
  *   ( 76,    24,       22,        1,       yes,            no,        no)
  */
 abstract class SizeClasses implements SizeClassesMetric {
-
+    //内存对齐怎么理解.
     static final int LOG2_QUANTUM = 4;
 
     private static final int LOG2_SIZE_CLASS_GROUP = 2;
