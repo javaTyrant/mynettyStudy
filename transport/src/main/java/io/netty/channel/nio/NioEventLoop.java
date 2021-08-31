@@ -134,6 +134,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
     private final SelectStrategy selectStrategy;
     //io任务比例.
     private volatile int ioRatio = 50;
+    //
     private int cancelledKeys;
     //
     private boolean needsToSelectAgain;
@@ -230,7 +231,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
                     if (PlatformDependent.javaVersion() >= 9 && PlatformDependent.hasUnsafe()) {
                         // Let us try to use sun.misc.Unsafe to replace the SelectionKeySet.
                         // This allows us to also do this in Java9+ without any extra flags.
-                        //获取两个
+                        //获取两个偏移量.
                         long selectedKeysFieldOffset = PlatformDependent.objectFieldOffset(selectedKeysField);
                         long publicSelectedKeysFieldOffset =
                                 PlatformDependent.objectFieldOffset(publicSelectedKeysField);
@@ -454,14 +455,13 @@ public final class NioEventLoop extends SingleThreadEventLoop {
             try {
                 int strategy;
                 try {
+                    //策略是什么意思呢?
                     strategy = selectStrategy.calculateStrategy(selectNowSupplier, hasTasks());
                     switch (strategy) {
                         case SelectStrategy.CONTINUE:
                             continue;
-
                         case SelectStrategy.BUSY_WAIT:
                             // fall-through to SELECT since the busy-wait is not supported with NIO
-
                         case SelectStrategy.SELECT:
                             long curDeadlineNanos = nextScheduledTaskDeadlineNanos();
                             if (curDeadlineNanos == -1L) {

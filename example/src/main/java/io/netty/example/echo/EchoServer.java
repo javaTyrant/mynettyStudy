@@ -74,15 +74,16 @@ public final class EchoServer {
         } else {
             sslCtx = null;
         }
-
         // Configure the server.MultithreadEventExecutorGroup里分配线程.
         // children[i] = newChild(executor, args);线程的分配有了,那么线程的启动呢?
         EventLoopGroup bossGroup = new NioEventLoopGroup(1);
-        //
+        //worker
         EventLoopGroup workerGroup = new NioEventLoopGroup();
         final EchoServerHandler serverHandler = new EchoServerHandler();
         try {
             ServerBootstrap b = new ServerBootstrap();
+            //group的作用.boss保存到AbstractBootstrap的group里.
+            //workerGroup.保存到ServerBootstrap的childGroup
             b.group(bossGroup, workerGroup)
                     //反射构造channel.
                     .channel(NioServerSocketChannel.class)
@@ -90,7 +91,7 @@ public final class EchoServer {
                     .handler(new LoggingHandler(LogLevel.INFO))
                     .childHandler(new ChannelInitializer<SocketChannel>() {
                         @Override
-                        public void initChannel(SocketChannel ch) throws Exception {
+                        public void initChannel(SocketChannel ch) {
                             ChannelPipeline p = ch.pipeline();
                             if (sslCtx != null) {
                                 p.addLast(sslCtx.newHandler(ch.alloc()));
@@ -106,7 +107,6 @@ public final class EchoServer {
 
             // Start the server.
             ChannelFuture f = b.bind(PORT).sync();
-
             // Wait until the server socket is closed.
             f.channel().closeFuture().sync();
         } finally {

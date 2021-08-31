@@ -304,6 +304,7 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
         }
     }
 
+    //初始化channel且把channel注册到
     final ChannelFuture initAndRegister() {
         Channel channel = null;
         try {
@@ -321,7 +322,7 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
             return new DefaultChannelPromise(new FailedChannel(), GlobalEventExecutor.INSTANCE).setFailure(t);
         }
         //boss注册channel.先调用eventloop的register.NioEventLoopGroup.
-        //开启boss。注册。
+        //开启boss。注册。MultithreadEventLoopGroup.register
         ChannelFuture regFuture = config().group().register(channel);
         if (regFuture.cause() != null) {
             if (channel.isRegistered()) {

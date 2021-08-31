@@ -88,6 +88,7 @@ public abstract class DefaultMaxMessagesRecvByteBufAllocator implements MaxMessa
         private ChannelConfig config;
         private int maxMessagePerRead;
         private int totalMessages;
+        //读的
         private int totalBytesRead;
         private int attemptedBytesRead;
         private int lastBytesRead;

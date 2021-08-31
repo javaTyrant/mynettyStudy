@@ -1026,6 +1026,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
     private void doStartThread() {
         assert thread == null;
         //会创建一个线程.也是生产任务,只是这个任务是调用run方法.ThreadExecutorMap.
+        //这个executor是内部类里的方法.然后调用command.run.就是下面的run方法.
         executor.execute(new Runnable() {
             //command.run()来调用.
             @Override
@@ -1131,6 +1132,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
     }
 
     private static final class DefaultThreadProperties implements ThreadProperties {
+        //
         private final Thread t;
 
         DefaultThreadProperties(Thread t) {
