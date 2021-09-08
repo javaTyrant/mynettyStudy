@@ -30,7 +30,7 @@ public abstract class AbstractFuture<V> implements Future<V> {
     @Override
     public V get() throws InterruptedException, ExecutionException {
         await();
-
+        //错误信息为空就返回
         Throwable cause = cause();
         if (cause == null) {
             return getNow();
@@ -42,7 +42,8 @@ public abstract class AbstractFuture<V> implements Future<V> {
     }
 
     @Override
-    public V get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+    public V get(long timeout, TimeUnit unit)
+            throws InterruptedException, ExecutionException, TimeoutException {
         if (await(timeout, unit)) {
             Throwable cause = cause();
             if (cause == null) {

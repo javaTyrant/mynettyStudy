@@ -32,18 +32,21 @@ import java.util.concurrent.TimeUnit;
  * Abstract base class for {@link EventExecutor} implementations.
  */
 public abstract class AbstractEventExecutor extends AbstractExecutorService implements EventExecutor {
+    //
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(AbstractEventExecutor.class);
-
+    //
     static final long DEFAULT_SHUTDOWN_QUIET_PERIOD = 2;
+    //
     static final long DEFAULT_SHUTDOWN_TIMEOUT = 15;
-
+    //
     private final EventExecutorGroup parent;
+    //
     private final Collection<EventExecutor> selfCollection = Collections.<EventExecutor>singleton(this);
-
+    //
     protected AbstractEventExecutor() {
         this(null);
     }
-
+    //
     protected AbstractEventExecutor(EventExecutorGroup parent) {
         this.parent = parent;
     }
@@ -170,10 +173,10 @@ public abstract class AbstractEventExecutor extends AbstractExecutorService impl
     /**
      * Like {@link #execute(Runnable)} but does not guarantee the task will be run until either
      * a non-lazy task is executed or the executor is shut down.
-     *
+     * <p>
      * This is equivalent to submitting a {@link AbstractEventExecutor.LazyRunnable} to
      * {@link #execute(Runnable)} but for an arbitrary {@link Runnable}.
-     *
+     * <p>
      * The default implementation just delegates to {@link #execute(Runnable)}.
      */
     @UnstableApi
@@ -186,5 +189,6 @@ public abstract class AbstractEventExecutor extends AbstractExecutorService impl
      * but does not need to run immediately.
      */
     @UnstableApi
-    public interface LazyRunnable extends Runnable { }
+    public interface LazyRunnable extends Runnable {
+    }
 }

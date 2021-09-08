@@ -15,36 +15,20 @@
  */
 package io.netty.util.concurrent;
 
-import io.netty.util.internal.ObjectUtil;
-import io.netty.util.internal.PlatformDependent;
-import io.netty.util.internal.SystemPropertyUtil;
-import io.netty.util.internal.ThreadExecutorMap;
-import io.netty.util.internal.UnstableApi;
+import io.netty.util.internal.*;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 
 import java.lang.Thread.State;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Queue;
-import java.util.Set;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executor;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.*;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 
 /**
  * Abstract base class for {@link OrderedEventExecutor}'s that execute all its submitted tasks in a single thread.
+ * <p/>单线程执行提交的任务.思考下这个类的设计,以及该有哪些方法.
+ * 为什么要有这个类?开启线程,执行run.取任务.
  */
 public abstract class SingleThreadEventExecutor extends AbstractScheduledEventExecutor implements OrderedEventExecutor {
 
@@ -54,11 +38,16 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
     private static final InternalLogger logger =
             InternalLoggerFactory.getInstance(SingleThreadEventExecutor.class);
 
-    //命名规范
+    //命名规范:线程的状态.
+    //还未开始
     private static final int ST_NOT_STARTED = 1;
+    //启动了
     private static final int ST_STARTED = 2;
+    //关闭中
     private static final int ST_SHUTTING_DOWN = 3;
+    //已关闭
     private static final int ST_SHUTDOWN = 4;
+    //已终止
     private static final int ST_TERMINATED = 5;
 
     //空任务
@@ -79,11 +68,11 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
 
     //任务队列:注意看看这个队列保存了哪些任务.
     private final Queue<Runnable> taskQueue;
-    //真正工作的线程
+    //赋值:thread = Thread.currentThread();获取的是executor底层的线程.
     private volatile Thread thread;
     @SuppressWarnings("unused")
     private volatile ThreadProperties threadProperties;
-    //执行器
+    //执行器:
     private final Executor executor;
     //是否被打断
     private volatile boolean interrupted;
@@ -380,6 +369,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
         if (isShutdown()) {
             reject();
         }
+        //taskQueue是否能add进去.
         return taskQueue.offer(task);
     }
 
@@ -1018,6 +1008,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
     private void doStartThread() {
         assert thread == null;
         //会创建一个线程.也是生产任务,只是这个任务是调用run方法.ThreadExecutorMap.
+        //这个executor是内部类里的方法.然后调用command.run.就是下面的run方法.
         executor.execute(new Runnable() {
             //command.run()来调用.
             @Override
@@ -1049,7 +1040,6 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
                             break;
                         }
                     }
-
                     // Check if confirmShutdown() was called at the end of the loop.
                     if (success && gracefulShutdownStartTime == 0) {
                         if (logger.isErrorEnabled()) {
@@ -1124,6 +1114,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
     }
 
     private static final class DefaultThreadProperties implements ThreadProperties {
+        //
         private final Thread t;
 
         DefaultThreadProperties(Thread t) {

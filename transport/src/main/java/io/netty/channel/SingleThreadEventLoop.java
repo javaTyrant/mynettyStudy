@@ -25,7 +25,7 @@ import io.netty.util.internal.UnstableApi;
 import java.util.Queue;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadFactory;
-
+//
 /**
  * Abstract base class for {@link EventLoop}s that execute all its submitted tasks in a single thread.
  *
@@ -79,6 +79,7 @@ public abstract class SingleThreadEventLoop extends SingleThreadEventExecutor im
 
     @Override
     public ChannelFuture register(Channel channel) {
+        //
         return register(new DefaultChannelPromise(channel, this));
     }
 
@@ -86,7 +87,9 @@ public abstract class SingleThreadEventLoop extends SingleThreadEventExecutor im
     public ChannelFuture register(final ChannelPromise promise) {
         ObjectUtil.checkNotNull(promise, "promise");
         //unsafe注册.获取channel获取unsafe在注册.
-        promise.channel().unsafe().register(this, promise);
+        Channel.Unsafe unsafe = promise.channel().unsafe();
+        //连接和read的unsafe有什么不同.那么秘密是不是都在channel里呢?
+        unsafe.register(this, promise);
         return promise;
     }
 

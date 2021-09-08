@@ -28,14 +28,7 @@ import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 
 import java.net.SocketAddress;
-import java.util.ArrayList;
-import java.util.IdentityHashMap;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.WeakHashMap;
+import java.util.*;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 
@@ -100,13 +93,16 @@ public class DefaultChannelPipeline implements ChannelPipeline {
     private boolean registered;
 
     protected DefaultChannelPipeline(Channel channel) {
+        //设置属于的channel.
         this.channel = ObjectUtil.checkNotNull(channel, "channel");
+        //
         succeededFuture = new SucceededChannelFuture(channel, null);
+        //
         voidPromise = new VoidChannelPromise(channel, true);
-
+        //
         tail = new TailContext(this);
         head = new HeadContext(this);
-
+        //
         head.next = tail;
         tail.prev = head;
     }
@@ -171,9 +167,9 @@ public class DefaultChannelPipeline implements ChannelPipeline {
         synchronized (this) {
             checkMultiplicity(handler);
             name = filterName(name, handler);
-            //构造新的ctx
+            //构造新的ctx.handler等信息封装成DefaultChannelHandlerContext.
             newCtx = newContext(group, name, handler);
-
+            //
             addFirst0(newCtx);
 
             // If the registered is false it means that the channel was not registered on an eventLoop yet.
@@ -195,7 +191,9 @@ public class DefaultChannelPipeline implements ChannelPipeline {
         return this;
     }
 
+    //插入到head和head.next之间.
     private void addFirst0(AbstractChannelHandlerContext newCtx) {
+        //head的后面一个
         AbstractChannelHandlerContext nextCtx = head.next;
         newCtx.prev = head;
         newCtx.next = nextCtx;
@@ -210,7 +208,9 @@ public class DefaultChannelPipeline implements ChannelPipeline {
 
     @Override
     public final ChannelPipeline addLast(EventExecutorGroup group, String name, ChannelHandler handler) {
+        //
         final AbstractChannelHandlerContext newCtx;
+        //
         synchronized (this) {
             checkMultiplicity(handler);
             //封装一个newCts:DefaultChannelHandlerContext
@@ -237,6 +237,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
         return this;
     }
 
+    //加到tail前面
     private void addLast0(AbstractChannelHandlerContext newCtx) {
         //把newCtx放入到链表中
         //获取tail的前一个节点
@@ -293,9 +294,11 @@ public class DefaultChannelPipeline implements ChannelPipeline {
     }
 
     private String filterName(String name, ChannelHandler handler) {
+        //如果name为空,根据handler生成name
         if (name == null) {
             return generateName(handler);
         }
+        //
         checkDuplicateName(name);
         return name;
     }
@@ -306,8 +309,10 @@ public class DefaultChannelPipeline implements ChannelPipeline {
     }
 
     @Override
-    public final ChannelPipeline addAfter(
-            EventExecutorGroup group, String baseName, String name, ChannelHandler handler) {
+    public final ChannelPipeline addAfter(EventExecutorGroup group,
+                                          String baseName,
+                                          String name,
+                                          ChannelHandler handler) {
         final AbstractChannelHandlerContext newCtx;
         final AbstractChannelHandlerContext ctx;
 
@@ -1261,7 +1266,9 @@ public class DefaultChannelPipeline implements ChannelPipeline {
 
     // A special catch-all handler that handles both bytes and messages.
     final class TailContext extends AbstractChannelHandlerContext implements ChannelInboundHandler {
-
+        //TailContext 只实现了 ChannelInboundHandler 接口。它会在 ChannelInboundHandler 调用链路的最后一步执行，
+        //主要用于终止 Inbound 事件传播，例如释放 Message 数据资源等。TailContext 节点作为 OutBound 事件传播的第一站，
+        //仅仅是将 OutBound 事件传递给上一个节点。
         TailContext(DefaultChannelPipeline pipeline) {
             super(pipeline, null, TAIL_NAME, TailContext.class);
             setAddComplete();
@@ -1324,9 +1331,12 @@ public class DefaultChannelPipeline implements ChannelPipeline {
         }
     }
 
+    //既是 Inbound 处理器，也是 Outbound 处理器
     final class HeadContext extends AbstractChannelHandlerContext
             implements ChannelOutboundHandler, ChannelInboundHandler {
-
+        //网络数据写入操作的入口就是由 HeadContext 节点完成的。HeadContext 作为 Pipeline 的头结点负责读取数据并开始传递 InBound 事件，
+        //当数据处理完成后，数据会反方向经过 Outbound 处理器，最终传递到 HeadContext，所以 HeadContext 又是处理 Outbound 事件的最后一站。
+        //此外 HeadContext 在传递事件之前，还会执行一些前置操作。
         private final Unsafe unsafe;
 
         HeadContext(DefaultChannelPipeline pipeline) {

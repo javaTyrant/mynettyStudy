@@ -22,13 +22,15 @@ public class MyAbstractQueuedSynchronizer
     protected MyAbstractQueuedSynchronizer() {
     }
 
-    //
+    //注意，在这个Node类中也有一个状态变量waitStatus，
+    //它表示了当前Node所代表的线程的等待锁的状态，在独占锁模式下，我们只需要关注CANCELLED SIGNAL两种状态即可。
+    //这里还有一个nextWaiter属性，它在独占锁模式下永远为null，仅仅起到一个标记作用，没有实际意义。这么一分析，这个Node类是不是就简单了好多？
     static final class Node {
         //共享
         static final Node SHARED = new Node();
         //独占
         static final Node EXCLUSIVE = null;
-        //几个状态的含义:取消了
+        //几个状态的含义:取消
         static final int CANCELLED = 1;
         //successor's thread needs unparking
         static final int SIGNAL = -1;
@@ -469,7 +471,11 @@ public class MyAbstractQueuedSynchronizer
         Thread.currentThread().interrupt();
     }
 
-    //difference between
+    //difference between:
+    //获取锁的逻辑:
+    //如果tryAcquire为true,直接获取锁成功.(tryAcquire里会判断是不是重入锁.)
+    //如果tryAcquire为fasle,那么就acquireQueued.
+    //
     public final void acquire(int arg) {
         //acquire的逻辑:tryAcquire由子类实现.如果获取失败了那么就入队列.
         //如果入队列失败了,那么就打断.addWaiter:封装线程.acquireQueued返回线程被打断的状态.
@@ -508,6 +514,7 @@ public class MyAbstractQueuedSynchronizer
             doAcquireSharedInterruptibly(arg);
         }
     }
+
     //中断获取
     private void doAcquireSharedInterruptibly(int arg) throws InterruptedException {
         //先添加等待节点
@@ -620,7 +627,7 @@ public class MyAbstractQueuedSynchronizer
             for (; ; ) {
                 //先获取前面的节点
                 final Node p = node.predecessor();
-                //如果之前是head.那么就在tryAcquire一次.
+                //如果之前是head.那么就在tryAcquire一次.(乐观的尝试.)
                 if (p == head && tryAcquire(arg)) {
                     //获取成功了.
                     setHead(node);
@@ -630,6 +637,8 @@ public class MyAbstractQueuedSynchronizer
                 }
                 //说明前面的不是头节点.或者没有tryAcquire成功.
                 //是否要park该线程.写个测试用例测测.
+                //换个角度讲，当我们决定要将一个线程挂起之前，首先要确保自己的前驱节点的waitStatus为SIGNAL，
+                //这就相当于给自己设一个闹钟再去睡，这个闹钟会在恰当的时候叫醒自己，否则，如果一直没有人来叫醒自己，自己可能就一直睡到天荒地老了。
                 if (shouldParkAfterFailedAcquire(p, node))
                     //位运算
                     interrupted |= parkAndCheckInterrupt();

@@ -82,6 +82,7 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
      * {@link Channel}'s.
      */
     public ServerBootstrap group(EventLoopGroup parentGroup, EventLoopGroup childGroup) {
+        //parent
         super.group(parentGroup);
         if (this.childGroup != null) {
             throw new IllegalStateException("childGroup set already");
@@ -218,7 +219,7 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
         @Override
         @SuppressWarnings("unchecked")
         public void channelRead(ChannelHandlerContext ctx, Object msg) {
-            //
+            //socket流
             final Channel child = (Channel) msg;
             //
             child.pipeline().addLast(childHandler);
@@ -229,7 +230,7 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
 
             try {
                 //childGroup的数据流:父类的childGroup传入,完美闭环.
-                //channel注册到childGroup
+                //channel注册到childGroup.channel 看看怎么给channel分配线程的.
                 childGroup.register(child).addListener(new ChannelFutureListener() {
                     @Override
                     public void operationComplete(ChannelFuture future) throws Exception {

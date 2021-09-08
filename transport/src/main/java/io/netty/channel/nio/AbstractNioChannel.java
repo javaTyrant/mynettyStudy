@@ -19,14 +19,8 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
-import io.netty.channel.AbstractChannel;
 import io.netty.channel.Channel;
-import io.netty.channel.ChannelException;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.ChannelPromise;
-import io.netty.channel.ConnectTimeoutException;
-import io.netty.channel.EventLoop;
+import io.netty.channel.*;
 import io.netty.util.ReferenceCountUtil;
 import io.netty.util.ReferenceCounted;
 import io.netty.util.internal.logging.InternalLogger;
@@ -34,11 +28,7 @@ import io.netty.util.internal.logging.InternalLoggerFactory;
 
 import java.io.IOException;
 import java.net.SocketAddress;
-import java.nio.channels.CancelledKeyException;
-import java.nio.channels.ClosedChannelException;
-import java.nio.channels.ConnectionPendingException;
-import java.nio.channels.SelectableChannel;
-import java.nio.channels.SelectionKey;
+import java.nio.channels.*;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -51,8 +41,11 @@ public abstract class AbstractNioChannel extends AbstractChannel {
             InternalLoggerFactory.getInstance(AbstractNioChannel.class);
 
     private final SelectableChannel ch;
+    //
     protected final int readInterestOp;
+    //
     volatile SelectionKey selectionKey;
+    //
     boolean readPending;
     private final Runnable clearReadPendingRunnable = new Runnable() {
         @Override
@@ -72,9 +65,9 @@ public abstract class AbstractNioChannel extends AbstractChannel {
     /**
      * Create a new instance
      *
-     * @param parent            the parent {@link Channel} by which this instance was created. May be {@code null}
-     * @param ch                the underlying {@link SelectableChannel} on which it operates
-     * @param readInterestOp    the ops to set to receive data from the {@link SelectableChannel}
+     * @param parent         the parent {@link Channel} by which this instance was created. May be {@code null}
+     * @param ch             the underlying {@link SelectableChannel} on which it operates
+     * @param readInterestOp the ops to set to receive data from the {@link SelectableChannel}
      */
     protected AbstractNioChannel(Channel parent, SelectableChannel ch, int readInterestOp) {
         super(parent);
@@ -87,9 +80,8 @@ public abstract class AbstractNioChannel extends AbstractChannel {
                 ch.close();
             } catch (IOException e2) {
                 logger.warn(
-                            "Failed to close a partially initialized socket.", e2);
+                        "Failed to close a partially initialized socket.", e2);
             }
-
             throw new ChannelException("Failed to enter non-blocking mode.", e);
         }
     }
@@ -260,7 +252,7 @@ public abstract class AbstractNioChannel extends AbstractChannel {
                                 ChannelPromise connectPromise = AbstractNioChannel.this.connectPromise;
                                 if (connectPromise != null && !connectPromise.isDone()
                                         && connectPromise.tryFailure(new ConnectTimeoutException(
-                                                "connection timed out: " + remoteAddress))) {
+                                        "connection timed out: " + remoteAddress))) {
                                     close(voidPromise());
                                 }
                             }
@@ -375,7 +367,7 @@ public abstract class AbstractNioChannel extends AbstractChannel {
     @Override
     protected void doRegister() throws Exception {
         boolean selected = false;
-        for (;;) {
+        for (; ; ) {
             try {
                 //最原始的注册.
                 selectionKey = javaChannel().register(eventLoop().unwrappedSelector(), 0, this);
@@ -400,6 +392,7 @@ public abstract class AbstractNioChannel extends AbstractChannel {
         eventLoop().cancel(selectionKey());
     }
 
+    //开始读.
     @Override
     protected void doBeginRead() throws Exception {
         // Channel.read() or ChannelHandlerContext.read() was called
@@ -411,8 +404,14 @@ public abstract class AbstractNioChannel extends AbstractChannel {
         readPending = true;
 
         final int interestOps = selectionKey.interestOps();
+        //意味着:
+        //read    0000 0001b 1
+        //write   0000 0100  4
+        //connect 0000 1000  8
+        //accept  0001 0000  16
         if ((interestOps & readInterestOp) == 0) {
             selectionKey.interestOps(interestOps | readInterestOp);
+            System.out.println("注册了...." + interestOps + "--" + readInterestOp);
         }
     }
 

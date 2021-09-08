@@ -38,35 +38,50 @@ import java.util.concurrent.atomic.AtomicInteger;
  * unless you know what you are doing.
  */
 public final class InternalThreadLocalMap extends UnpaddedInternalThreadLocalMap {
-
+    //
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(InternalThreadLocalMap.class);
+    //
     private static final ThreadLocal<InternalThreadLocalMap> slowThreadLocalMap =
             new ThreadLocal<InternalThreadLocalMap>();
+    //
     private static final AtomicInteger nextIndex = new AtomicInteger();
-
+    //
     private static final int DEFAULT_ARRAY_LIST_INITIAL_CAPACITY = 8;
+    //
     private static final int STRING_BUILDER_INITIAL_SIZE;
+    //
     private static final int STRING_BUILDER_MAX_SIZE;
+    //
     private static final int HANDLER_SHARABLE_CACHE_INITIAL_CAPACITY = 4;
+    //
     private static final int INDEXED_VARIABLE_TABLE_INITIAL_SIZE = 32;
-
+    //
     public static final Object UNSET = new Object();
 
-    /** Used by {@link FastThreadLocal} */
+    /**
+     * Used by {@link FastThreadLocal}
+     */
     private Object[] indexedVariables;
 
     // Core thread-locals
     private int futureListenerStackDepth;
+    //
     private int localChannelReaderStackDepth;
+    //
     private Map<Class<?>, Boolean> handlerSharableCache;
+    //
     private IntegerHolder counterHashCode;
+    //
     private ThreadLocalRandom random;
+    //
     private Map<Class<?>, TypeParameterMatcher> typeParameterMatcherGetCache;
+    //
     private Map<Class<?>, Map<String, TypeParameterMatcher>> typeParameterMatcherFindCache;
-
     // String-related thread-locals
     private StringBuilder stringBuilder;
+    //
     private Map<Charset, CharsetEncoder> charsetEncoderCache;
+    //
     private Map<Charset, CharsetDecoder> charsetDecoderCache;
 
     // ArrayList-related thread-locals
@@ -74,7 +89,9 @@ public final class InternalThreadLocalMap extends UnpaddedInternalThreadLocalMap
 
     private BitSet cleanerFlags;
 
-    /** @deprecated These padding fields will be removed in the future. */
+    /**
+     * @deprecated These padding fields will be removed in the future.
+     */
     public long rp1, rp2, rp3, rp4, rp5, rp6, rp7, rp8, rp9;
 
     static {
@@ -103,6 +120,7 @@ public final class InternalThreadLocalMap extends UnpaddedInternalThreadLocalMap
         }
     }
 
+    //快速get
     private static InternalThreadLocalMap fastGet(FastThreadLocalThread thread) {
         InternalThreadLocalMap threadLocalMap = thread.threadLocalMap();
         if (threadLocalMap == null) {
@@ -111,6 +129,7 @@ public final class InternalThreadLocalMap extends UnpaddedInternalThreadLocalMap
         return threadLocalMap;
     }
 
+    //慢速get
     private static InternalThreadLocalMap slowGet() {
         InternalThreadLocalMap ret = slowThreadLocalMap.get();
         if (ret == null) {
@@ -160,42 +179,42 @@ public final class InternalThreadLocalMap extends UnpaddedInternalThreadLocalMap
         int count = 0;
 
         if (futureListenerStackDepth != 0) {
-            count ++;
+            count++;
         }
         if (localChannelReaderStackDepth != 0) {
-            count ++;
+            count++;
         }
         if (handlerSharableCache != null) {
-            count ++;
+            count++;
         }
         if (counterHashCode != null) {
-            count ++;
+            count++;
         }
         if (random != null) {
-            count ++;
+            count++;
         }
         if (typeParameterMatcherGetCache != null) {
-            count ++;
+            count++;
         }
         if (typeParameterMatcherFindCache != null) {
-            count ++;
+            count++;
         }
         if (stringBuilder != null) {
-            count ++;
+            count++;
         }
         if (charsetEncoderCache != null) {
-            count ++;
+            count++;
         }
         if (charsetDecoderCache != null) {
-            count ++;
+            count++;
         }
         if (arrayList != null) {
-            count ++;
+            count++;
         }
 
-        for (Object o: indexedVariables) {
+        for (Object o : indexedVariables) {
             if (o != UNSET) {
-                count ++;
+                count++;
             }
         }
 
@@ -310,7 +329,7 @@ public final class InternalThreadLocalMap extends UnpaddedInternalThreadLocalMap
 
     public Object indexedVariable(int index) {
         Object[] lookup = indexedVariables;
-        return index < lookup.length? lookup[index] : UNSET;
+        return index < lookup.length ? lookup[index] : UNSET;
     }
 
     /**
@@ -332,12 +351,12 @@ public final class InternalThreadLocalMap extends UnpaddedInternalThreadLocalMap
         Object[] oldArray = indexedVariables;
         final int oldCapacity = oldArray.length;
         int newCapacity = index;
-        newCapacity |= newCapacity >>>  1;
-        newCapacity |= newCapacity >>>  2;
-        newCapacity |= newCapacity >>>  4;
-        newCapacity |= newCapacity >>>  8;
+        newCapacity |= newCapacity >>> 1;
+        newCapacity |= newCapacity >>> 2;
+        newCapacity |= newCapacity >>> 4;
+        newCapacity |= newCapacity >>> 8;
         newCapacity |= newCapacity >>> 16;
-        newCapacity ++;
+        newCapacity++;
 
         Object[] newArray = Arrays.copyOf(oldArray, newCapacity);
         Arrays.fill(newArray, oldCapacity, newArray.length, UNSET);

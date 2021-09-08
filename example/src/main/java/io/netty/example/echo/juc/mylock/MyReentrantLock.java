@@ -196,6 +196,7 @@ public class MyReentrantLock implements MyLock, java.io.Serializable {
 
         @Override
         final void lock() {
+            //调用aqs
             acquire(1);
         }
 
@@ -219,8 +220,6 @@ public class MyReentrantLock implements MyLock, java.io.Serializable {
             }
             return false;
         }
-
-
     }
 
     static final class NonfairSync extends Sync {

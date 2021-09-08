@@ -79,10 +79,7 @@ import static io.netty.buffer.PoolThreadCache.*;
  *   ( 76,    24,       22,        1,       yes,            no,        no)
  */
 abstract class SizeClasses implements SizeClassesMetric {
-    //在学习Netty内存池之前，我们先了解一下Netty的内存对齐类SizeClasses，它为Netty内存池中的内存块提供大小对齐，索引计算等服务方法。
-    //内存对齐内.
-    //SizeClasses初始化后，将计算chunkSize（内存池每次向操作系统申请内存块大小）范围内每个size的值，保存到sizeClasses字段中。
-    //sizeClasses是一个表格（二维数组），共有7列，含义如下
+    //内存对齐怎么理解.
     static final int LOG2_QUANTUM = 4;
 
     private static final int LOG2_SIZE_CLASS_GROUP = 2;

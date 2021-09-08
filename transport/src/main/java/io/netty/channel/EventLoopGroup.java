@@ -20,6 +20,9 @@ import io.netty.util.concurrent.EventExecutorGroup;
 /**
  * Special {@link EventExecutorGroup} which allows registering {@link Channel}s that get
  * processed for later selection during the event loop.
+ *  EventLoopGroup 负责为每个新创建的Channel 分配一个EventLoop。在当前实现中，
+ * 使用顺序循环（round-robin）的方式进行分配以获取一个均衡的分布，并且相同的EventLoop
+ * 可能会被分配给多个Channel。（这一点在将来的版本中可能会改变。）
  *
  */
 public interface EventLoopGroup extends EventExecutorGroup {

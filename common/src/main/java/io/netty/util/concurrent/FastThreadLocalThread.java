@@ -24,7 +24,7 @@ import io.netty.util.internal.UnstableApi;
 public class FastThreadLocalThread extends Thread {
     // This will be set to true if we have a chance to wrap the Runnable.
     private final boolean cleanupFastThreadLocals;
-
+    //核心的优化
     private InternalThreadLocalMap threadLocalMap;
 
     public FastThreadLocalThread() {

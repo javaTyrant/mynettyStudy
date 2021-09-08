@@ -17,14 +17,7 @@ package io.netty.channel.nio;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelConfig;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelMetadata;
-import io.netty.channel.ChannelOutboundBuffer;
-import io.netty.channel.ChannelPipeline;
-import io.netty.channel.FileRegion;
-import io.netty.channel.RecvByteBufAllocator;
+import io.netty.channel.*;
 import io.netty.channel.internal.ChannelUtils;
 import io.netty.channel.socket.ChannelInputShutdownEvent;
 import io.netty.channel.socket.ChannelInputShutdownReadComplete;
@@ -44,7 +37,7 @@ public abstract class AbstractNioByteChannel extends AbstractNioChannel {
     private static final ChannelMetadata METADATA = new ChannelMetadata(false, 16);
     private static final String EXPECTED_TYPES =
             " (expected: " + StringUtil.simpleClassName(ByteBuf.class) + ", " +
-            StringUtil.simpleClassName(FileRegion.class) + ')';
+                    StringUtil.simpleClassName(FileRegion.class) + ')';
 
     private final Runnable flushTask = new Runnable() {
         @Override
@@ -59,11 +52,13 @@ public abstract class AbstractNioByteChannel extends AbstractNioChannel {
     /**
      * Create a new instance
      *
-     * @param parent            the parent {@link Channel} by which this instance was created. May be {@code null}
-     * @param ch                the underlying {@link SelectableChannel} on which it operates
+     * @param parent the parent {@link Channel} by which this instance was created. May be {@code null}
+     * @param ch     the underlying {@link SelectableChannel} on which it operates
      */
     protected AbstractNioByteChannel(Channel parent, SelectableChannel ch) {
+        //注册读事件
         super(parent, ch, SelectionKey.OP_READ);
+        System.out.println("注册了一次读事件.");
     }
 
     /**
@@ -111,7 +106,7 @@ public abstract class AbstractNioByteChannel extends AbstractNioChannel {
         }
 
         private void handleReadException(ChannelPipeline pipeline, ByteBuf byteBuf, Throwable cause, boolean close,
-                RecvByteBufAllocator.Handle allocHandle) {
+                                         RecvByteBufAllocator.Handle allocHandle) {
             if (byteBuf != null) {
                 if (byteBuf.isReadable()) {
                     readPending = false;
@@ -120,8 +115,11 @@ public abstract class AbstractNioByteChannel extends AbstractNioChannel {
                     byteBuf.release();
                 }
             }
+            //记录这次读时间总共读了多少数据,计算下次分配大小
             allocHandle.readComplete();
+            //相当于完成本次读事件的处理
             pipeline.fireChannelReadComplete();
+            //
             pipeline.fireExceptionCaught(cause);
 
             // If oom will close the read event, release connection.
@@ -133,21 +131,28 @@ public abstract class AbstractNioByteChannel extends AbstractNioChannel {
 
         @Override
         public final void read() {
+            //客户端channel发送数据.此时是哪个线程在处理?应该还是boss吧.
+            System.out.println("此时的执行线程是:" + Thread.currentThread().getName());
             final ChannelConfig config = config();
             if (shouldBreakReadReady(config)) {
                 clearReadPending();
                 return;
             }
             final ChannelPipeline pipeline = pipeline();
+            //
             final ByteBufAllocator allocator = config.getAllocator();
+            //
             final RecvByteBufAllocator.Handle allocHandle = recvBufAllocHandle();
+            //
             allocHandle.reset(config);
 
             ByteBuf byteBuf = null;
             boolean close = false;
             try {
                 do {
+                    //guess
                     byteBuf = allocHandle.allocate(allocator);
+                    //
                     allocHandle.lastBytesRead(doReadBytes(byteBuf));
                     if (allocHandle.lastBytesRead() <= 0) {
                         // nothing was read. release the buffer.
@@ -191,6 +196,7 @@ public abstract class AbstractNioByteChannel extends AbstractNioChannel {
 
     /**
      * Write objects to the OS.
+     *
      * @param in the collection which contains objects to write.
      * @return The value that should be decremented from the write quantum which starts at
      * {@link ChannelConfig#getWriteSpinCount()}. The typical use cases are as follows:
@@ -305,7 +311,7 @@ public abstract class AbstractNioByteChannel extends AbstractNioChannel {
     /**
      * Write a {@link FileRegion}
      *
-     * @param region        the {@link FileRegion} from which the bytes should be written
+     * @param region the {@link FileRegion} from which the bytes should be written
      * @return amount       the amount of written bytes
      */
     protected abstract long doWriteFileRegion(FileRegion region) throws Exception;
@@ -317,7 +323,8 @@ public abstract class AbstractNioByteChannel extends AbstractNioChannel {
 
     /**
      * Write bytes form the given {@link ByteBuf} to the underlying {@link java.nio.channels.Channel}.
-     * @param buf           the {@link ByteBuf} from which the bytes should be written
+     *
+     * @param buf the {@link ByteBuf} from which the bytes should be written
      * @return amount       the amount of written bytes
      */
     protected abstract int doWriteBytes(ByteBuf buf) throws Exception;

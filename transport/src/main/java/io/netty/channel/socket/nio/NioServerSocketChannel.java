@@ -42,6 +42,9 @@ import java.util.Map;
 /**
  * A {@link io.netty.channel.socket.ServerSocketChannel} implementation which uses
  * NIO selector based implementation to accept new connections.
+ * <p/>
+ *
+ * 一个netty应用有多少NioServerSocketChannel?
  */
 public class NioServerSocketChannel extends AbstractNioMessageChannel
         implements io.netty.channel.socket.ServerSocketChannel {
@@ -85,10 +88,12 @@ public class NioServerSocketChannel extends AbstractNioMessageChannel
 
     /**
      * Create a new instance using the given {@link ServerSocketChannel}.
+     *
      */
     public NioServerSocketChannel(ServerSocketChannel channel) {
         //accept
         super(null, channel, SelectionKey.OP_ACCEPT);
+        System.out.println("创建了一个NioServerSocketChannel实例.");
         //config
         config = new NioServerSocketChannelConfig(this, javaChannel().socket());
     }
@@ -130,8 +135,8 @@ public class NioServerSocketChannel extends AbstractNioMessageChannel
         return SocketUtils.localSocketAddress(javaChannel().socket());
     }
 
-    @SuppressJava6Requirement(reason = "Usage guarded by java version check")
     @Override
+    @SuppressJava6Requirement(reason = "Usage guarded by java version check")
     protected void doBind(SocketAddress localAddress) throws Exception {
         if (PlatformDependent.javaVersion() >= 7) {
             javaChannel().bind(localAddress, config.getBacklog());
@@ -152,7 +157,7 @@ public class NioServerSocketChannel extends AbstractNioMessageChannel
 
         try {
             if (ch != null) {
-                //创建客户端流.传一个parent.
+                //创建客户端流.传一个parent.这里会注册读事件.
                 buf.add(new NioSocketChannel(this, ch));
                 return 1;
             }

@@ -59,6 +59,7 @@ public abstract class AbstractNioMessageChannel extends AbstractNioChannel {
         return allocHandle.continueReading();
     }
 
+    //
     private final class NioMessageUnsafe extends AbstractNioUnsafe {
 
         private final List<Object> readBuf = new ArrayList<Object>();

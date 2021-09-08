@@ -22,14 +22,13 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 final class SelectedSelectionKeySet extends AbstractSet<SelectionKey> {
-
+    //
     SelectionKey[] keys;
+    //
     int size;
 
-    SelectedSelectionKeySet() {
-        keys = new SelectionKey[1024];
-    }
-
+    //protected Set<SelectionKey> selectedKeys = new HashSet();
+    //怎么被调用的. WindowsSelectorImpl.this.selectedKeys.add(var10);
     @Override
     public boolean add(SelectionKey o) {
         if (o == null) {
@@ -42,6 +41,10 @@ final class SelectedSelectionKeySet extends AbstractSet<SelectionKey> {
         }
 
         return true;
+    }
+
+    SelectedSelectionKeySet() {
+        keys = new SelectionKey[1024];
     }
 
     @Override

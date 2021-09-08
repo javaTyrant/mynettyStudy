@@ -30,6 +30,7 @@ import static io.netty.util.internal.ObjectUtil.checkNotNull;
 public class DefaultChannelPromise extends DefaultPromise<Void> implements ChannelPromise, FlushCheckpoint {
 
     private final Channel channel;
+
     private long checkpoint;
 
     /**
@@ -49,6 +50,7 @@ public class DefaultChannelPromise extends DefaultPromise<Void> implements Chann
      *        the {@link Channel} associated with this future
      */
     public DefaultChannelPromise(Channel channel, EventExecutor executor) {
+        //channel 和 executor绑定在DefaultChannelPromise里.
         super(executor);
         this.channel = checkNotNull(channel, "channel");
     }

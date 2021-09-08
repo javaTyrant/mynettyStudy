@@ -26,18 +26,31 @@ import java.nio.channels.FileChannel;
 import java.nio.channels.GatheringByteChannel;
 import java.nio.channels.ScatteringByteChannel;
 
+/**
+ * 池化的ByteBuf
+ *
+ * @param <T> T
+ */
 abstract class PooledByteBuf<T> extends AbstractReferenceCountedByteBuf {
 
     private final Handle<PooledByteBuf<T>> recyclerHandle;
-
+    //
     protected PoolChunk<T> chunk;
+    //
     protected long handle;
+    //
     protected T memory;
+    //
     protected int offset;
+    //
     protected int length;
+    //
     int maxLength;
+    //
     PoolThreadCache cache;
+    //
     ByteBuffer tmpNioBuf;
+    //
     private ByteBufAllocator allocator;
 
     @SuppressWarnings("unchecked")
@@ -213,7 +226,7 @@ abstract class PooledByteBuf<T> extends AbstractReferenceCountedByteBuf {
 
     @Override
     public final ByteBuffer[] nioBuffers(int index, int length) {
-        return new ByteBuffer[] { nioBuffer(index, length) };
+        return new ByteBuffer[]{nioBuffer(index, length)};
     }
 
     @Override
