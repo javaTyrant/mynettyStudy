@@ -36,12 +36,17 @@ import static io.netty.util.internal.ObjectUtil.checkPositiveOrZero;
  * {@code 0}.
  */
 public class DefaultFileRegion extends AbstractReferenceCounted implements FileRegion {
-
+    //
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(DefaultFileRegion.class);
+    //
     private final File f;
+    //
     private final long position;
+    //
     private final long count;
+    //
     private long transferred;
+    //
     private FileChannel file;
 
     /**
@@ -127,6 +132,8 @@ public class DefaultFileRegion extends AbstractReferenceCounted implements FileR
         // Call open to make sure fc is initialized. This is a no-oop if we called it before.
         open();
 
+        //底层还是jdk.transferTo的原理是什么呢?写入到WritableByteChannel.A channel that can write bytes
+        //SocketChannel
         long written = file.transferTo(this.position + position, count, target);
         if (written > 0) {
             transferred += written;
