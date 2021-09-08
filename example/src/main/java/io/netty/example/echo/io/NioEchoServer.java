@@ -7,7 +7,6 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
-import java.util.Iterator;
 import java.util.Set;
 
 /**
@@ -16,27 +15,29 @@ import java.util.Set;
  **/
 public class NioEchoServer {
     public static void main(String[] args) throws IOException {
-        //打开服务端的流
+        //打开服务端的流.
         ServerSocketChannel ssChannel = ServerSocketChannel.open();
         int port = 9001;
-        //bind
+        //绑定地址
         ssChannel.bind(new InetSocketAddress(port));
-        //open Selector
+        //打开Selector
         Selector selector = Selector.open();
         //config
         ssChannel.configureBlocking(false);
-        //服务器流注册
+        //服务器流注册.channel selector就联系起来啦.
         ssChannel.register(selector, SelectionKey.OP_ACCEPT); //注册监听连接请求
         //
         while (true) {
             selector.select();//阻塞 直到某个channel注册的事件被触发
+            //获取keys
             Set<SelectionKey> keys = selector.selectedKeys();
             for (SelectionKey key : keys) {
                 if (key.isAcceptable()) { //客户端连接请求
-                    ServerSocketChannel ssc = (ServerSocketChannel) key
-                            .channel();
+                    ServerSocketChannel ssc = (ServerSocketChannel) key.channel();
+                    //accept返回socketChannel.
                     SocketChannel sc = ssc.accept();
                     sc.configureBlocking(false);
+                    //注册读事件.
                     sc.register(selector, SelectionKey.OP_READ); //注册监听客户端输入
                 }
                 //可读的
@@ -45,9 +46,11 @@ public class NioEchoServer {
                     SocketChannel sc = (SocketChannel) key.channel();
                     //
                     ByteBuffer buffer = ByteBuffer.allocate(1024);
+                    //
                     sc.read(buffer);
                     //读写转换.
                     buffer.flip();
+                    //
                     sc.write(buffer);
                 }
             }

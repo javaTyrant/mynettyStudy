@@ -27,11 +27,7 @@ import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 
 import java.io.IOException;
-import java.net.ConnectException;
-import java.net.InetSocketAddress;
-import java.net.NoRouteToHostException;
-import java.net.SocketAddress;
-import java.net.SocketException;
+import java.net.*;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.NotYetConnectedException;
 import java.util.concurrent.Executor;
@@ -72,6 +68,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
      * Cache for the string representation of this channel
      */
     private boolean strValActive;
+    //
     private String strVal;
 
     /**
@@ -85,10 +82,10 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
         id = newId();
         //构造unsafe.
         unsafe = newUnsafe();
-        System.out.println("unsafe创建好了...");
+        System.out.println("unsafe创建好了..." + unsafe.getClass().getSimpleName());
         //构造pipeline
         pipeline = newChannelPipeline();
-        System.out.println("pipeline创建好了...");
+        System.out.println("pipeline创建好了..." + pipeline.getClass().getSimpleName());
     }
 
     /**
@@ -100,9 +97,9 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
         this.parent = parent;
         this.id = id;
         unsafe = newUnsafe();
-        System.out.println("unsafe创建好了...");
+        System.out.println("unsafe创建好了..." + unsafe.getClass().getSimpleName());
         pipeline = newChannelPipeline();
-        System.out.println("pipeline创建好了...");
+        System.out.println("pipeline创建好了..." + pipeline.getClass().getSimpleName());
     }
 
     protected final int maxMessagesPerWrite() {
@@ -363,6 +360,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
     /**
      * Create a new {@link AbstractUnsafe} instance which will be used for the life-time of the {@link Channel}
      * <p/>
+     * 创建unsafe.
      */
     protected abstract AbstractUnsafe newUnsafe();
 

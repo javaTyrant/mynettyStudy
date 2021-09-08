@@ -27,6 +27,7 @@ public class EchoServerHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
+        System.out.println("EchoServerHandler-channelRead被触发了");
         ctx.write(msg);
     }
 

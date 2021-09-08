@@ -313,8 +313,8 @@ public interface ChannelPipeline
      *
      * @param group    the {@link EventExecutorGroup} which will be used to execute the {@link ChannelHandler}
      *                 methods
-     * @param baseName the name of the existing handler
-     * @param name     the name of the handler to insert after
+     * @param baseName the name of the existing handler 已经存在handler的名字
+     * @param name     the name of the handler to insert after 
      * @param handler  the handler to insert after
      * @throws NoSuchElementException   if there's no such entry with the specified {@code baseName}
      * @throws IllegalArgumentException if there's an entry with the same name already in the pipeline

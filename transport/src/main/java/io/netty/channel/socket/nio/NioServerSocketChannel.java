@@ -88,6 +88,7 @@ public class NioServerSocketChannel extends AbstractNioMessageChannel
 
     /**
      * Create a new instance using the given {@link ServerSocketChannel}.
+     *
      */
     public NioServerSocketChannel(ServerSocketChannel channel) {
         //accept
@@ -156,7 +157,7 @@ public class NioServerSocketChannel extends AbstractNioMessageChannel
 
         try {
             if (ch != null) {
-                //创建客户端流.传一个parent.
+                //创建客户端流.传一个parent.这里会注册读事件.
                 buf.add(new NioSocketChannel(this, ch));
                 return 1;
             }

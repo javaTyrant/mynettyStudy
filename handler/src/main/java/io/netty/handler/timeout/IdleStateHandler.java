@@ -289,6 +289,7 @@ public class IdleStateHandler extends ChannelDuplexHandler {
             reading = true;
             firstReaderIdleEvent = firstAllIdleEvent = true;
         }
+        //ctx在哪封装的?
         ctx.fireChannelRead(msg);
     }
 

@@ -34,6 +34,8 @@ public final class ThreadPerTaskExecutor implements Executor {
     @Override//Thread跟eventloop的关系是如何关联的.
     public void execute(Runnable command) {
         //new thread就完事了.线程是保存在newChild里的,所以不会无限new
-        threadFactory.newThread(command).start();
+        Thread thread = threadFactory.newThread(command);
+        System.out.println("开启了一个线程" + thread.getName());
+        thread.start();
     }
 }

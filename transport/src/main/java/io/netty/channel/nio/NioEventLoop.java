@@ -15,13 +15,7 @@
  */
 package io.netty.channel.nio;
 
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelException;
-import io.netty.channel.EventLoop;
-import io.netty.channel.EventLoopException;
-import io.netty.channel.EventLoopTaskQueueFactory;
-import io.netty.channel.SelectStrategy;
-import io.netty.channel.SingleThreadEventLoop;
+import io.netty.channel.*;
 import io.netty.util.IntSupplier;
 import io.netty.util.concurrent.RejectedExecutionHandler;
 import io.netty.util.internal.ObjectUtil;
@@ -35,17 +29,12 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.nio.channels.CancelledKeyException;
 import java.nio.channels.SelectableChannel;
-import java.nio.channels.Selector;
 import java.nio.channels.SelectionKey;
-
+import java.nio.channels.Selector;
 import java.nio.channels.spi.SelectorProvider;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.Queue;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -504,7 +493,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
                             processSelectedKeys();
                         }
                     } finally {
-                        // Ensure we always run tasks.
+                        // Ensure we always run tasks.执行是什么任务呢?
                         ranTasks = runAllTasks();
                     }
                 } else if (strategy > 0) {
@@ -666,13 +655,14 @@ public final class NioEventLoop extends SingleThreadEventLoop {
         }
     }
 
+    //优化过的,所以从数组里取SelectionKey
     private void processSelectedKeysOptimized() {
         for (int i = 0; i < selectedKeys.size; ++i) {
             final SelectionKey k = selectedKeys.keys[i];
             // null out entry in the array to allow to have it GC'ed once the Channel close
             // See https://github.com/netty/netty/issues/2363
             selectedKeys.keys[i] = null;
-            //获取附件.
+            //获取附件.那么哪里放进去的呢.所以连接的时候跟读的时候并不是一样的.
             final Object a = k.attachment();
             //
             if (a instanceof AbstractNioChannel) {
@@ -696,7 +686,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
 
     //如果记不清楚说明还没有真正的理解.
     private void processSelectedKey(SelectionKey k, AbstractNioChannel ch) {
-        //
+        //从channel获取unsafe.不同unsafe的赋值在哪里呢?
         final AbstractNioChannel.NioUnsafe unsafe = ch.unsafe();
         //如果k不是有效的
         if (!k.isValid()) {
@@ -759,6 +749,11 @@ public final class NioEventLoop extends SingleThreadEventLoop {
                 //->next.invokeChannelRead(m);
                 //->((ChannelInboundHandler) handler()).channelRead(this, msg);
                 //->childGroup.register(child).addListener
+                //连接的时候unsafe是:AbstractNioMessageChannel$NioMessageUnsafe
+                //读数据的时候unsafe是:NioSocketChannel$NioSocketChannelUnsafe
+                //boss和worker线程绑定了不同的unsafe吧.unsafe在哪里绑定的呢?
+                //OP_ACCEPT事件是什么时候注册的? channelFactory.newChannel()->constructor.newInstance()->注册accept事件.
+                //OP_READ事件是什么时候注册的? new AbstractNioByteChannel ->注册读事件.
                 unsafe.read();
             }
         } catch (CancelledKeyException ignored) {
@@ -848,7 +843,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
         return selector.selectNow();
     }
 
-    //调用jdk的select的方法.
+    //调用jdk的select的方法.select注册什么兴趣的事件,就监听什么.
     private int select(long deadlineNanos) throws IOException {
         if (deadlineNanos == NONE) {
             return selector.select();

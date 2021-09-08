@@ -23,42 +23,18 @@ import io.netty.util.ResourceLeakHint;
 import io.netty.util.concurrent.AbstractEventExecutor;
 import io.netty.util.concurrent.EventExecutor;
 import io.netty.util.concurrent.OrderedEventExecutor;
-import io.netty.util.internal.ObjectPool;
+import io.netty.util.internal.*;
 import io.netty.util.internal.ObjectPool.Handle;
 import io.netty.util.internal.ObjectPool.ObjectCreator;
-import io.netty.util.internal.PromiseNotificationUtil;
-import io.netty.util.internal.ThrowableUtil;
-import io.netty.util.internal.ObjectUtil;
-import io.netty.util.internal.StringUtil;
-import io.netty.util.internal.SystemPropertyUtil;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 
 import java.net.SocketAddress;
 import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 
-import static io.netty.channel.ChannelHandlerMask.MASK_BIND;
-import static io.netty.channel.ChannelHandlerMask.MASK_CHANNEL_ACTIVE;
-import static io.netty.channel.ChannelHandlerMask.MASK_CHANNEL_INACTIVE;
-import static io.netty.channel.ChannelHandlerMask.MASK_CHANNEL_READ;
-import static io.netty.channel.ChannelHandlerMask.MASK_CHANNEL_READ_COMPLETE;
-import static io.netty.channel.ChannelHandlerMask.MASK_CHANNEL_REGISTERED;
-import static io.netty.channel.ChannelHandlerMask.MASK_CHANNEL_UNREGISTERED;
-import static io.netty.channel.ChannelHandlerMask.MASK_CHANNEL_WRITABILITY_CHANGED;
-import static io.netty.channel.ChannelHandlerMask.MASK_CLOSE;
-import static io.netty.channel.ChannelHandlerMask.MASK_CONNECT;
-import static io.netty.channel.ChannelHandlerMask.MASK_DEREGISTER;
-import static io.netty.channel.ChannelHandlerMask.MASK_DISCONNECT;
-import static io.netty.channel.ChannelHandlerMask.MASK_EXCEPTION_CAUGHT;
-import static io.netty.channel.ChannelHandlerMask.MASK_FLUSH;
-import static io.netty.channel.ChannelHandlerMask.MASK_ONLY_INBOUND;
-import static io.netty.channel.ChannelHandlerMask.MASK_ONLY_OUTBOUND;
-import static io.netty.channel.ChannelHandlerMask.MASK_READ;
-import static io.netty.channel.ChannelHandlerMask.MASK_USER_EVENT_TRIGGERED;
-import static io.netty.channel.ChannelHandlerMask.MASK_WRITE;
-import static io.netty.channel.ChannelHandlerMask.mask;
+import static io.netty.channel.ChannelHandlerMask.*;
 
-//
+//抽象的channel Handler 上下文.为什么要封装这一层呢?
 abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, ResourceLeakHint {
     //日志打印
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(AbstractChannelHandlerContext.class);
@@ -885,11 +861,13 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
         return false;
     }
 
+    //这里面移动到了下一个handler
     private AbstractChannelHandlerContext findContextInbound(int mask) {
         AbstractChannelHandlerContext ctx = this;
         EventExecutor currentExecutor = executor();
         do {
             ctx = ctx.next;
+            //需要过滤的.
         } while (skipContext(ctx, currentExecutor, mask, MASK_ONLY_INBOUND));
         return ctx;
     }
@@ -942,6 +920,7 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
         boolean updated = HANDLER_STATE_UPDATER.compareAndSet(this, INIT, ADD_PENDING);
         assert updated; // This should always be true as it MUST be called before setAddComplete() or setRemoved().
     }
+
     //
     final void callHandlerAdded() throws Exception {
         // We must call setAddComplete before calling handlerAdded. Otherwise if the handlerAdded method generates

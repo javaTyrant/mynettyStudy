@@ -16,11 +16,7 @@
 package io.netty.example.echo;
 
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.ChannelPipeline;
-import io.netty.channel.EventLoopGroup;
+import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
@@ -32,6 +28,18 @@ import io.netty.handler.ssl.util.SelfSignedCertificate;
 import io.netty.handler.timeout.IdleStateHandler;
 
 import java.util.concurrent.TimeUnit;
+/**
+ * 一些组件之间的关系:
+ * 1.一个EventLoopGroup 包含一个或者多个EventLoop；
+ * 2.一个EventLoop 在它的生命周期内只和一个Thread 绑定；
+ * 3.所有由EventLoop 处理的I/O 事件都将在它专有的Thread 上被处理；
+ * 4.一个Channel 在它的生命周期内只注册于一个EventLoop；
+ * 5.一个EventLoop 可能会被分配给一个或多个Channel。
+ * 注意，在这种设计中，一个给定Channel 的I/O 操作都是由相同的Thread 执行的，实际
+ * 上消除了对于同步的需要。
+ * 问:eventLoop怎么跟线程绑定起来的?
+ *
+ */
 
 /**
  * Echoes back any received data from a client.
@@ -61,6 +69,7 @@ public final class EchoServer {
      */
     static final boolean SSL = System.getProperty("ssl") != null;
     static final int PORT = Integer.parseInt(System.getProperty("port", "8007"));
+
     //boss线程的启动:
     //worker线程的启动:
     //boss如何把工作转移到worker的呢?boss accept
@@ -80,18 +89,21 @@ public final class EchoServer {
         //worker
         EventLoopGroup workerGroup = new NioEventLoopGroup();
         final EchoServerHandler serverHandler = new EchoServerHandler();
+        final EchoServerHandler1 serverHandler1 = new EchoServerHandler1();
         try {
             ServerBootstrap b = new ServerBootstrap();
             //group的作用.boss保存到AbstractBootstrap的group里.
             //workerGroup.保存到ServerBootstrap的childGroup
             b.group(bossGroup, workerGroup)
                     //反射构造channel.
+                    //客户端流的创建: buf.add(new NioSocketChannel(this, ch));
                     .channel(NioServerSocketChannel.class)
                     .option(ChannelOption.SO_BACKLOG, 100)
                     .handler(new LoggingHandler(LogLevel.INFO))
                     .childHandler(new ChannelInitializer<SocketChannel>() {
                         @Override
                         public void initChannel(SocketChannel ch) {
+                            //从ch里获取pipeline
                             ChannelPipeline p = ch.pipeline();
                             if (sslCtx != null) {
                                 p.addLast(sslCtx.newHandler(ch.alloc()));
@@ -100,6 +112,7 @@ public final class EchoServer {
                             //如何触发的?callHandlerAdded->
                             p.addLast(new IdleStateHandler(30, 0, 0, TimeUnit.SECONDS));
                             p.addLast(serverHandler);
+                            p.addLast(serverHandler1);
                             p.addLast(new HeartBeatServerHandler());
                             //p.addLast()
                         }

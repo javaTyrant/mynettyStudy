@@ -323,6 +323,7 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
         }
         //boss注册channel.先调用eventloop的register.NioEventLoopGroup.
         //开启boss。注册。MultithreadEventLoopGroup.register
+        //channel注册到EventLoopGroup
         ChannelFuture regFuture = config().group().register(channel);
         if (regFuture.cause() != null) {
             if (channel.isRegistered()) {
