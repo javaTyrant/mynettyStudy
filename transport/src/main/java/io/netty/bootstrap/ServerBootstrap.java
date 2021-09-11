@@ -177,6 +177,7 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
         return this;
     }
 
+    //也是一个ChannelHandler.
     //ServerBootstrapAcceptor是用来处理当BossGroup(EventLoopGroup)里面有新的客户端连接产生时候
     //将新连接(NioSocketChannel)交给WorkerGroup(EventLoopGroup)
     private static class ServerBootstrapAcceptor extends ChannelInboundHandlerAdapter {

@@ -63,13 +63,13 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
      * nor {@link ChannelHandler#handlerRemoved(ChannelHandlerContext)} was called.
      */
     private static final int INIT = 0;
-    //默认的channelPipeline.
+    //ACH属于的pipeline.pipeline属于的channel也从这里面获取.
     private final DefaultChannelPipeline pipeline;
     //
     private final String name;
     //
     private final boolean ordered;
-    //
+    //掩码运算操作:作用:?
     private final int executionMask;
 
     // Will be set to null if no child executor should be used, otherwise it will be set to the
@@ -89,6 +89,7 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
         this.name = ObjectUtil.checkNotNull(name, "name");
         this.pipeline = pipeline;
         this.executor = executor;
+        //
         this.executionMask = mask(handlerClass);
         // Its ordered if its driven by the EventLoop or the given Executor is an instanceof OrderedEventExecutor.
         ordered = executor == null || executor instanceof OrderedEventExecutor;
@@ -99,6 +100,7 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
         return pipeline.channel();
     }
 
+    //
     @Override
     public ChannelPipeline pipeline() {
         return pipeline;
@@ -433,8 +435,10 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
         }
     }
 
+    //为什么这个类需要bind以及其他的底层方法呢?什么时候会使用这个方法呢?
     @Override
     public ChannelFuture bind(SocketAddress localAddress) {
+        System.out.println("调用到了吗??????");
         return bind(localAddress, newPromise());
     }
 
@@ -489,6 +493,7 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
     private void invokeBind(SocketAddress localAddress, ChannelPromise promise) {
         if (invokeHandler()) {
             try {
+                //获取handler.
                 ((ChannelOutboundHandler) handler()).bind(this, localAddress, promise);
             } catch (Throwable t) {
                 notifyOutboundHandlerException(t, promise);
@@ -881,6 +886,7 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
         return ctx;
     }
 
+    //过滤掉不感兴趣的.
     private static boolean skipContext(
             AbstractChannelHandlerContext ctx, EventExecutor currentExecutor, int mask, int onlyMask) {
         // Ensure we correctly handle MASK_EXCEPTION_CAUGHT which is not included in the MASK_EXCEPTION_CAUGHT
@@ -901,7 +907,9 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
         handlerState = REMOVE_COMPLETE;
     }
 
+    //
     final boolean setAddComplete() {
+        //死循环
         for (; ; ) {
             int oldState = handlerState;
             if (oldState == REMOVE_COMPLETE) {
@@ -910,6 +918,7 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
             // Ensure we never update when the handlerState is REMOVE_COMPLETE already.
             // oldState is usually ADD_PENDING but can also be REMOVE_COMPLETE when an EventExecutor is used that is not
             // exposing ordering guarantees.
+            // cas更新handlerState
             if (HANDLER_STATE_UPDATER.compareAndSet(this, oldState, ADD_COMPLETE)) {
                 return true;
             }

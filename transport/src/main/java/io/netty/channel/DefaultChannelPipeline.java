@@ -42,7 +42,6 @@ public class DefaultChannelPipeline implements ChannelPipeline {
     static final InternalLogger logger = InternalLoggerFactory.getInstance(DefaultChannelPipeline.class);
     //头尾名称
     private static final String HEAD_NAME = generateName0(HeadContext.class);
-    //
     private static final String TAIL_NAME = generateName0(TailContext.class);
 
     //名称缓存
@@ -55,17 +54,17 @@ public class DefaultChannelPipeline implements ChannelPipeline {
             };
     //netty用了AtomicReferenceFieldUpdater.那么是不是应该仔细的了解下呢?
     private static final AtomicReferenceFieldUpdater<DefaultChannelPipeline, MessageSizeEstimator.Handle> ESTIMATOR =
-            AtomicReferenceFieldUpdater.newUpdater(
-                    DefaultChannelPipeline.class, MessageSizeEstimator.Handle.class, "estimatorHandle");
-    //头
+            AtomicReferenceFieldUpdater.newUpdater(DefaultChannelPipeline.class,
+                    MessageSizeEstimator.Handle.class, "estimatorHandle");
+    //头:双向链表的元素是AbstractChannelHandlerContext.
     final AbstractChannelHandlerContext head;
-    //尾
+    //尾:
     final AbstractChannelHandlerContext tail;
     //属于哪个channel.
     private final Channel channel;
-    //
+    //成功的future.
     private final ChannelFuture succeededFuture;
-    //
+    //promise:作用?
     private final VoidChannelPromise voidPromise;
     //
     private final boolean touch = ResourceLeakDetector.isEnabled();
@@ -92,17 +91,19 @@ public class DefaultChannelPipeline implements ChannelPipeline {
      */
     private boolean registered;
 
+    //
     protected DefaultChannelPipeline(Channel channel) {
         //设置属于的channel.
         this.channel = ObjectUtil.checkNotNull(channel, "channel");
-        //
+        //channel保存到CompleteChannelFuture里.
         succeededFuture = new SucceededChannelFuture(channel, null);
         //
         voidPromise = new VoidChannelPromise(channel, true);
-        //
+        //这个处理逻辑要仔细看看.两个哨兵.
         tail = new TailContext(this);
-        head = new HeadContext(this);
         //
+        head = new HeadContext(this);
+        //双向链表串起来.
         head.next = tail;
         tail.prev = head;
     }
@@ -122,6 +123,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
         return touch ? ReferenceCountUtil.touch(msg, next) : msg;
     }
 
+    //
     private AbstractChannelHandlerContext newContext(EventExecutorGroup group, String name, ChannelHandler handler) {
         //childExecutor包装下group
         return new DefaultChannelHandlerContext(this, childExecutor(group), name, handler);
@@ -206,18 +208,19 @@ public class DefaultChannelPipeline implements ChannelPipeline {
         return addLast(null, name, handler);
     }
 
+    //注意:!!!!
     @Override
     public final ChannelPipeline addLast(EventExecutorGroup group, String name, ChannelHandler handler) {
         //
         final AbstractChannelHandlerContext newCtx;
-        //
+        //加锁.
         synchronized (this) {
+            //重复性检查.
             checkMultiplicity(handler);
             //封装一个newCts:DefaultChannelHandlerContext
             newCtx = newContext(group, filterName(name, handler), handler);
-            //
+            //插入链表.
             addLast0(newCtx);
-
             // If the registered is false it means that the channel was not registered on an eventLoop yet.
             // In this case we add the context to the pipeline and add a task that will call
             // ChannelHandler.handlerAdded(...) once the channel is registered.
@@ -233,6 +236,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
                 return this;
             }
         }
+        //回调用户 Handler 中实现的 handlerAdded() 方法。
         callHandlerAdded0(newCtx);
         return this;
     }
@@ -617,6 +621,9 @@ public class DefaultChannelPipeline implements ChannelPipeline {
     private static void checkMultiplicity(ChannelHandler handler) {
         if (handler instanceof ChannelHandlerAdapter) {
             ChannelHandlerAdapter h = (ChannelHandlerAdapter) handler;
+            //如果是false.且added为true,那么就报错.
+            //如果是true.那么可以重复添加.共享的Handler 必须要确保是线程安全的。
+            //简而言之就是不可用共享的handler只能添加一次.
             if (!h.isSharable() && h.added) {
                 throw new ChannelPipelineException(
                         h.getClass().getName() +
@@ -628,6 +635,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
 
     private void callHandlerAdded0(final AbstractChannelHandlerContext ctx) {
         try {
+            //用户实现的方法.
             ctx.callHandlerAdded();
         } catch (Throwable t) {
             boolean removed = false;
@@ -957,6 +965,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
 
     @Override
     public final ChannelFuture bind(SocketAddress localAddress) {
+        //为什么呢
         return tail.bind(localAddress);
     }
 
@@ -1332,6 +1341,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
     }
 
     //既是 Inbound 处理器，也是 Outbound 处理器
+    //有unsafe对象哦.
     final class HeadContext extends AbstractChannelHandlerContext
             implements ChannelOutboundHandler, ChannelInboundHandler {
         //网络数据写入操作的入口就是由 HeadContext 节点完成的。HeadContext 作为 Pipeline 的头结点负责读取数据并开始传递 InBound 事件，

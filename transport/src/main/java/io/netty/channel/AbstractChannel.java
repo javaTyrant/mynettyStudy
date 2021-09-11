@@ -235,6 +235,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
 
     @Override
     public ChannelFuture bind(SocketAddress localAddress) {
+        //为什么要让pipeline来bind呢?
         return pipeline.bind(localAddress);
     }
 

@@ -28,6 +28,17 @@ import io.netty.handler.ssl.util.SelfSignedCertificate;
 import io.netty.handler.timeout.IdleStateHandler;
 
 import java.util.concurrent.TimeUnit;
+//Netty 服务端启动后，BossEventLoopGroup 会负责监听客户端的 Accept 事件。
+//当有客户端新连接接入时，BossEventLoopGroup 中的 NioEventLoop 首先会新建客户端 Channel，
+//然后在 NioServerSocketChannel 中触发 channelRead 事件传播，NioServerSocketChannel
+//中包含了一种特殊的处理器 ServerBootstrapAcceptor，最终通过 ServerBootstrapAcceptor
+//的 channelRead() 方法将新建的客户端 Channel 分配到 WorkerEventLoopGroup 中。
+//WorkerEventLoopGroup 中包含多个 NioEventLoop，它会选择其中一个 NioEventLoop 与新建的客户端 Channel 绑定。
+
+//完成客户端连接注册之后，就可以接收客户端的请求数据了。当客户端向服务端发送数据时，NioEventLoop 会监听到 OP_READ 事件，
+//然后分配 ByteBuf 并读取数据，读取完成后将数据传递给 Pipeline 进行处理。一般来说，数据会从 ChannelPipeline 的第一个
+//ChannelHandler 开始传播，将加工处理后的消息传递给下一个 ChannelHandler，整个过程是串行化执行。
+
 /**
  * 一些组件之间的关系:
  * 1.一个EventLoopGroup 包含一个或者多个EventLoop；
@@ -38,7 +49,6 @@ import java.util.concurrent.TimeUnit;
  * 注意，在这种设计中，一个给定Channel 的I/O 操作都是由相同的Thread 执行的，实际
  * 上消除了对于同步的需要。
  * 问:eventLoop怎么跟线程绑定起来的?
- *
  */
 
 /**
@@ -103,7 +113,8 @@ public final class EchoServer {
                     .childHandler(new ChannelInitializer<SocketChannel>() {
                         @Override
                         public void initChannel(SocketChannel ch) {
-                            //从ch里获取pipeline
+                            //从ch里获取pipeline:思考下,网络流程在Netty中的旅程.
+                            //主要还是跟下出站入站的流程.
                             ChannelPipeline p = ch.pipeline();
                             if (sslCtx != null) {
                                 p.addLast(sslCtx.newHandler(ch.alloc()));
