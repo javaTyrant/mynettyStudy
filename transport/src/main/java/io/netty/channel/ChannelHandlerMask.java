@@ -32,26 +32,44 @@ import java.security.PrivilegedExceptionAction;
 import java.util.Map;
 import java.util.WeakHashMap;
 
+//ChannelHandlerMask主要是定义了ChannelHandler支持回调的事件类型以及相应的辅助方法。
 final class ChannelHandlerMask {
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(ChannelHandlerMask.class);
 
     // Using to mask which methods must be called for a ChannelHandler.
+    //异常捕获到
     static final int MASK_EXCEPTION_CAUGHT = 1;
+    //
     static final int MASK_CHANNEL_REGISTERED = 1 << 1;
+    //
     static final int MASK_CHANNEL_UNREGISTERED = 1 << 2;
+    //
     static final int MASK_CHANNEL_ACTIVE = 1 << 3;
+    //
     static final int MASK_CHANNEL_INACTIVE = 1 << 4;
+    //
     static final int MASK_CHANNEL_READ = 1 << 5;
+    //
     static final int MASK_CHANNEL_READ_COMPLETE = 1 << 6;
+    //
     static final int MASK_USER_EVENT_TRIGGERED = 1 << 7;
+    //
     static final int MASK_CHANNEL_WRITABILITY_CHANGED = 1 << 8;
+    //
     static final int MASK_BIND = 1 << 9;
+    //
     static final int MASK_CONNECT = 1 << 10;
+    //
     static final int MASK_DISCONNECT = 1 << 11;
+    //
     static final int MASK_CLOSE = 1 << 12;
+    //
     static final int MASK_DEREGISTER = 1 << 13;
+    //
     static final int MASK_READ = 1 << 14;
+    //
     static final int MASK_WRITE = 1 << 15;
+    //
     static final int MASK_FLUSH = 1 << 16;
 
     static final int MASK_ONLY_INBOUND =  MASK_CHANNEL_REGISTERED |
@@ -91,6 +109,7 @@ final class ChannelHandlerMask {
     private static int mask0(Class<? extends ChannelHandler> handlerType) {
         int mask = MASK_EXCEPTION_CAUGHT;
         try {
+            //如果是入站事件.
             if (ChannelInboundHandler.class.isAssignableFrom(handlerType)) {
                 mask |= MASK_ALL_INBOUND;
 
@@ -119,7 +138,7 @@ final class ChannelHandlerMask {
                     mask &= ~MASK_USER_EVENT_TRIGGERED;
                 }
             }
-
+            //如果是出站事件.
             if (ChannelOutboundHandler.class.isAssignableFrom(handlerType)) {
                 mask |= MASK_ALL_OUTBOUND;
 

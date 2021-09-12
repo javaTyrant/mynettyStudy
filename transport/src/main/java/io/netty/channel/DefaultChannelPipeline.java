@@ -936,9 +936,10 @@ public class DefaultChannelPipeline implements ChannelPipeline {
         return this;
     }
 
+    //客户端流触发到这边.
     @Override
     public final ChannelPipeline fireChannelRead(Object msg) {
-        //context里维护了链表.从头向尾一个一个触发.
+        //context里维护了链表.从头向尾一个一个触发.以head为入参.
         AbstractChannelHandlerContext.invokeChannelRead(head, msg);
         return this;
     }
@@ -1043,6 +1044,8 @@ public class DefaultChannelPipeline implements ChannelPipeline {
         return tail.writeAndFlush(msg, promise);
     }
 
+    //Outbound 事件最常见的就是写事件，执行 writeAndFlush() 方法时就会触发 Outbound 事件传播。
+    //我们直接从 TailContext 跟进 writeAndFlush() 源码：
     @Override
     public final ChannelFuture writeAndFlush(Object msg) {
         return tail.writeAndFlush(msg);
@@ -1206,6 +1209,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
                     "Discarded inbound message {} that reached at the tail of the pipeline. " +
                             "Please check your pipeline configuration.", msg);
         } finally {
+            //release
             ReferenceCountUtil.release(msg);
         }
     }
@@ -1396,6 +1400,9 @@ public class DefaultChannelPipeline implements ChannelPipeline {
 
         @Override
         public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) {
+            //为什么head要持有Unsafe就很明了了吧.
+            //HeadContext 最终调用了底层的 unsafe 写入数据，数据在执行 write() 方法时，
+            //只会写入到一个底层的缓冲数据结构，然后等待 flush 操作将数据冲刷到 Channel 中。
             unsafe.write(msg, promise);
         }
 

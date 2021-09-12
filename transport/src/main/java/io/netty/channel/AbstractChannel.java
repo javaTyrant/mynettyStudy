@@ -445,7 +445,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
      * {@link Unsafe} implementation which sub-classes must extend and use.
      */
     protected abstract class AbstractUnsafe implements Unsafe {
-        //
+        //出站消息暂存队列.重要.
         private volatile ChannelOutboundBuffer outboundBuffer = new ChannelOutboundBuffer(AbstractChannel.this);
         //
         private RecvByteBufAllocator.Handle recvHandle;
@@ -932,7 +932,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
                 }
                 return;
             }
-
+            //添加到队列里.
             outboundBuffer.addMessage(msg, size, promise);
         }
 
@@ -944,8 +944,9 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
             if (outboundBuffer == null) {
                 return;
             }
-
+            //
             outboundBuffer.addFlush();
+            //
             flush0();
         }
 
@@ -982,6 +983,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
             }
 
             try {
+                //核心.
                 doWrite(outboundBuffer);
             } catch (Throwable t) {
                 handleWriteError(t);
