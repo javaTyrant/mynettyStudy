@@ -15,11 +15,7 @@
  */
 package io.netty.util.concurrent;
 
-import io.netty.util.internal.InternalThreadLocalMap;
-import io.netty.util.internal.PlatformDependent;
-import io.netty.util.internal.StringUtil;
-import io.netty.util.internal.SystemPropertyUtil;
-import io.netty.util.internal.ThrowableUtil;
+import io.netty.util.internal.*;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 
@@ -593,7 +589,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
     @SuppressWarnings({"unchecked", "rawtypes"})
     private static void notifyListener0(Future future, GenericFutureListener l) {
         try {
-            //执行.
+            //执行.完成时通知,权力交给你.
             l.operationComplete(future);
         } catch (Throwable t) {
             if (logger.isWarnEnabled()) {
