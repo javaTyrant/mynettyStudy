@@ -21,8 +21,10 @@ import io.netty.util.Attribute;
 import io.netty.util.AttributeKey;
 import io.netty.util.AttributeMap;
 import io.netty.util.concurrent.EventExecutor;
-
-//
+//为什么需要ChannelHandlerContext?
+//赋予一个ChannelHandler和他的ChannelPipeline交互的能力,以及和其他的handlers交互.
+//通知下一个handler
+//修改pipeline.
 
 /**
  * Enables a {@link ChannelHandler} to interact with its {@link ChannelPipeline}

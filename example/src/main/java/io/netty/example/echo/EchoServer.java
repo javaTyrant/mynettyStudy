@@ -125,6 +125,9 @@ public final class EchoServer {
                             p.addLast(serverHandler);
                             p.addLast(serverHandler1);
                             p.addLast(new HeartBeatServerHandler());
+                            p.addLast(new SampleInBoundHandler("SampleInBoundHandlerA", false))
+                                    .addLast(new SampleInBoundHandler("SampleInBoundHandlerB", false))
+                                    .addLast(new SampleInBoundHandler("SampleInBoundHandlerC", true));
                             //p.addLast()
                         }
                     });

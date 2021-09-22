@@ -49,11 +49,14 @@ import java.util.Map;
 public class NioServerSocketChannel extends AbstractNioMessageChannel
         implements io.netty.channel.socket.ServerSocketChannel {
 
+    //
     private static final ChannelMetadata METADATA = new ChannelMetadata(false, 16);
+    //
     private static final SelectorProvider DEFAULT_SELECTOR_PROVIDER = SelectorProvider.provider();
-
+    //
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(NioServerSocketChannel.class);
 
+    //创建服务端socket.
     private static ServerSocketChannel newSocket(SelectorProvider provider) {
         try {
             /**
@@ -62,6 +65,7 @@ public class NioServerSocketChannel extends AbstractNioMessageChannel
              *
              *  See <a href="https://github.com/netty/netty/issues/2308">#2308</a>.
              */
+            //
             return provider.openServerSocketChannel();
         } catch (IOException e) {
             throw new ChannelException(
@@ -157,7 +161,7 @@ public class NioServerSocketChannel extends AbstractNioMessageChannel
 
         try {
             if (ch != null) {
-                //创建客户端流.传一个parent.这里会注册读事件.
+                //创建客户端流.传一个parent.这里会注册读事件.每一个客户端流都有一个连接
                 buf.add(new NioSocketChannel(this, ch));
                 return 1;
             }

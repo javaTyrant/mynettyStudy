@@ -35,6 +35,7 @@ import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 import static io.netty.channel.ChannelHandlerMask.*;
 
 //抽象的channel Handler 上下文.为什么要封装这一层呢?
+//defaultChannelPipeline里双向链表.
 abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, ResourceLeakHint {
     //日志打印
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(AbstractChannelHandlerContext.class);
@@ -42,7 +43,7 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
     volatile AbstractChannelHandlerContext next;
     //前一个
     volatile AbstractChannelHandlerContext prev;
-    //原子更新
+    //原子更新:handlerState.节约内存.
     private static final AtomicIntegerFieldUpdater<AbstractChannelHandlerContext> HANDLER_STATE_UPDATER =
             AtomicIntegerFieldUpdater.newUpdater(AbstractChannelHandlerContext.class, "handlerState");
 
@@ -82,6 +83,7 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
     // There is no need to make this volatile as at worse it will just create a few more instances then needed.
     private Tasks invokeTasks;
 
+    //初始化状态,为什么不用atomicInteger.节约内存.
     private volatile int handlerState = INIT;
 
     AbstractChannelHandlerContext(DefaultChannelPipeline pipeline, EventExecutor executor,
@@ -132,10 +134,13 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
     }
 
     static void invokeChannelRegistered(final AbstractChannelHandlerContext next) {
+        //
         EventExecutor executor = next.executor();
+        //如果在线程模型里,直接执行
         if (executor.inEventLoop()) {
             next.invokeChannelRegistered();
         } else {
+            //放入队列里.
             executor.execute(new Runnable() {
                 @Override
                 public void run() {
@@ -145,7 +150,10 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
         }
     }
 
+    //
     private void invokeChannelRegistered() {
+        //Makes best possible effort to detect if ChannelHandler.handlerAdded(ChannelHandlerContext) was called yet.
+        // if called or could not detect return true.
         if (invokeHandler()) {
             try {
                 ((ChannelInboundHandler) handler()).channelRegistered(this);
@@ -153,6 +161,7 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
                 invokeExceptionCaught(t);
             }
         } else {
+            //什么时候会走到这个分支呢?
             fireChannelRegistered();
         }
     }
@@ -904,7 +913,7 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
                 //
                 // See https://github.com/netty/netty/issues/10067
                 (ctx.executor() == currentExecutor && (ctx.executionMask & mask) == 0);
-        System.out.println("bbbb"+b);
+        //System.out.println("bbbb"+b);
         return b;
     }
 
@@ -972,6 +981,7 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
     private boolean invokeHandler() {
         // Store in local variable to reduce volatile reads.
         int handlerState = this.handlerState;
+        //添加完成.或者
         return handlerState == ADD_COMPLETE || (!ordered && handlerState == ADD_PENDING);
     }
 
@@ -1021,7 +1031,9 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
         return StringUtil.simpleClassName(ChannelHandlerContext.class) + '(' + name + ", " + channel() + ')';
     }
 
+    //
     static final class WriteTask implements Runnable {
+        //
         private static final ObjectPool<WriteTask> RECYCLER = ObjectPool.newPool(new ObjectCreator<WriteTask>() {
             @Override
             public WriteTask newObject(Handle<WriteTask> handle) {
@@ -1029,6 +1041,7 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
             }
         });
 
+        //
         static WriteTask newInstance(AbstractChannelHandlerContext ctx,
                                      Object msg, ChannelPromise promise, boolean flush) {
             WriteTask task = RECYCLER.get();
@@ -1036,6 +1049,7 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
             return task;
         }
 
+        //
         private static final boolean ESTIMATE_TASK_SIZE_ON_SUBMIT =
                 SystemPropertyUtil.getBoolean("io.netty.transport.estimateSizeOnSubmit", true);
 
@@ -1043,10 +1057,15 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
         private static final int WRITE_TASK_OVERHEAD =
                 SystemPropertyUtil.getInt("io.netty.transport.writeTaskSizeOverhead", 32);
 
+        //
         private final Handle<WriteTask> handle;
+        //
         private AbstractChannelHandlerContext ctx;
+        //
         private Object msg;
+        //
         private ChannelPromise promise;
+        //
         private int size; // sign bit controls flush
 
         @SuppressWarnings("unchecked")
@@ -1108,8 +1127,11 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
         }
     }
 
+    //
     private static final class Tasks {
+        //
         private final AbstractChannelHandlerContext next;
+        //
         private final Runnable invokeChannelReadCompleteTask = new Runnable() {
             @Override
             public void run() {
