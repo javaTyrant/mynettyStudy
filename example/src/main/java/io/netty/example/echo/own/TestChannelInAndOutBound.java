@@ -36,6 +36,8 @@ public class TestChannelInAndOutBound {
                                 .addLast(new SampleOutBoundHandler("SampleOutBoundHandlerB"))
 
                                 .addLast(new SampleOutBoundHandler("SampleOutBoundHandlerC"));
+                        //必须放在后面再有效果.
+                        //通过异常传播机制的学习，我们应该可以想到最好的方法是在 ChannelPipeline 自定义处理器的末端添加统一的异常处理器，此时 ChannelPipeline 的内部结构如下图所示。
                         ch.pipeline().addLast(new ExceptionHandler());
                     }
                 });
