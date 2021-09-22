@@ -72,8 +72,11 @@ public abstract class AbstractNioChannel extends AbstractChannel {
     protected AbstractNioChannel(Channel parent, SelectableChannel ch, int readInterestOp) {
         super(parent);
         this.ch = ch;
+        //注册事件存到AbstractNioChannel里.那什么时候注册的.
+        //doBeginRead里注册.看看doBeginRead的调用链.
         this.readInterestOp = readInterestOp;
         try {
+            //阻塞设置成false.
             ch.configureBlocking(false);
         } catch (IOException e) {
             try {

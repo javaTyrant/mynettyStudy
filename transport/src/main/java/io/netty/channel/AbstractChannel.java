@@ -35,6 +35,7 @@ import java.util.concurrent.RejectedExecutionException;
 
 /**
  * A skeletal {@link Channel} implementation.
+ * AbstractChannel的体系.
  */
 public abstract class AbstractChannel extends DefaultAttributeMap implements Channel {
     //日志
@@ -77,7 +78,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
      * @param parent the parent of this channel. {@code null} if there's no parent.
      */
     protected AbstractChannel(Channel parent) {
-        //
+        //父流
         this.parent = parent;
         id = newId();
         //构造unsafe.
@@ -387,7 +388,6 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
         if (this == o) {
             return 0;
         }
-
         return id().compareTo(o.id());
     }
 
@@ -525,6 +525,10 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
             }
         }
 
+        //1.调用 JDK 底层进行 Channel 注册、
+        //2.触发 handlerAdded 事件
+        //3.触发 channelRegistered 事件
+        //4.Channel 当前状态为活跃时，触发 channelActive 事件。
         private void register0(ChannelPromise promise) {
             try {
                 // check if the channel is still open as it could be closed in the mean time when the register
@@ -557,6 +561,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
                         // again so that we process inbound data.
                         //
                         // See https://github.com/netty/netty/issues/4805
+                        //
                         beginRead();
                     }
                 }

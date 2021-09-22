@@ -633,6 +633,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
         }
     }
 
+    //
     private void callHandlerAdded0(final AbstractChannelHandlerContext ctx) {
         try {
             //用户实现的方法.
@@ -1149,9 +1150,10 @@ public class DefaultChannelPipeline implements ChannelPipeline {
         }
     }
 
+    //
     private void callHandlerCallbackLater(AbstractChannelHandlerContext ctx, boolean added) {
         assert !registered;
-
+        //
         PendingHandlerCallback task = added ? new PendingHandlerAddedTask(ctx) : new PendingHandlerRemovedTask(ctx);
         PendingHandlerCallback pending = pendingHandlerCallbackHead;
         if (pending == null) {
@@ -1476,6 +1478,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
         }
     }
 
+    //
     private abstract static class PendingHandlerCallback implements Runnable {
         final AbstractChannelHandlerContext ctx;
         PendingHandlerCallback next;
@@ -1520,6 +1523,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
         }
     }
 
+    //什么时候被调用?
     private final class PendingHandlerRemovedTask extends PendingHandlerCallback {
 
         PendingHandlerRemovedTask(AbstractChannelHandlerContext ctx) {

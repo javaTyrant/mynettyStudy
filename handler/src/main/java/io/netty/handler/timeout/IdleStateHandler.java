@@ -16,20 +16,20 @@
 package io.netty.handler.timeout;
 
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.Channel;
+import io.netty.channel.*;
 import io.netty.channel.Channel.Unsafe;
-import io.netty.channel.ChannelDuplexHandler;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelOutboundBuffer;
-import io.netty.channel.ChannelPromise;
+import io.netty.util.concurrent.EventExecutor;
 import io.netty.util.internal.ObjectUtil;
 
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+//IdleStateHandler 既是出站处理器也是入站处理器，继承了 ChannelDuplexHandler 。
+//通常在 initChannel 方法中将 IdleStateHandler 添加到 pipeline 中。然后在自己的 handler 中重写 userEventTriggered 方法，
+//当发生空闲事件（读或者写），就会触发这个方法，并传入具体事件。
+//这时，你可以通过 Context 对象尝试向目标 Socekt 写入数据，并设置一个 监听器，如果发送失败就关闭 Socket
+//（Netty 准备了一个 ChannelFutureListener.CLOSE_ON_FAILURE 监听器用来实现关闭 Socket 逻辑）。
+//这样，就实现了一个简单的心跳服务。
 
 /**
  * Triggers an {@link IdleStateEvent} when a {@link Channel} has not performed
@@ -110,13 +110,13 @@ public class IdleStateHandler extends ChannelDuplexHandler {
         }
     };
 
-    //
+    //是否考虑出站时较慢的情况。默认值是false（不考虑）。
     private final boolean observeOutput;
-    //
+    //读事件空闲时间，0 则禁用事件
     private final long readerIdleTimeNanos;
-    //
+    //写事件空闲时间，0 则禁用事件
     private final long writerIdleTimeNanos;
-    //
+    //读或写空闲时间，0 则禁用事件
     private final long allIdleTimeNanos;
     //
     private ScheduledFuture<?> readerIdleTimeout;
@@ -312,7 +312,7 @@ public class IdleStateHandler extends ChannelDuplexHandler {
         }
     }
 
-    //重要的入口,会开启定时任务
+    //重要的入口,会开启定时任务.
     private void initialize(ChannelHandlerContext ctx) {
         // Avoid the case where destroy() is called before scheduling timeouts.
         // See: https://github.com/netty/netty/issues/143
@@ -352,7 +352,9 @@ public class IdleStateHandler extends ChannelDuplexHandler {
      */
     ScheduledFuture<?> schedule(ChannelHandlerContext ctx, Runnable task, long delay, TimeUnit unit) {
         //从cts获取执行器.然后调度.
-        return ctx.executor().schedule(task, delay, unit);
+        EventExecutor executor = ctx.executor();
+        System.out.println("执行调度的线程");
+        return executor.schedule(task, delay, unit);
     }
 
     private void destroy() {
@@ -486,6 +488,7 @@ public class IdleStateHandler extends ChannelDuplexHandler {
         protected abstract void run(ChannelHandlerContext ctx);
     }
 
+    //被schedule调用.
     private final class ReaderIdleTimeoutTask extends AbstractIdleTask {
 
         ReaderIdleTimeoutTask(ChannelHandlerContext ctx) {
@@ -498,6 +501,7 @@ public class IdleStateHandler extends ChannelDuplexHandler {
         @Override
         protected void run(ChannelHandlerContext ctx) {
             System.out.println("第" + startIndex.getAndAdd(1) + "次执行任务");
+            //
             long nextDelay = readerIdleTimeNanos;
             if (!reading) {
                 nextDelay -= ticksInNanos() - lastReadTime;

@@ -15,12 +15,7 @@
  */
 package io.netty.channel.nio;
 
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelConfig;
-import io.netty.channel.ChannelOutboundBuffer;
-import io.netty.channel.ChannelPipeline;
-import io.netty.channel.RecvByteBufAllocator;
-import io.netty.channel.ServerChannel;
+import io.netty.channel.*;
 
 import java.io.IOException;
 import java.net.PortUnreachableException;
@@ -28,6 +23,7 @@ import java.nio.channels.SelectableChannel;
 import java.nio.channels.SelectionKey;
 import java.util.ArrayList;
 import java.util.List;
+//
 
 /**
  * {@link AbstractNioChannel} base class for {@link Channel}s that operate on messages.
@@ -59,9 +55,10 @@ public abstract class AbstractNioMessageChannel extends AbstractNioChannel {
         return allocHandle.continueReading();
     }
 
-    //
+    //什么时候被调用?应该是服务端接受到客户端连接.
     private final class NioMessageUnsafe extends AbstractNioUnsafe {
 
+        //保存读取的数据.
         private final List<Object> readBuf = new ArrayList<Object>();
 
         @Override
@@ -80,6 +77,7 @@ public abstract class AbstractNioMessageChannel extends AbstractNioChannel {
                     do {
                         //接受客户端的流.
                         int localRead = doReadMessages(readBuf);
+                        //
                         if (localRead == 0) {
                             break;
                         }
@@ -87,8 +85,9 @@ public abstract class AbstractNioMessageChannel extends AbstractNioChannel {
                             closed = true;
                             break;
                         }
-
+                        //
                         allocHandle.incMessagesRead(localRead);
+                        //什么时候要continueReading
                     } while (continueReading(allocHandle));
                 } catch (Throwable t) {
                     exception = t;
@@ -100,6 +99,7 @@ public abstract class AbstractNioMessageChannel extends AbstractNioChannel {
                     //readBuf.get类型:NioSocketChannel.传递.
                     pipeline.fireChannelRead(readBuf.get(i));
                 }
+                //处理完了clear.
                 readBuf.clear();
                 allocHandle.readComplete();
                 pipeline.fireChannelReadComplete();

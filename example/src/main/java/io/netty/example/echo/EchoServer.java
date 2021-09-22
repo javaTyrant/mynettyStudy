@@ -79,7 +79,7 @@ public final class EchoServer {
      */
     static final boolean SSL = System.getProperty("ssl") != null;
     static final int PORT = Integer.parseInt(System.getProperty("port", "8007"));
-
+    //思考一个问题，为什么需要 ChannelInitializer 处理器呢？ServerBootstrapAcceptor 的注册过程为什么又需要封装成异步 task 呢？
     //boss线程的启动:
     //worker线程的启动:
     //boss如何把工作转移到worker的呢?boss accept
@@ -98,6 +98,7 @@ public final class EchoServer {
         EventLoopGroup bossGroup = new NioEventLoopGroup(1);
         //worker
         EventLoopGroup workerGroup = new NioEventLoopGroup();
+        //业务处理
         final EchoServerHandler serverHandler = new EchoServerHandler();
         final EchoServerHandler1 serverHandler1 = new EchoServerHandler1();
         try {
@@ -109,8 +110,11 @@ public final class EchoServer {
                     //客户端流的创建: buf.add(new NioSocketChannel(this, ch));
                     .channel(NioServerSocketChannel.class)
                     .option(ChannelOption.SO_BACKLOG, 100)
+                    //添加到服务端上的pipeline中.
                     .handler(new LoggingHandler(LogLevel.INFO))
+                    //添加到客户端的pipeline上.
                     .childHandler(new ChannelInitializer<SocketChannel>() {
+                        //初始化channel.客户端连接的时候才会调用.
                         @Override
                         public void initChannel(SocketChannel ch) {
                             //从ch里获取pipeline:思考下,网络流程在Netty中的旅程.

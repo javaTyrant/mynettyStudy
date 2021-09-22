@@ -52,7 +52,7 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
     private final ServerBootstrapConfig config = new ServerBootstrapConfig(this);
     //worker线程.
     private volatile EventLoopGroup childGroup;
-    //
+    //客户端handler
     private volatile ChannelHandler childHandler;
 
     public ServerBootstrap() {
@@ -126,6 +126,7 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
      * Set the {@link ChannelHandler} which is used to serve the request for the {@link Channel}'s.
      */
     public ServerBootstrap childHandler(ChannelHandler childHandler) {
+        //
         this.childHandler = ObjectUtil.checkNotNull(childHandler, "childHandler");
         return this;
     }

@@ -44,7 +44,7 @@ import java.util.Map;
  * NIO selector based implementation to accept new connections.
  * <p/>
  *
- * 一个netty应用有多少NioServerSocketChannel?
+ * 一个netty应用有多少NioServerSocketChannel?按理说只有一个服务端流吧.
  */
 public class NioServerSocketChannel extends AbstractNioMessageChannel
         implements io.netty.channel.socket.ServerSocketChannel {
@@ -76,6 +76,7 @@ public class NioServerSocketChannel extends AbstractNioMessageChannel
      */
     public NioServerSocketChannel() {
         //被反射调用.ServerSocketChannel
+        //提供一个默认的Selector_Provider,然后openServerSocketChannel.
         this(newSocket(DEFAULT_SELECTOR_PROVIDER));
     }
 
@@ -91,7 +92,11 @@ public class NioServerSocketChannel extends AbstractNioMessageChannel
      *
      */
     public NioServerSocketChannel(ServerSocketChannel channel) {
-        //accept
+        //accept.
+        //->AbstractNioMessageChannel-> AbstractNioChannel->AbstractChannel
+        //主要步骤:1.
+        //2.
+        //3.
         super(null, channel, SelectionKey.OP_ACCEPT);
         System.out.println("创建了一个NioServerSocketChannel实例.");
         //config
@@ -138,6 +143,7 @@ public class NioServerSocketChannel extends AbstractNioMessageChannel
     @Override
     @SuppressJava6Requirement(reason = "Usage guarded by java version check")
     protected void doBind(SocketAddress localAddress) throws Exception {
+        //底层的bind就是调用ServerSocketChannel.bind
         if (PlatformDependent.javaVersion() >= 7) {
             javaChannel().bind(localAddress, config.getBacklog());
         } else {
@@ -150,6 +156,7 @@ public class NioServerSocketChannel extends AbstractNioMessageChannel
         javaChannel().close();
     }
 
+    //连接并非真正的读取数据.
     @Override
     protected int doReadMessages(List<Object> buf) throws Exception {
         //调用客户端的accept.
