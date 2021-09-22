@@ -126,7 +126,7 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
      * Set the {@link ChannelHandler} which is used to serve the request for the {@link Channel}'s.
      */
     public ServerBootstrap childHandler(ChannelHandler childHandler) {
-        //
+        //childHandler赋值.
         this.childHandler = ObjectUtil.checkNotNull(childHandler, "childHandler");
         return this;
     }
@@ -136,7 +136,7 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
         //
         setChannelOptions(channel, newOptionsArray(), logger);
         setAttributes(channel, newAttributesArray());
-        //
+        //获取pipeline
         ChannelPipeline p = channel.pipeline();
         //
         final EventLoopGroup currentChildGroup = childGroup;
@@ -157,6 +157,7 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
                 ch.eventLoop().execute(new Runnable() {
                     @Override
                     public void run() {
+                        //
                         pipeline.addLast(new ServerBootstrapAcceptor(
                                 ch, currentChildGroup, currentChildHandler, currentChildOptions, currentChildAttrs));
                     }
@@ -209,6 +210,7 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
             enableAutoReadTask = new Runnable() {
                 @Override
                 public void run() {
+                    //AutoRead的含义.
                     channel.config().setAutoRead(true);
                 }
             };

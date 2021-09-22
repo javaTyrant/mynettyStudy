@@ -89,7 +89,7 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
         this.name = ObjectUtil.checkNotNull(name, "name");
         this.pipeline = pipeline;
         this.executor = executor;
-        //
+        //妙啊.
         this.executionMask = mask(handlerClass);
         // Its ordered if its driven by the EventLoop or the given Executor is an instanceof OrderedEventExecutor.
         ordered = executor == null || executor instanceof OrderedEventExecutor;
@@ -343,13 +343,15 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
         return this;
     }
 
+    //此时的节点是什么?
     static void invokeChannelRead(final AbstractChannelHandlerContext next, Object msg) {
         //看看touch方法
         final Object m = next.pipeline.touch(ObjectUtil.checkNotNull(msg, "msg"), next);
+        //
         EventExecutor executor = next.executor();
         //
         if (executor.inEventLoop()) {
-            //下一个.
+            //这里.
             next.invokeChannelRead(m);
         } else {
             executor.execute(new Runnable() {
@@ -361,9 +363,12 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
         }
     }
 
+    //然后到这里.
     private void invokeChannelRead(Object msg) {
+        //
         if (invokeHandler()) {
             try {
+                //取出自己的handler().
                 ((ChannelInboundHandler) handler()).channelRead(this, msg);
             } catch (Throwable t) {
                 invokeExceptionCaught(t);
@@ -759,6 +764,7 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
         }
     }
 
+    //
     private void write(Object msg, boolean flush, ChannelPromise promise) {
         ObjectUtil.checkNotNull(msg, "msg");
         try {
@@ -778,6 +784,7 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
         EventExecutor executor = next.executor();
         //如果是io线程.豁然开朗,为什么要有这个模板写法了.
         if (executor.inEventLoop()) {
+            //是否需要刷新.
             if (flush) {
                 next.invokeWriteAndFlush(m, promise);
             } else {
@@ -866,7 +873,7 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
         return false;
     }
 
-    //这里面移动到了下一个handler
+    //这里面移动到了下一个handler.
     private AbstractChannelHandlerContext findContextInbound(int mask) {
         AbstractChannelHandlerContext ctx = this;
         EventExecutor currentExecutor = executor();
@@ -874,6 +881,7 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
             ctx = ctx.next;
             //需要过滤的.
         } while (skipContext(ctx, currentExecutor, mask, MASK_ONLY_INBOUND));
+
         return ctx;
     }
 
@@ -890,12 +898,14 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
     private static boolean skipContext(
             AbstractChannelHandlerContext ctx, EventExecutor currentExecutor, int mask, int onlyMask) {
         // Ensure we correctly handle MASK_EXCEPTION_CAUGHT which is not included in the MASK_EXCEPTION_CAUGHT
-        return (ctx.executionMask & (onlyMask | mask)) == 0 ||
+        boolean b = (ctx.executionMask & (onlyMask | mask)) == 0 ||
                 // We can only skip if the EventExecutor is the same as otherwise we need to ensure we offload
                 // everything to preserve ordering.
                 //
                 // See https://github.com/netty/netty/issues/10067
                 (ctx.executor() == currentExecutor && (ctx.executionMask & mask) == 0);
+        System.out.println("bbbb"+b);
+        return b;
     }
 
     @Override

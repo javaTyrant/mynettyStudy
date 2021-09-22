@@ -39,6 +39,8 @@ import java.util.concurrent.atomic.AtomicLongFieldUpdater;
 
 import static java.lang.Math.min;
 
+//store its pending outbound write requests.
+//背后的设计思想是什么呢?
 /**
  * (Transport implementors only) an internal data structure used by {@link AbstractChannel} to store its pending
  * outbound write requests.
@@ -74,17 +76,22 @@ public final class ChannelOutboundBuffer {
     private final Channel channel;
 
     // Entry(flushedEntry) --> ... Entry(unflushedEntry) --> ... Entry(tailEntry)
+    //三个重要的核心变量
     //
+    //即将被消费的开始节点
     // The Entry that is the first in the linked-list structure that was flushed
     private Entry flushedEntry;
+    //被添加的开始节点，但没有准备好被消费。
     // The Entry which is the first unflushed in the linked-list structure
     private Entry unflushedEntry;
     // The Entry which represents the tail of the buffer
+    // 最后一个节点
     private Entry tailEntry;
     // The number of flushed entries that are not written yet
     private int flushed;
 
     private int nioBufferCount;
+    //
     private long nioBufferSize;
 
     private boolean inFail;

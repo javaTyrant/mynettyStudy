@@ -379,6 +379,7 @@ public class NioSocketChannel extends AbstractNioByteChannel implements io.netty
     protected void doWrite(ChannelOutboundBuffer in) throws Exception {
         SocketChannel ch = javaChannel();
         int writeSpinCount = config().getWriteSpinCount();
+        //循环
         do {
             if (in.isEmpty()) {
                 // All written so clear OP_WRITE
@@ -405,6 +406,7 @@ public class NioSocketChannel extends AbstractNioByteChannel implements io.netty
                     // to check if the total size of all the buffers is non-zero.
                     ByteBuffer buffer = nioBuffers[0];
                     int attemptedBytes = buffer.remaining();
+                    //还是调用nio的write.
                     final int localWrittenBytes = ch.write(buffer);
                     if (localWrittenBytes <= 0) {
                         incompleteWrite(true);

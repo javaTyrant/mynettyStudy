@@ -266,6 +266,7 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
     //3.regFuture.isDone() 表示 initAndRegister() 是否执行完毕，如果执行完毕则调用 doBind0() 进行 Socket 绑定。如果 initAndRegister() 还没有执行结束，
     //regFuture 会添加一个 ChannelFutureListener 回调监听，当 initAndRegister() 执行结束后会调用 operationComplete()，同样通过 doBind0() 进行端口绑定。
     private ChannelFuture doBind(final SocketAddress localAddress) {
+        //init what .肯定是channel.
         final ChannelFuture regFuture = initAndRegister();
         final Channel channel = regFuture.channel();
         //出异常了
@@ -311,7 +312,6 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
     final ChannelFuture initAndRegister() {
         Channel channel = null;
         try {
-            //这里new新的实例.
             channel = channelFactory.newChannel();
             //初始化channel.
             init(channel);

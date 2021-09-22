@@ -28,7 +28,8 @@ import java.lang.annotation.Target;
 /**
  * Handles an I/O event or intercepts an I/O operation, and forwards it to its next handler in
  * its {@link ChannelPipeline}.
- *
+ * <p/>
+ * 处理IO事件和拦截IO事件,然后转交给它的pipeline中的下一个处理器.
  * <h3>Sub-types</h3>
  * <p>
  * {@link ChannelHandler} itself does not provide many methods, but you usually have to implement one of its subtypes:
