@@ -36,6 +36,8 @@ import java.net.SocketAddress;
  * 4.流关联的处理io事件,请求的channelpipeline.
  * 所有的io操作都是异步的.
  *
+ * channel的生命周期.
+ *
  */
 
 /**

@@ -21,6 +21,7 @@ import io.netty.util.concurrent.FutureListener;
 import java.net.ConnectException;
 import java.net.SocketAddress;
 
+//没太搞懂为什么这个里面要有bind这些源方法.
 public interface ChannelOutboundInvoker {
 
     /**

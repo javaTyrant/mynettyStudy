@@ -19,7 +19,12 @@ import java.net.SocketAddress;
 //ChannelOutboundHandler中的大部分方法都需要一个ChannelPromise参数，以便在操作完成时得到通知。
 //ChannelPromise是ChannelFuture的一个子类，其定义了一些可写的方法，如setSuccess()和setFailure()，
 //从而使ChannelFuture不可变
-
+//Outbound handlers are supposed to intercept the operations issued by your application.
+//read() is an operation you can issue to tell Netty to continue reading the inbound data from the socket,
+//and that's why it's in an outbound handler.
+//You don't usually issue a read() operation because Netty does that for you automatically if autoRead property is set to true.
+//Typical flow when autoRead is on:
+//
 /**
  * {@link ChannelHandler} which will get notified for IO-outbound-operations.
  */
@@ -75,6 +80,7 @@ public interface ChannelOutboundHandler extends ChannelHandler {
     void deregister(ChannelHandlerContext ctx, ChannelPromise promise) throws Exception;
 
     /**
+     * 拦截ChannelHandlerContext的read方法.
      * Intercepts {@link ChannelHandlerContext#read()}.
      */
     void read(ChannelHandlerContext ctx) throws Exception;

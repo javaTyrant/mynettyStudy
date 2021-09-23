@@ -379,6 +379,7 @@ public class IdleStateHandler extends ChannelDuplexHandler {
      * {@link ChannelHandlerContext#fireUserEventTriggered(Object)}.
      */
     protected void channelIdle(ChannelHandlerContext ctx, IdleStateEvent evt) throws Exception {
+        //see.
         ctx.fireUserEventTriggered(evt);
     }
 

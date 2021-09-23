@@ -843,6 +843,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
 
     @Override
     public final ChannelPipeline fireChannelRegistered() {
+        //流注册了事件触发.
         AbstractChannelHandlerContext.invokeChannelRegistered(head);
         return this;
     }
@@ -939,6 +940,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
         return this;
     }
 
+    //触发用户事件.
     @Override
     public final ChannelPipeline fireUserEventTriggered(Object event) {
         AbstractChannelHandlerContext.invokeUserEventTriggered(head, event);
