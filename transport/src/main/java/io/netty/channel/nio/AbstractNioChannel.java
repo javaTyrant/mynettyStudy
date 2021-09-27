@@ -36,17 +36,18 @@ import java.util.concurrent.TimeUnit;
  * Abstract base class for {@link Channel} implementations which use a Selector based approach.
  */
 public abstract class AbstractNioChannel extends AbstractChannel {
-
+    //log
     private static final InternalLogger logger =
             InternalLoggerFactory.getInstance(AbstractNioChannel.class);
-
+    //A channel that can be multiplexed via a link Selector.
     private final SelectableChannel ch;
-    //
+    //感兴趣的事件类型
     protected final int readInterestOp;
-    //
+    //A token representing the registration of a SelectableChannel with a Selector.
     volatile SelectionKey selectionKey;
     //
     boolean readPending;
+    //
     private final Runnable clearReadPendingRunnable = new Runnable() {
         @Override
         public void run() {
@@ -59,7 +60,9 @@ public abstract class AbstractNioChannel extends AbstractChannel {
      * connection attempts will fail.
      */
     private ChannelPromise connectPromise;
+    //
     private ScheduledFuture<?> connectTimeoutFuture;
+    //
     private SocketAddress requestedRemoteAddress;
 
     /**
