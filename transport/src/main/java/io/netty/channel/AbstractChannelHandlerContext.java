@@ -349,6 +349,7 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
     @Override
     public ChannelHandlerContext fireChannelRead(final Object msg) {
         invokeChannelRead(findContextInbound(MASK_CHANNEL_READ), msg);
+        //this.
         return this;
     }
 
@@ -888,7 +889,7 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
         EventExecutor currentExecutor = executor();
         do {
             ctx = ctx.next;
-            //需要过滤的.
+            //需要过滤的. MASK_ONLY_INBOUND
         } while (skipContext(ctx, currentExecutor, mask, MASK_ONLY_INBOUND));
 
         return ctx;

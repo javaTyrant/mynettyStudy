@@ -22,29 +22,21 @@ public class SampleInBoundHandler extends ChannelInboundHandlerAdapter {
 
     @Override
 
-    public void channelRead(ChannelHandlerContext ctx, Object msg) {
+    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
 
         System.out.println("InBoundHandler: " + name);
 
         if (flush) {
-
             ctx.channel().writeAndFlush(msg);
-
         } else {
-
-            throw new RuntimeException("InBoundHandler: " + name);
-
+            super.channelRead(ctx, msg);
         }
 
     }
 
     @Override
-
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-
         System.out.println("InBoundHandlerException: " + name);
-
         ctx.fireExceptionCaught(cause);
-
     }
 }

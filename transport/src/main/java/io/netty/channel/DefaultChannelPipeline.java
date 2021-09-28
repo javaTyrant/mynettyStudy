@@ -1339,6 +1339,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
 
         @Override
         public void channelRead(ChannelHandlerContext ctx, Object msg) {
+            //到尾部了.回收msg. ReferenceCountUtil.release(msg);
             onUnhandledInboundMessage(ctx, msg);
         }
 
@@ -1460,6 +1461,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
 
         @Override
         public void channelRead(ChannelHandlerContext ctx, Object msg) {
+            //向下分发
             ctx.fireChannelRead(msg);
         }
 

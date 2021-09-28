@@ -19,6 +19,7 @@ import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+//只是实现了两个get方法.
 
 /**
  * Abstract {@link Future} implementation which does not allow for cancellation.

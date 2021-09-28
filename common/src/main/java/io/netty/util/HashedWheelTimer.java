@@ -437,7 +437,6 @@ public class HashedWheelTimer implements Timer {
         }
         //开始
         start();
-
         // Add the timeout to the timeout queue which will be processed on the next tick.
         // During processing all the queued HashedWheelTimeouts will be added to the correct HashedWheelBucket.
         //获取这个任务的deadline.相对时间.
@@ -472,8 +471,9 @@ public class HashedWheelTimer implements Timer {
 
     //都是核心.
     private final class Worker implements Runnable {
+        //
         private final Set<Timeout> unprocessedTimeouts = new HashSet<Timeout>();
-
+        //
         private long tick;
 
         //核心中的核心.这种设计思路太多见了.

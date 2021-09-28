@@ -239,6 +239,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
 
     @Override
     public Promise<V> await() throws InterruptedException {
+        //
         if (isDone()) {
             return this;
         }
@@ -250,12 +251,15 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
         checkDeadLock();
 
         synchronized (this) {
+            //死循环
             while (!isDone()) {
+                //增加等待.
                 incWaiters();
                 try {
                     //native method
                     wait();
                 } finally {
+                    //减少等待者
                     decWaiters();
                 }
             }
@@ -406,7 +410,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
 
     @Override
     public Promise<V> sync() throws InterruptedException {
-        //
+        //等待
         await();
         rethrowIfFailed();
         return this;
@@ -484,8 +488,10 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
      * @param future        the future that is complete.
      * @param listener      the listener to notify.
      */
-    protected static void notifyListener(
-            EventExecutor eventExecutor, final Future<?> future, final GenericFutureListener<?> listener) {
+    protected static void notifyListener(EventExecutor eventExecutor,
+                                         final Future<?> future,
+                                         final GenericFutureListener<?> listener) {
+        //保护性通知.
         notifyListenerWithStackOverFlowProtection(
                 checkNotNull(eventExecutor, "eventExecutor"),
                 checkNotNull(future, "future"),
@@ -526,9 +532,13 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
     private static void notifyListenerWithStackOverFlowProtection(final EventExecutor executor,
                                                                   final Future<?> future,
                                                                   final GenericFutureListener<?> listener) {
+        //
         if (executor.inEventLoop()) {
+            //
             final InternalThreadLocalMap threadLocals = InternalThreadLocalMap.get();
+            //
             final int stackDepth = threadLocals.futureListenerStackDepth();
+            //
             if (stackDepth < MAX_LISTENER_STACK_DEPTH) {
                 threadLocals.setFutureListenerStackDepth(stackDepth + 1);
                 try {
@@ -660,6 +670,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
         if (waiters == Short.MAX_VALUE) {
             throw new IllegalStateException("too many waiters: " + this);
         }
+        //waiters++
         ++waiters;
     }
 
