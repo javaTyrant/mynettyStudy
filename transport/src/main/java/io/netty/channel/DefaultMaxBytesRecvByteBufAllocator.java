@@ -29,7 +29,9 @@ import java.util.Map.Entry;
  * the max bytes per read.
  */
 public class DefaultMaxBytesRecvByteBufAllocator implements MaxBytesRecvByteBufAllocator {
+    //
     private volatile int maxBytesPerRead;
+    //
     private volatile int maxBytesPerIndividualRead;
 
     private final class HandleImpl implements ExtendedHandle {

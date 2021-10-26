@@ -682,4 +682,9 @@ abstract class PoolArena<T> extends SizeClasses implements PoolArenaMetric {
             }
         }
     }
+
+    public static void main(String[] args) {
+
+        System.out.println(Math.abs("837b1a4ef27b4deca6297f662021daf4".hashCode()) % 10);
+    }
 }

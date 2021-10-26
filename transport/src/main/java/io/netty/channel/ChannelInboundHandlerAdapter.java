@@ -17,6 +17,9 @@ package io.netty.channel;
 
 import io.netty.channel.ChannelHandlerMask.Skip;
 
+//这个实现只是把操作转移到channelPipeline中的下一个channelHandler.
+//子类可以重写这个方法,改变这个方法的行为.
+//消息不会被自动释放.如果想的话,可以参考SimpleChannelInboundHandler.
 /**
  * Abstract base class for {@link ChannelInboundHandler} implementations which provide
  * implementations of all of their methods.
@@ -25,6 +28,7 @@ import io.netty.channel.ChannelHandlerMask.Skip;
  * This implementation just forward the operation to the next {@link ChannelHandler} in the
  * {@link ChannelPipeline}. Sub-classes may override a method implementation to change this.
  * </p>
+ * 注意.
  * <p>
  * Be aware that messages are not released after the {@link #channelRead(ChannelHandlerContext, Object)}
  * method returns automatically. If you are looking for a {@link ChannelInboundHandler} implementation that

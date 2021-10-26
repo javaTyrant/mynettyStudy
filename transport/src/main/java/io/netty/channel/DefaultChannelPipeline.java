@@ -224,8 +224,13 @@ public class DefaultChannelPipeline implements ChannelPipeline {
             // If the registered is false it means that the channel was not registered on an eventLoop yet.
             // In this case we add the context to the pipeline and add a task that will call
             // ChannelHandler.handlerAdded(...) once the channel is registered.
+            // 如果没有注册的话,意味着这个channel还没有注册到这个eventloop.
+            // 这种情况下,我们把context添加到pipeline中且添加一个任务,这个任务会调用你handlerAdded一旦这个
+            // channel被注册到eventLoop上.
+            // 那么什么时候会出现channel没有注册就有pipeline添加了的呢?
             if (!registered) {
                 newCtx.setAddPending();
+                //
                 callHandlerCallbackLater(newCtx, true);
                 return this;
             }
@@ -1132,14 +1137,16 @@ public class DefaultChannelPipeline implements ChannelPipeline {
         }
     }
 
+    //
     private void callHandlerAddedForAllHandlers() {
+        //
         final PendingHandlerCallback pendingHandlerCallbackHead;
+        //
         synchronized (this) {
             assert !registered;
-
             // This Channel itself was registered.
             registered = true;
-
+            //
             pendingHandlerCallbackHead = this.pendingHandlerCallbackHead;
             // Null out so it can be GC'ed.
             this.pendingHandlerCallbackHead = null;
@@ -1149,22 +1156,34 @@ public class DefaultChannelPipeline implements ChannelPipeline {
         // holding the lock and so produce a deadlock if handlerAdded(...) will try to add another handler from outside
         // the EventLoop.
         PendingHandlerCallback task = pendingHandlerCallbackHead;
+        //
         while (task != null) {
             task.execute();
             task = task.next;
         }
     }
 
+<<<<<<< HEAD
     //
+=======
+    //调用链.
+>>>>>>> 2f92fae69586fa6bdd10db6861133dba54815141
     private void callHandlerCallbackLater(AbstractChannelHandlerContext ctx, boolean added) {
-        assert !registered;
         //
+        assert !registered;
+<<<<<<< HEAD
+        //
+=======
+        //判断添加还是删除的task
+>>>>>>> 2f92fae69586fa6bdd10db6861133dba54815141
         PendingHandlerCallback task = added ? new PendingHandlerAddedTask(ctx) : new PendingHandlerRemovedTask(ctx);
+        //
         PendingHandlerCallback pending = pendingHandlerCallbackHead;
+        //
         if (pending == null) {
             pendingHandlerCallbackHead = task;
         } else {
-            // Find the tail of the linked-list.
+            // Find the tail of the linked-list.找到链表的结尾.
             while (pending.next != null) {
                 pending = pending.next;
             }
@@ -1361,6 +1380,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
         HeadContext(DefaultChannelPipeline pipeline) {
             super(pipeline, null, HEAD_NAME, HeadContext.class);
             unsafe = pipeline.channel().unsafe();
+            //head添加成功.
             setAddComplete();
         }
 
@@ -1491,16 +1511,20 @@ public class DefaultChannelPipeline implements ChannelPipeline {
 
     //
     private abstract static class PendingHandlerCallback implements Runnable {
+        //ctx
         final AbstractChannelHandlerContext ctx;
+        //下一个
         PendingHandlerCallback next;
-
+        //
         PendingHandlerCallback(AbstractChannelHandlerContext ctx) {
             this.ctx = ctx;
         }
 
+        //execute
         abstract void execute();
     }
 
+    //
     private final class PendingHandlerAddedTask extends PendingHandlerCallback {
 
         PendingHandlerAddedTask(AbstractChannelHandlerContext ctx) {

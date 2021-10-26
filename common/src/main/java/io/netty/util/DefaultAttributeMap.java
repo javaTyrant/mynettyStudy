@@ -20,6 +20,7 @@ import io.netty.util.internal.ObjectUtil;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
+//默认的 AttributeMap 实现，在修改路径上使用写时复制方法时，不会在属性查找时出现任何阻塞行为。
 
 /**
  * Default {@link AttributeMap} implementation which not exibit any blocking behaviour on attribute lookup while using a
@@ -27,9 +28,10 @@ import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
  * complexity, hence {@code attribute::set(null)} is to be preferred to {@code remove}.
  */
 public class DefaultAttributeMap implements AttributeMap {
-
+    //
     private static final AtomicReferenceFieldUpdater<DefaultAttributeMap, DefaultAttribute[]> ATTRIBUTES_UPDATER =
             AtomicReferenceFieldUpdater.newUpdater(DefaultAttributeMap.class, DefaultAttribute[].class, "attributes");
+    //
     private static final DefaultAttribute[] EMPTY_ATTRIBUTES = new DefaultAttribute[0];
 
     /**
@@ -57,7 +59,6 @@ public class DefaultAttributeMap implements AttributeMap {
                 high = mid - 1;
             }
         }
-
         return -(low + 1);
     }
 
@@ -88,7 +89,7 @@ public class DefaultAttributeMap implements AttributeMap {
     public <T> Attribute<T> attr(AttributeKey<T> key) {
         ObjectUtil.checkNotNull(key, "key");
         DefaultAttribute newAttribute = null;
-        for (;;) {
+        for (; ; ) {
             final DefaultAttribute[] attributes = this.attributes;
             final int index = searchAttributeByKey(attributes, key);
             final DefaultAttribute[] newAttributes;
@@ -126,7 +127,7 @@ public class DefaultAttributeMap implements AttributeMap {
     }
 
     private <T> void removeAttributeIfMatch(AttributeKey<T> key, DefaultAttribute<T> value) {
-        for (;;) {
+        for (; ; ) {
             final DefaultAttribute[] attributes = this.attributes;
             final int index = searchAttributeByKey(attributes, key);
             if (index < 0) {
@@ -140,7 +141,7 @@ public class DefaultAttributeMap implements AttributeMap {
             final int count = attributes.length;
             final int newCount = count - 1;
             final DefaultAttribute[] newAttributes =
-                    newCount == 0? EMPTY_ATTRIBUTES : new DefaultAttribute[newCount];
+                    newCount == 0 ? EMPTY_ATTRIBUTES : new DefaultAttribute[newCount];
             // perform 2 bulk copies
             System.arraycopy(attributes, 0, newAttributes, 0, index);
             final int remaining = count - index - 1;
@@ -158,7 +159,7 @@ public class DefaultAttributeMap implements AttributeMap {
 
         private static final AtomicReferenceFieldUpdater<DefaultAttribute, DefaultAttributeMap> MAP_UPDATER =
                 AtomicReferenceFieldUpdater.newUpdater(DefaultAttribute.class,
-                                                       DefaultAttributeMap.class, "attributeMap");
+                        DefaultAttributeMap.class, "attributeMap");
         private static final long serialVersionUID = -2661411462200283011L;
 
         private volatile DefaultAttributeMap attributeMap;

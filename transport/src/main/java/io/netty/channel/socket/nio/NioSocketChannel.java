@@ -345,8 +345,11 @@ public class NioSocketChannel extends AbstractNioByteChannel implements io.netty
 
     @Override
     protected int doReadBytes(ByteBuf byteBuf) throws Exception {
+        //
         final RecvByteBufAllocator.Handle allocHandle = unsafe().recvBufAllocHandle();
+        //
         allocHandle.attemptedBytesRead(byteBuf.writableBytes());
+        //
         return byteBuf.writeBytes(javaChannel(), allocHandle.attemptedBytesRead());
     }
 

@@ -31,14 +31,24 @@ import java.nio.channels.SelectionKey;
 import static io.netty.channel.internal.ChannelUtils.WRITE_STATUS_SNDBUF_FULL;
 
 /**
+ * 1.核心方法 read write
+ * 核心内部类: NioByteUnsafe
+ *
+ *
+ *
+ */
+
+/**
  * {@link AbstractNioChannel} base class for {@link Channel}s that operate on bytes.
  */
 public abstract class AbstractNioByteChannel extends AbstractNioChannel {
+    //
     private static final ChannelMetadata METADATA = new ChannelMetadata(false, 16);
+    //
     private static final String EXPECTED_TYPES =
             " (expected: " + StringUtil.simpleClassName(ByteBuf.class) + ", " +
                     StringUtil.simpleClassName(FileRegion.class) + ')';
-
+    //
     private final Runnable flushTask = new Runnable() {
         @Override
         public void run() {
@@ -47,6 +57,7 @@ public abstract class AbstractNioByteChannel extends AbstractNioChannel {
             ((AbstractNioUnsafe) unsafe()).flush0();
         }
     };
+    //
     private boolean inputClosedSeenErrorOnRead;
 
     /**
@@ -80,7 +91,9 @@ public abstract class AbstractNioByteChannel extends AbstractNioChannel {
         return METADATA;
     }
 
+    //
     final boolean shouldBreakReadReady(ChannelConfig config) {
+        //
         return isInputShutdown0() && (inputClosedSeenErrorOnRead || !isAllowHalfClosure(config));
     }
 
@@ -89,8 +102,9 @@ public abstract class AbstractNioByteChannel extends AbstractNioChannel {
                 ((SocketChannelConfig) config).isAllowHalfClosure();
     }
 
+    //Nio Byte Unsafe.
     protected class NioByteUnsafe extends AbstractNioUnsafe {
-
+        //读时关闭
         private void closeOnRead(ChannelPipeline pipeline) {
             if (!isInputShutdown0()) {
                 if (isAllowHalfClosure(config())) {
@@ -105,6 +119,7 @@ public abstract class AbstractNioByteChannel extends AbstractNioChannel {
             }
         }
 
+        //处理异常.
         private void handleReadException(ChannelPipeline pipeline, ByteBuf byteBuf, Throwable cause, boolean close,
                                          RecvByteBufAllocator.Handle allocHandle) {
             if (byteBuf != null) {
@@ -134,26 +149,32 @@ public abstract class AbstractNioByteChannel extends AbstractNioChannel {
             //客户端channel发送数据.此时是哪个线程在处理?应该还是boss吧.
             System.out.println("此时的执行线程是:" + Thread.currentThread().getName());
             final ChannelConfig config = config();
+            //是否要中断准备中的读?
             if (shouldBreakReadReady(config)) {
+                //
                 clearReadPending();
                 return;
             }
+            //
             final ChannelPipeline pipeline = pipeline();
-            //
+            //分配器.
             final ByteBufAllocator allocator = config.getAllocator();
-            //
+            //重要!!!!
             final RecvByteBufAllocator.Handle allocHandle = recvBufAllocHandle();
             //
             allocHandle.reset(config);
-
+            //
             ByteBuf byteBuf = null;
+            //
             boolean close = false;
+            //
             try {
                 do {
-                    //guess
+                    //guess.读多少数据呢?
                     byteBuf = allocHandle.allocate(allocator);
-                    //
+                    //doReadBytes.
                     allocHandle.lastBytesRead(doReadBytes(byteBuf));
+                    //
                     if (allocHandle.lastBytesRead() <= 0) {
                         // nothing was read. release the buffer.
                         byteBuf.release();
@@ -165,16 +186,19 @@ public abstract class AbstractNioByteChannel extends AbstractNioChannel {
                         }
                         break;
                     }
-
+                    //
                     allocHandle.incMessagesRead(1);
                     readPending = false;
+                    //read的触发入口.
                     pipeline.fireChannelRead(byteBuf);
+                    //读完一次后清空.
                     byteBuf = null;
                 } while (allocHandle.continueReading());
-
+                //读完了.
                 allocHandle.readComplete();
+                //
                 pipeline.fireChannelReadComplete();
-
+                //
                 if (close) {
                     closeOnRead(pipeline);
                 }

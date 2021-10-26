@@ -14,7 +14,7 @@
  * under the License.
  */
 package io.netty.buffer;
-
+//看看这个体系.
 /**
  * Implementations are responsible to allocate buffers. Implementations of this interface are expected to be
  * thread-safe.

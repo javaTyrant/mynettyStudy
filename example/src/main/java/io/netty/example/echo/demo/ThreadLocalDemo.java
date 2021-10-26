@@ -15,6 +15,7 @@ public class ThreadLocalDemo {
         System.out.println(0x61c88647);
         //多线程共享一个ThreadLocal,threadLocal里做隔离.
         ThreadLocal<Integer> local = new ThreadLocal<>();
+        ThreadLocal<Integer> local1 = new ThreadLocal<>();
         ExecutorService executorService = Executors.newFixedThreadPool(8);
         for (int i = 0; i < 8; i++) {
             int finalI = i;
@@ -22,6 +23,7 @@ public class ThreadLocalDemo {
                 String name = Thread.currentThread().getName();
                 System.out.println("set:" + name + ":" + finalI);
                 local.set(finalI);
+                local1.set(finalI);
             });
         }
         for (int i = 0; i < 8; i++) {
