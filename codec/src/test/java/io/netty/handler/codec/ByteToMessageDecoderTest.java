@@ -51,7 +51,7 @@ public class ByteToMessageDecoderTest {
             private boolean removed;
 
             @Override
-            protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
+            protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) {
                 assertFalse(removed);
                 in.readByte();
                 ctx.pipeline().remove(this);

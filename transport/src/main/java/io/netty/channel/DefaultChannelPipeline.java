@@ -1163,19 +1163,11 @@ public class DefaultChannelPipeline implements ChannelPipeline {
         }
     }
 
-<<<<<<< HEAD
-    //
-=======
     //调用链.
->>>>>>> 2f92fae69586fa6bdd10db6861133dba54815141
     private void callHandlerCallbackLater(AbstractChannelHandlerContext ctx, boolean added) {
         //
         assert !registered;
-<<<<<<< HEAD
-        //
-=======
         //判断添加还是删除的task
->>>>>>> 2f92fae69586fa6bdd10db6861133dba54815141
         PendingHandlerCallback task = added ? new PendingHandlerAddedTask(ctx) : new PendingHandlerRemovedTask(ctx);
         //
         PendingHandlerCallback pending = pendingHandlerCallbackHead;
@@ -1515,6 +1507,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
         final AbstractChannelHandlerContext ctx;
         //下一个
         PendingHandlerCallback next;
+
         //
         PendingHandlerCallback(AbstractChannelHandlerContext ctx) {
             this.ctx = ctx;
