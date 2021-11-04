@@ -15,7 +15,13 @@
  */
 package io.netty.channel.nio;
 
-import io.netty.channel.*;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelException;
+import io.netty.channel.EventLoop;
+import io.netty.channel.EventLoopException;
+import io.netty.channel.EventLoopTaskQueueFactory;
+import io.netty.channel.SelectStrategy;
+import io.netty.channel.SingleThreadEventLoop;
 import io.netty.util.IntSupplier;
 import io.netty.util.concurrent.RejectedExecutionHandler;
 import io.netty.util.internal.ObjectUtil;
@@ -34,11 +40,28 @@ import java.nio.channels.Selector;
 import java.nio.channels.spi.SelectorProvider;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.Queue;
+import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
+ * NioEventLoop 的事件处理机制采用的是无锁串行化的设计思路。
+ * NioEventLoop 无锁串行化的设计不仅使系统吞吐量达到最大化，而且降低了用户开发业务逻辑的难度，不需要花太多精力关心线程安全问题。
+ * 虽然单线程执行避免了线程切换，但是它的缺陷就是不能执行时间过长的 I/O 操作，一旦某个 I/O 事件发生阻塞，那么后续的所有 I/O 事件都无法执行，
+ * 甚至造成事件积压。在使用 Netty 进行程序开发时，我们一定要对 ChannelHandler 的实现逻辑有充分的风险意识。
+ * NioEventLoop 线程的可靠性至关重要，一旦 NioEventLoop 发生阻塞或者陷入空轮询，就会导致整个系统不可用。
+ * 任务处理机制:
+ * 普通任务
+ * 定时任务
+ * 尾部队列
+ * EventLoop 最佳实践:
+ * 1.
+ * 2.
+ * 3.
  * {@link SingleThreadEventLoop} implementation which register the {@link Channel}'s to a
  * {@link Selector} and so does the multi-plexing of these in the event loop.
  */
@@ -439,9 +462,12 @@ public final class NioEventLoop extends SingleThreadEventLoop {
     //
     @Override
     protected void run() {
+        //
         int selectCnt = 0;
+        //
         for (; ; ) {
             try {
+                //
                 int strategy;
                 try {
                     //策略是什么意思呢?
@@ -664,7 +690,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
             selectedKeys.keys[i] = null;
             //获取附件.那么哪里放进去的呢.所以连接的时候跟读的时候并不是一样的.
             final Object a = k.attachment();
-            //
+            //为什么有两个分支呢?
             if (a instanceof AbstractNioChannel) {
                 processSelectedKey(k, (AbstractNioChannel) a);
             } else {

@@ -94,11 +94,10 @@ public abstract class AbstractNioMessageChannel extends AbstractNioChannel {
                 }
 
                 //这边的size会大于1吗?
-                int size = readBuf.size();
-                for (int i = 0; i < size; i++) {
+                for (Object o : readBuf) {
                     readPending = false;
                     //readBuf.get类型:NioSocketChannel.传递.
-                    pipeline.fireChannelRead(readBuf.get(i));
+                    pipeline.fireChannelRead(o);
                 }
                 //处理完了clear.
                 readBuf.clear();
