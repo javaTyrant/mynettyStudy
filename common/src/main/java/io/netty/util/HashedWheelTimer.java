@@ -894,4 +894,17 @@ public class HashedWheelTimer implements Timer {
             return head;
         }
     }
+
+    public static void main(String[] args) {
+        HashedWheelTimer timer = new HashedWheelTimer();
+        timer.newTimeout(new Task(), 20, TimeUnit.SECONDS);
+    }
+
+    static class Task implements TimerTask {
+
+        @Override
+        public void run(Timeout timeout) throws Exception {
+            System.out.println("hello");
+        }
+    }
 }
