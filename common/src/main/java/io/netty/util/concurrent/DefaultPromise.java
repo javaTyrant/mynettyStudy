@@ -516,12 +516,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
             }
         }
 
-        safeExecute(executor, new Runnable() {
-            @Override
-            public void run() {
-                notifyListenersNow();
-            }
-        });
+        safeExecute(executor, this::notifyListenersNow);
     }
 
     /**

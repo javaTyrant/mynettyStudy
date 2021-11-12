@@ -46,7 +46,7 @@ public abstract class AbstractEventExecutor extends AbstractExecutorService impl
     protected AbstractEventExecutor() {
         this(null);
     }
-    //
+    //只是赋值parent.
     protected AbstractEventExecutor(EventExecutorGroup parent) {
         this.parent = parent;
     }

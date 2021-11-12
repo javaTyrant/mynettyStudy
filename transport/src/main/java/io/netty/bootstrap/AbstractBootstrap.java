@@ -16,7 +16,16 @@
 
 package io.netty.bootstrap;
 
-import io.netty.channel.*;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelFutureListener;
+import io.netty.channel.ChannelHandler;
+import io.netty.channel.ChannelOption;
+import io.netty.channel.ChannelPromise;
+import io.netty.channel.DefaultChannelPromise;
+import io.netty.channel.EventLoop;
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.ReflectiveChannelFactory;
 import io.netty.util.AttributeKey;
 import io.netty.util.concurrent.EventExecutor;
 import io.netty.util.concurrent.GlobalEventExecutor;
@@ -268,6 +277,7 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
     private ChannelFuture doBind(final SocketAddress localAddress) {
         //init what .肯定是channel.
         final ChannelFuture regFuture = initAndRegister();
+        //
         final Channel channel = regFuture.channel();
         //出异常了
         if (regFuture.cause() != null) {

@@ -36,14 +36,19 @@ import java.util.concurrent.atomic.AtomicInteger;
  * The internal data structure that stores the thread-local variables for Netty and all {@link FastThreadLocal}s.
  * Note that this class is for internal use only and is subject to change at any time.  Use {@link FastThreadLocal}
  * unless you know what you are doing.
+ * 从 InternalThreadLocalMap 内部实现来看，与 ThreadLocalMap 一样都是采用数组的存储方式。但是 InternalThreadLocalMap
+ * 并没有使用线性探测法来解决 Hash 冲突，而是在 FastThreadLocal 初始化的时候分配一个数组索引 index，index 的值采用原子类 AtomicInteger 保证顺序递增，
+ * 通过调用 InternalThreadLocalMap.nextVariableIndex() 方法获得。然后在读写数据的时候通过数组下标 index 直接定位到 FastThreadLocal 的位置，
+ * 时间复杂度为 O(1)。如果数组下标递增到非常大，那么数组也会比较大，所以 FastThreadLocal 是通过空间换时间的思想提升读写性能。
+ * 下面通过一幅图描述 InternalThreadLocalMap、index 和 FastThreadLocal 之间的关系。
  */
 public final class InternalThreadLocalMap extends UnpaddedInternalThreadLocalMap {
     //
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(InternalThreadLocalMap.class);
-    //
+    //老的ThreadLocal.
     private static final ThreadLocal<InternalThreadLocalMap> slowThreadLocalMap =
-            new ThreadLocal<InternalThreadLocalMap>();
-    //
+            new ThreadLocal<>();
+    //index.
     private static final AtomicInteger nextIndex = new AtomicInteger();
     //
     private static final int DEFAULT_ARRAY_LIST_INITIAL_CAPACITY = 8;
@@ -59,6 +64,8 @@ public final class InternalThreadLocalMap extends UnpaddedInternalThreadLocalMap
     public static final Object UNSET = new Object();
 
     /**
+     * Object 数组替代了 Entry 数组，Object[0] 存储的是一个Set<FastThreadLocal<?>> 集合，
+     * 从数组下标 1 开始都是直接存储的 value 数据，不再采用 ThreadLocal 的键值对形式进行存储。
      * Used by {@link FastThreadLocal}
      */
     private Object[] indexedVariables;
@@ -103,6 +110,7 @@ public final class InternalThreadLocalMap extends UnpaddedInternalThreadLocalMap
         logger.debug("-Dio.netty.threadLocalMap.stringBuilder.maxSize: {}", STRING_BUILDER_MAX_SIZE);
     }
 
+    //兜底方案.
     public static InternalThreadLocalMap getIfSet() {
         Thread thread = Thread.currentThread();
         if (thread instanceof FastThreadLocalThread) {
@@ -122,8 +130,11 @@ public final class InternalThreadLocalMap extends UnpaddedInternalThreadLocalMap
 
     //快速get
     private static InternalThreadLocalMap fastGet(FastThreadLocalThread thread) {
+        //获取InternalThreadLocalMap.
         InternalThreadLocalMap threadLocalMap = thread.threadLocalMap();
+        //说明还没有赋值.
         if (threadLocalMap == null) {
+            //初始化一个,然后赋值给threadLocalMap.
             thread.setThreadLocalMap(threadLocalMap = new InternalThreadLocalMap());
         }
         return threadLocalMap;
@@ -170,8 +181,11 @@ public final class InternalThreadLocalMap extends UnpaddedInternalThreadLocalMap
     }
 
     private static Object[] newIndexedVariableTable() {
+        //初始化一个数组.32.
         Object[] array = new Object[INDEXED_VARIABLE_TABLE_INITIAL_SIZE];
+        //用UNSET填入数组的每个槽位.
         Arrays.fill(array, UNSET);
+        //
         return array;
     }
 
@@ -334,20 +348,31 @@ public final class InternalThreadLocalMap extends UnpaddedInternalThreadLocalMap
 
     /**
      * @return {@code true} if and only if a new thread-local variable has been created
+     * 只有新的线程本地变量被创建才为true.
      */
     public boolean setIndexedVariable(int index, Object value) {
         Object[] lookup = indexedVariables;
         if (index < lookup.length) {
+            //老索引的值
             Object oldValue = lookup[index];
+            //设置新值
             lookup[index] = value;
+            //
             return oldValue == UNSET;
         } else {
+            //扩容的逻辑index == lookup.length.
             expandIndexedVariableTableAndSet(index, value);
             return true;
         }
     }
 
+    //为什么 InternalThreadLocalMap 以 index 为基准进行扩容，
+    //而不是原数组长度呢？假设现在初始化了 70 个 FastThreadLocal，但是这些 FastThreadLocal 从来没有调用过 set() 方法，
+    //此时数组还是默认长度 32。当第 index = 70 的 FastThreadLocal 调用 set() 方法时，
+    //如果按原数组容量 32 进行扩容 2 倍后，还是无法填充 index = 70 的数据。
+    //所以使用 index 为基准进行扩容可以解决这个问题，但是如果 FastThreadLocal 特别多，数组的长度也是非常大的。
     private void expandIndexedVariableTableAndSet(int index, Object value) {
+        //netty里n次使用了.
         Object[] oldArray = indexedVariables;
         final int oldCapacity = oldArray.length;
         int newCapacity = index;
@@ -357,7 +382,7 @@ public final class InternalThreadLocalMap extends UnpaddedInternalThreadLocalMap
         newCapacity |= newCapacity >>> 8;
         newCapacity |= newCapacity >>> 16;
         newCapacity++;
-
+        //大于index的最小的2的n次方.
         Object[] newArray = Arrays.copyOf(oldArray, newCapacity);
         Arrays.fill(newArray, oldCapacity, newArray.length, UNSET);
         newArray[index] = value;

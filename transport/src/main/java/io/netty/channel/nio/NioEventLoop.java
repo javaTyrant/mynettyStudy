@@ -69,7 +69,8 @@ public final class NioEventLoop extends SingleThreadEventLoop {
 
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(NioEventLoop.class);
 
-    private static final int CLEANUP_INTERVAL = 256; // XXX Hard-coded value, but won't need customization.
+    // XXX Hard-coded value, but won't need customization.
+    private static final int CLEANUP_INTERVAL = 256;
 
     //是否禁止优化
     private static final boolean DISABLE_KEY_SET_OPTIMIZATION =
@@ -151,6 +152,14 @@ public final class NioEventLoop extends SingleThreadEventLoop {
     //
     private boolean needsToSelectAgain;
 
+    /**
+     * @param parent                   父Group
+     * @param executor                 执行器
+     * @param selectorProvider         多路复用提供器
+     * @param strategy                 策略
+     * @param rejectedExecutionHandler 拒绝策略
+     * @param queueFactory             队列工厂.
+     */
     NioEventLoop(NioEventLoopGroup parent, Executor executor, SelectorProvider selectorProvider,
                  SelectStrategy strategy, RejectedExecutionHandler rejectedExecutionHandler,
                  EventLoopTaskQueueFactory queueFactory) {
@@ -459,7 +468,9 @@ public final class NioEventLoop extends SingleThreadEventLoop {
     }
 
     //run方法被哪调用的?doStartThread()
-    //
+    //NioEventLoop 每次循环的处理流程都包含事件轮询 select、事件处理 processSelectedKeys、任务处理 runAllTasks 几个步骤，
+    //是典型的 Reactor 线程模型的运行机制。而且 Netty 提供了一个参数 ioRatio，可以调整 I/O 事件处理和任务处理的时间比例。
+    //下面我们将着重从事件处理和任务处理两个核心部分出发，详细介绍 Netty EventLoop 的实现原理。
     @Override
     protected void run() {
         //

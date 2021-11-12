@@ -21,6 +21,7 @@ package io.netty.util.concurrent;
  * calling the constructor of this future.
  */
 public final class SucceededFuture<V> extends CompleteFuture<V> {
+    //结果
     private final V result;
 
     /**

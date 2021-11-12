@@ -17,20 +17,13 @@ public class SampleInBoundHandler extends ChannelInboundHandlerAdapter {
     }
 
     @Override
-<<<<<<< HEAD
-
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-
-=======
-    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
->>>>>>> 2f92fae69586fa6bdd10db6861133dba54815141
         System.out.println("InBoundHandler: " + name);
         if (flush) {
             ctx.channel().writeAndFlush(msg);
         } else {
             super.channelRead(ctx, msg);
         }
-<<<<<<< HEAD
 
     }
 
@@ -38,7 +31,5 @@ public class SampleInBoundHandler extends ChannelInboundHandlerAdapter {
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         System.out.println("InBoundHandlerException: " + name);
         ctx.fireExceptionCaught(cause);
-=======
->>>>>>> 2f92fae69586fa6bdd10db6861133dba54815141
     }
 }
