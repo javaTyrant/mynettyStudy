@@ -24,9 +24,9 @@ import java.util.PriorityQueue;
  * Description of algorithm for PageRun/PoolSubpage allocation from PoolChunk
  *
  * Notation: The following terms are important to understand the code
- * > page  - a page is the smallest unit of memory chunk that can be allocated
- * > run   - a run is a collection of pages
- * > chunk - a chunk is a collection of runs
+ * > page  - a page is the smallest unit of memory chunk that can be allocated(最小的可分配单位.)
+ * > run   - a run is a collection of pages(page的集合)
+ * > chunk - a chunk is a collection of runs(run的集合)
  * > in this code chunkSize = maxPages * pageSize
  *
  * To begin we allocate a byte array of size = chunkSize
@@ -129,6 +129,7 @@ import java.util.PriorityQueue;
  * 4) save the merged run
  *
  */
+//Netty 向操作系统申请内存的单位，所有的内存分配操作也是基于 Chunk 完成的，Chunk 可以理解为 Page 的集合，每个 Chunk 默认大小为 16M。
 final class PoolChunk<T> implements PoolChunkMetric {
     private static final int SIZE_BIT_LENGTH = 15;
     private static final int INUSED_BIT_LENGTH = 1;

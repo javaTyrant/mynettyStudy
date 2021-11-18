@@ -30,6 +30,28 @@ import static io.netty.buffer.PoolChunk.isSubpage;
 import static java.lang.Math.max;
 
 //Arena:竞技场
+//Netty 借鉴了 jemalloc 中 Arena 的设计思想，采用固定数量的多个 Arena 进行内存分配，Arena 的默认数量与 CPU 核数有关，
+//通过创建多个 Arena 来缓解资源竞争问题，从而提高内存分配效率。线程在首次申请分配内存时，会通过 round-robin 的方式轮询 Arena 数组，
+//选择一个固定的 Arena，在线程的生命周期内只与该 Arena 打交道，所以每个线程都保存了 Arena 信息，从而提高访问效率。
+//根据分配内存的类型，ByteBuf 可以分为 Heap 和 Direct，同样 PoolArena 抽象类提供了 HeapArena 和 DirectArena 两个子类。
+//首先看下 PoolArena 的数据结构
+//PoolArena 的数据结构包含两个 PoolSubpage 数组和六个 PoolChunkList，两个 PoolSubpage 数组分别存放 Tiny 和 Small 类型的内存块，
+//六个 PoolChunkList 分别存储不同利用率的 Chunk，构成一个双向循环链表。
+//之前我们介绍了 Netty 内存规格的分类，PoolArena 对应实现了 Subpage 和 Chunk 中的内存分配，其 中 PoolSubpage 用于分配小于 8K 的内存，
+//PoolChunkList 用于分配大于 8K 的内存。
+//PoolSubpage 也是按照 Tiny 和 Small 两种内存规格，设计了tinySubpagePools 和 smallSubpagePools 两个数组，根据关于 Subpage 的介绍，
+//我们知道 Tiny 场景下，内存单位最小为 16B，
+//按 16B 依次递增，共 32 种情况，Small 场景下共分为 512B、1024B、2048B、4096B 四种情况，分别对应两个数组的长度大小，
+//每种粒度的内存单位都由一个 PoolSubpage 进行管理。假如我们分配 20B 大小的内存空间，也会向上取整找到 32B 的 PoolSubpage 节点进行分配。
+//PoolChunkList 用于 Chunk 场景下的内存分配，PoolArena 中初始化了六个 PoolChunkList，分别为 qInit、q000、q025、q050、q075、q100，
+//这与 jemalloc 中 run 队列思路是一致的，它们分别代表不同的内存使用率，如下所示：
+//qInit，内存使用率为 0 ~ 25% 的 Chunk。
+//q000，内存使用率为 1 ~ 50% 的 Chunk。
+//q025，内存使用率为 25% ~ 75% 的 Chunk。
+//q050，内存使用率为 50% ~ 100% 的 Chunk。
+//q075，内存使用率为 75% ~ 100% 的 Chunk。
+//q100，内存使用率为 100% 的 Chunk。
+//随着 Chunk 内存使用率的变化，Netty 会重新检查内存的使用率并放入对应的 PoolChunkList，所以 PoolChunk 会在不同的 PoolChunkList 移动。
 abstract class PoolArena<T> extends SizeClasses implements PoolArenaMetric {
     //是否有unsafe
     static final boolean HAS_UNSAFE = PlatformDependent.hasUnsafe();
@@ -50,32 +72,34 @@ abstract class PoolArena<T> extends SizeClasses implements PoolArenaMetric {
     private final PoolSubpage<T>[] smallSubpagePools;
     //why?
     private final PoolChunkList<T> q050;
+    //
     private final PoolChunkList<T> q025;
+    //
     private final PoolChunkList<T> q000;
     //
     private final PoolChunkList<T> qInit;
+    //
     private final PoolChunkList<T> q075;
+    //
     private final PoolChunkList<T> q100;
-
+    //
     private final List<PoolChunkListMetric> chunkListMetrics;
-
-    // Metrics for allocations and deallocations
+    //Metrics for allocations and deallocations
     private long allocationsNormal;
-    // We need to use the LongCounter here as this is not guarded via synchronized block.
+    //We need to use the LongCounter here as this is not guarded via synchronized block.
     private final LongCounter allocationsSmall = PlatformDependent.newLongCounter();
+    //
     private final LongCounter allocationsHuge = PlatformDependent.newLongCounter();
+    //
     private final LongCounter activeBytesHuge = PlatformDependent.newLongCounter();
     //
     private long deallocationsSmall;
     //
     private long deallocationsNormal;
-
     // We need to use the LongCounter here as this is not guarded via synchronized block.
     private final LongCounter deallocationsHuge = PlatformDependent.newLongCounter();
-
     // Number of thread caches backed by this arena.
     final AtomicInteger numThreadCaches = new AtomicInteger();
-
     // TODO: Test if adding padding helps under contention
     //private long pad0, pad1, pad2, pad3, pad4, pad5, pad6, pad7;
 
@@ -197,6 +221,8 @@ abstract class PoolArena<T> extends SizeClasses implements PoolArenaMetric {
     }
 
     // Method must be called inside synchronized(this) { ... } block
+    //还有一点需要注意的是，在分配大于 8K 的内存时，其链表的访问顺序是 q050->q025->q000->qInit->q075，
+    //遍历检查 PoolChunkList 中是否有 PoolChunk 可以用于内存分配，源码如下：
     private void allocateNormal(PooledByteBuf<T> buf, int reqCapacity, int sizeIdx, PoolThreadCache threadCache) {
         if (q050.allocate(buf, reqCapacity, sizeIdx, threadCache) ||
                 q025.allocate(buf, reqCapacity, sizeIdx, threadCache) ||
