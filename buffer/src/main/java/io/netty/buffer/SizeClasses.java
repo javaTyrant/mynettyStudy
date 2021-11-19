@@ -83,9 +83,11 @@ abstract class SizeClasses implements SizeClassesMetric {
     static final int LOG2_QUANTUM = 4;
 
     private static final int LOG2_SIZE_CLASS_GROUP = 2;
+
     private static final int LOG2_MAX_LOOKUP_SIZE = 12;
 
-    private static final int INDEX_IDX = 0;
+    //private static final int INDEX_IDX = 0;
+
     private static final int LOG2GROUP_IDX = 1;
     private static final int LOG2DELTA_IDX = 2;
     private static final int NDELTA_IDX = 3;
@@ -116,22 +118,27 @@ abstract class SizeClasses implements SizeClassesMetric {
         size2idxTab = new int[lookupMaxSize >> LOG2_QUANTUM];
         size2idxTab(size2idxTab);
     }
-
+    //
     protected final int pageSize;
+    //
     protected final int pageShifts;
+    //
     protected final int chunkSize;
+    //
     protected final int directMemoryCacheAlignment;
-
+    //
     final int nSizes;
+    //
     int nSubpages;
+    //
     int nPSizes;
-
+    //
     int smallMaxSizeIdx;
-
+    //
     private int lookupMaxSize;
-
+    //
     private final short[][] sizeClasses;
-
+    //
     private final int[] pageIdx2sizeTab;
 
     // lookup table for sizeIdx <= smallMaxSizeIdx

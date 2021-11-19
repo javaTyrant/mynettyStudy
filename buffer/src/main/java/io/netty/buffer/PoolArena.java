@@ -103,8 +103,11 @@ abstract class PoolArena<T> extends SizeClasses implements PoolArenaMetric {
     // TODO: Test if adding padding helps under contention
     //private long pad0, pad1, pad2, pad3, pad4, pad5, pad6, pad7;
 
-    protected PoolArena(PooledByteBufAllocator parent, int pageSize,
-                        int pageShifts, int chunkSize, int cacheAlignment) {
+    protected PoolArena(PooledByteBufAllocator parent,
+                        int pageSize,
+                        int pageShifts,
+                        int chunkSize,
+                        int cacheAlignment) {
         super(pageSize, pageShifts, chunkSize, cacheAlignment);
         this.parent = parent;
         directMemoryCacheAlignment = cacheAlignment;
@@ -627,8 +630,11 @@ abstract class PoolArena<T> extends SizeClasses implements PoolArenaMetric {
 
     static final class DirectArena extends PoolArena<ByteBuffer> {
 
-        DirectArena(PooledByteBufAllocator parent, int pageSize, int pageShifts,
-                    int chunkSize, int directMemoryCacheAlignment) {
+        DirectArena(PooledByteBufAllocator parent,
+                    int pageSize,
+                    int pageShifts,
+                    int chunkSize,
+                    int directMemoryCacheAlignment) {
             super(parent, pageSize, pageShifts, chunkSize,
                     directMemoryCacheAlignment);
         }

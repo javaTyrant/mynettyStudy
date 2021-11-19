@@ -16,27 +16,30 @@
 
 package io.netty.buffer;
 
-import io.netty.util.internal.PlatformDependent;
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.nio.ByteBuffer;
 
-import static org.junit.Assert.*;
-import static org.junit.Assume.*;
+import static org.junit.Assert.assertEquals;
 
 public class PoolArenaTest {
-
+    //
     private static final int PAGE_SIZE = 8192;
+    //
     private static final int PAGE_SHIFTS = 11;
     //chunkSize = pageSize * (2 ^ pageShifts)
     private static final int CHUNK_SIZE = 16777216;
 
     @Test
     public void testNormalizeCapacity() {
+        //
         PoolArena<ByteBuffer> arena = new PoolArena.DirectArena(null, PAGE_SIZE, PAGE_SHIFTS, CHUNK_SIZE, 0);
+        //
         int[] reqCapacities = {0, 15, 510, 1024, 1023, 1025};
+        //
         int[] expectedResult = {16, 16, 512, 1024, 1024, 1280};
+        //
         for (int i = 0; i < reqCapacities.length; i ++) {
             Assert.assertEquals(expectedResult[i], arena.sizeIdx2size(arena.size2SizeIdx(reqCapacities[i])));
         }
