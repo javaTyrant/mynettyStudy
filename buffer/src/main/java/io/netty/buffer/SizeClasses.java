@@ -79,7 +79,8 @@ import static io.netty.buffer.PoolThreadCache.*;
  *   ( 76,    24,       22,        1,       yes,            no,        no)
  */
 abstract class SizeClasses implements SizeClassesMetric {
-    //内存对齐怎么理解.
+    // SizeClasses 就是记录 Small 和 Normal 规格值得一张表（table），这张表记录了很多有用的信息。
+    //内存对齐怎么理解.如果申请1025的内存,jemalloc3是怎么处理的,以及jemalloc4是怎么分配的.
     static final int LOG2_QUANTUM = 4;
 
     private static final int LOG2_SIZE_CLASS_GROUP = 2;
@@ -142,6 +143,7 @@ abstract class SizeClasses implements SizeClassesMetric {
     private final int[] pageIdx2sizeTab;
 
     // lookup table for sizeIdx <= smallMaxSizeIdx
+    //只存了最后一列.
     private final int[] sizeIdx2sizeTab;
 
     // lookup table used for size <= lookupMaxclass

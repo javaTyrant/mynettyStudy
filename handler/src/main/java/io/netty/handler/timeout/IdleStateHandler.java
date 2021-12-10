@@ -16,8 +16,15 @@
 package io.netty.handler.timeout;
 
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.*;
+import io.netty.channel.Channel;
 import io.netty.channel.Channel.Unsafe;
+import io.netty.channel.ChannelDuplexHandler;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelFutureListener;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelOutboundBuffer;
+import io.netty.channel.ChannelPromise;
 import io.netty.util.concurrent.EventExecutor;
 import io.netty.util.internal.ObjectUtil;
 
@@ -104,7 +111,7 @@ public class IdleStateHandler extends ChannelDuplexHandler {
     // Not create a new ChannelFutureListener per write operation to reduce GC pressure.
     private final ChannelFutureListener writeListener = new ChannelFutureListener() {
         @Override
-        public void operationComplete(ChannelFuture future) throws Exception {
+        public void operationComplete(ChannelFuture future) {
             lastWriteTime = ticksInNanos();
             firstWriterIdleEvent = firstAllIdleEvent = true;
         }
@@ -120,13 +127,13 @@ public class IdleStateHandler extends ChannelDuplexHandler {
     private final long allIdleTimeNanos;
     //
     private ScheduledFuture<?> readerIdleTimeout;
-    //
+    //最后一次读的时间
     private long lastReadTime;
     //
     private boolean firstReaderIdleEvent = true;
     //
     private ScheduledFuture<?> writerIdleTimeout;
-    //
+    //最后一次写的时间.
     private long lastWriteTime;
     //
     private boolean firstWriterIdleEvent = true;
@@ -134,8 +141,8 @@ public class IdleStateHandler extends ChannelDuplexHandler {
     private ScheduledFuture<?> allIdleTimeout;
     //
     private boolean firstAllIdleEvent = true;
-    //
-    private byte state; // 0 - none, 1 - initialized, 2 - destroyed
+    // 0 - none, 1 - initialized, 2 - destroyed
+    private byte state;
     //
     private boolean reading;
     //
@@ -196,7 +203,9 @@ public class IdleStateHandler extends ChannelDuplexHandler {
      *                       {@code writeIdleTime}, and {@code allIdleTime}
      */
     public IdleStateHandler(boolean observeOutput,
-                            long readerIdleTime, long writerIdleTime, long allIdleTime,
+                            long readerIdleTime,
+                            long writerIdleTime,
+                            long allIdleTime,
                             TimeUnit unit) {
         ObjectUtil.checkNotNull(unit, "unit");
 
@@ -242,6 +251,7 @@ public class IdleStateHandler extends ChannelDuplexHandler {
 
     @Override
     public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
+        //
         if (ctx.channel().isActive() && ctx.channel().isRegistered()) {
             // channelActive() event has been fired already, which means this.channelActive() will
             // not be invoked. We have to initialize here instead.
@@ -296,6 +306,7 @@ public class IdleStateHandler extends ChannelDuplexHandler {
     @Override
     public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
         if ((readerIdleTimeNanos > 0 || allIdleTimeNanos > 0) && reading) {
+            //修改
             lastReadTime = ticksInNanos();
             reading = false;
         }
@@ -321,11 +332,13 @@ public class IdleStateHandler extends ChannelDuplexHandler {
             case 2:
                 return;
         }
-
+        //初始化了.
         state = 1;
+        //
         initOutputChanged(ctx);
-
+        //
         lastReadTime = lastWriteTime = ticksInNanos();
+        //满足条件就开启定时器.
         if (readerIdleTimeNanos > 0) {
             readerIdleTimeout = schedule(ctx, new ReaderIdleTimeoutTask(ctx),
                     readerIdleTimeNanos, TimeUnit.NANOSECONDS);
@@ -469,6 +482,7 @@ public class IdleStateHandler extends ChannelDuplexHandler {
         return false;
     }
 
+    //
     private abstract static class AbstractIdleTask implements Runnable {
 
         private final ChannelHandlerContext ctx;
@@ -505,7 +519,7 @@ public class IdleStateHandler extends ChannelDuplexHandler {
             //
             long nextDelay = readerIdleTimeNanos;
             if (!reading) {
-                nextDelay -= ticksInNanos() - lastReadTime;
+                nextDelay -= (ticksInNanos() - lastReadTime);
             }
 
             if (nextDelay <= 0) {
