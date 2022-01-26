@@ -293,8 +293,9 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
             //没有完成
             // Registration future is almost always fulfilled already, but just in case it's not.
             final PendingRegistrationPromise promise = new PendingRegistrationPromise(channel);
-            //注册监听:operationComplete
+            //注册监听:operationComplete.
             regFuture.addListener(new ChannelFutureListener() {
+                //完成时调用这个方法.
                 @Override
                 public void operationComplete(ChannelFuture future) throws Exception {
                     Throwable cause = future.cause();

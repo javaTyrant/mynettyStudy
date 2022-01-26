@@ -15,7 +15,11 @@
  */
 package io.netty.util.concurrent;
 
-import io.netty.util.internal.*;
+import io.netty.util.internal.InternalThreadLocalMap;
+import io.netty.util.internal.PlatformDependent;
+import io.netty.util.internal.StringUtil;
+import io.netty.util.internal.SystemPropertyUtil;
+import io.netty.util.internal.ThrowableUtil;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 
@@ -49,9 +53,9 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
             StacklessCancellationException.newInstance(DefaultPromise.class, "cancel(...)"));
     //
     private static final StackTraceElement[] CANCELLATION_STACK = CANCELLATION_CAUSE_HOLDER.cause.getStackTrace();
-    //
+    //result.
     private volatile Object result;
-    //
+    //执行器.
     private final EventExecutor executor;
     /**
      * One or more listeners. Can be a {@link GenericFutureListener} or a {@link DefaultFutureListeners}.
@@ -165,6 +169,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
         if (!(result instanceof CauseHolder)) {
             return null;
         }
+        //取消.
         if (result == CANCELLATION_CAUSE_HOLDER) {
             CancellationException ce = new LeanCancellationException();
             if (RESULT_UPDATER.compareAndSet(this, CANCELLATION_CAUSE_HOLDER, new CauseHolder(ce))) {
@@ -243,7 +248,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
         if (isDone()) {
             return this;
         }
-
+        //
         if (Thread.interrupted()) {
             throw new InterruptedException(toString());
         }
@@ -267,15 +272,17 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
         return this;
     }
 
+    //和await的区别,await先响应中断.
     @Override
     public Promise<V> awaitUninterruptibly() {
         if (isDone()) {
             return this;
         }
-
+        //
         checkDeadLock();
-
+        //
         boolean interrupted = false;
+        //
         synchronized (this) {
             while (!isDone()) {
                 incWaiters();
@@ -289,8 +296,9 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
                 }
             }
         }
-
+        //如果被打断
         if (interrupted) {
+            //自己中断.
             Thread.currentThread().interrupt();
         }
 
@@ -340,7 +348,9 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
     @SuppressWarnings("unchecked")
     @Override
     public V get() throws InterruptedException, ExecutionException {
+        //
         Object result = this.result;
+        //没有完成.等待.如果等待的过程被取消了呢?
         if (!isDone0(result)) {
             await();
             result = this.result;
@@ -348,10 +358,12 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
         if (result == SUCCESS || result == UNCANCELLABLE) {
             return null;
         }
+        //
         Throwable cause = cause0(result);
         if (cause == null) {
             return (V) result;
         }
+        //取消了.
         if (cause instanceof CancellationException) {
             throw (CancellationException) cause;
         }
@@ -384,12 +396,14 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
 
     /**
      * {@inheritDoc}
+     * 这个实现中mayInterruptIfRunning没有使用.
      *
      * @param mayInterruptIfRunning this value has no effect in this implementation.
      */
     @Override
     public boolean cancel(boolean mayInterruptIfRunning) {
         if (RESULT_UPDATER.compareAndSet(this, null, CANCELLATION_CAUSE_HOLDER)) {
+            //如果有通知的节点,cancel实际上是没有作用的,
             if (checkNotifyWaiters()) {
                 notifyListeners();
             }
@@ -515,7 +529,6 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
                 return;
             }
         }
-
         safeExecute(executor, this::notifyListenersNow);
     }
 
@@ -561,13 +574,17 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
                 return;
             }
             notifyingListeners = true;
+            //获取监听器.
             listeners = this.listeners;
+            //置空.
             this.listeners = null;
         }
         for (; ; ) {
+            //如果是数组
             if (listeners instanceof DefaultFutureListeners) {
                 notifyListeners0((DefaultFutureListeners) listeners);
             } else {
+                //单个, 强转一下.
                 notifyListener0(this, (GenericFutureListener<?>) listeners);
             }
             synchronized (this) {
@@ -583,6 +600,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
         }
     }
 
+    //多个.内部循环调用单个.
     private void notifyListeners0(DefaultFutureListeners listeners) {
         GenericFutureListener<?>[] a = listeners.listeners();
         int size = listeners.size();
@@ -591,10 +609,11 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
         }
     }
 
+    //单个.
     @SuppressWarnings({"unchecked", "rawtypes"})
     private static void notifyListener0(Future future, GenericFutureListener l) {
         try {
-            //执行.完成时通知,权力交给你.
+            //执行.完成时通知.
             l.operationComplete(future);
         } catch (Throwable t) {
             if (logger.isWarnEnabled()) {
@@ -855,6 +874,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
     }
 
     private static boolean isCancelled0(Object result) {
+        //是否被取消了.
         return result instanceof CauseHolder && ((CauseHolder) result).cause instanceof CancellationException;
     }
 
@@ -872,6 +892,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
         }
     }
 
+    //
     private static void safeExecute(EventExecutor executor, Runnable task) {
         try {
             executor.execute(task);

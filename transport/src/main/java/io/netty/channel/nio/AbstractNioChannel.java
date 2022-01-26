@@ -207,8 +207,10 @@ public abstract class AbstractNioChannel extends AbstractChannel {
         void forceFlush();
     }
 
+    //
     protected abstract class AbstractNioUnsafe extends AbstractUnsafe implements NioUnsafe {
 
+        //
         protected final void removeReadOp() {
             SelectionKey key = selectionKey();
             // Check first if the key is still valid as it may be canceled as part of the deregistration
@@ -267,7 +269,7 @@ public abstract class AbstractNioChannel extends AbstractChannel {
 
                     promise.addListener(new ChannelFutureListener() {
                         @Override
-                        public void operationComplete(ChannelFuture future) throws Exception {
+                        public void operationComplete(ChannelFuture future) {
                             if (future.isCancelled()) {
                                 if (connectTimeoutFuture != null) {
                                     connectTimeoutFuture.cancel(false);
@@ -394,7 +396,7 @@ public abstract class AbstractNioChannel extends AbstractChannel {
     }
 
     @Override
-    protected void doDeregister() throws Exception {
+    protected void doDeregister() {
         eventLoop().cancel(selectionKey());
     }
 

@@ -138,7 +138,7 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
         setAttributes(channel, newAttributesArray());
         //获取pipeline
         ChannelPipeline p = channel.pipeline();
-        //
+        //worker.
         final EventLoopGroup currentChildGroup = childGroup;
         //
         final ChannelHandler currentChildHandler = childHandler;
@@ -157,9 +157,8 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
                 ch.eventLoop().execute(new Runnable() {
                     @Override
                     public void run() {
-                        //
-                        pipeline.addLast(new ServerBootstrapAcceptor(
-                                ch, currentChildGroup, currentChildHandler, currentChildOptions, currentChildAttrs));
+                        //pipeline什么时候被触发的.
+                        pipeline.addLast(new ServerBootstrapAcceptor(ch, currentChildGroup, currentChildHandler, currentChildOptions, currentChildAttrs));
                     }
                 });
             }
@@ -197,9 +196,13 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
         ServerBootstrapAcceptor(
                 final Channel channel, EventLoopGroup childGroup, ChannelHandler childHandler,
                 Entry<ChannelOption<?>, Object>[] childOptions, Entry<AttributeKey<?>, Object>[] childAttrs) {
+            //
             this.childGroup = childGroup;
+            //
             this.childHandler = childHandler;
+            //
             this.childOptions = childOptions;
+            //
             this.childAttrs = childAttrs;
 
             // Task which is scheduled to re-enable auto-read.
@@ -216,7 +219,8 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
             };
         }
 
-        //msg的数据流.
+        //msg的数据流.什么时候触发.连接的时候?还是读到数据的时候.猜一下是连接的时候.
+        //boss接受连接,然后把child流注册到childGroup里.
         @Override
         @SuppressWarnings("unchecked")
         public void channelRead(ChannelHandlerContext ctx, Object msg) {
@@ -228,7 +232,7 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
             setChannelOptions(child, childOptions, logger);
             //
             setAttributes(child, childAttrs);
-
+            //
             try {
                 //childGroup的数据流:父类的childGroup传入,完美闭环.
                 //channel注册到childGroup.channel 看看怎么给channel分配线程的.

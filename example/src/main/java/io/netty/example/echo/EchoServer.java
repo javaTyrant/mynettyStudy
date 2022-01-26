@@ -16,7 +16,11 @@
 package io.netty.example.echo;
 
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.*;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelOption;
+import io.netty.channel.ChannelPipeline;
+import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
@@ -79,6 +83,7 @@ public final class EchoServer {
      */
     static final boolean SSL = System.getProperty("ssl") != null;
     static final int PORT = Integer.parseInt(System.getProperty("port", "8007"));
+
     //思考一个问题，为什么需要 ChannelInitializer 处理器呢？ServerBootstrapAcceptor 的注册过程为什么又需要封装成异步 task 呢？
     //boss线程的启动:
     //worker线程的启动:
@@ -111,7 +116,10 @@ public final class EchoServer {
                     //客户端流的创建: buf.add(new NioSocketChannel(this, ch));
                     .channel(NioServerSocketChannel.class)
                     .option(ChannelOption.SO_BACKLOG, 100)
-                    //添加到服务端上的pipeline中.
+                    //添加到服务端上的pipeline中.ServerBootstrap#handler设置的ChannelHandler是被添加到ServerChannel的ChannelPipeline中，
+                    //而ServerBootstrap#childHandler设置的ChannelHandler是被添加到Channel的ChannelPipeline中
+                    //ServerBootstrap#handler添加的handler实例链，只在客户端连接创建的时候调用（ServerChannel负责创建子Channel，对应点3），在创建完成之后，不会再调用。
+                    //ServerBootstrap#childHandler添加的handler实例链，对于Channel的所有事件都会被调用触发。
                     .handler(new LoggingHandler(LogLevel.INFO))
                     //添加到客户端的pipeline上.
                     .childHandler(new ChannelInitializer<SocketChannel>() {

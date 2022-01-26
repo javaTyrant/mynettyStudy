@@ -16,7 +16,16 @@
 package io.netty.channel.socket.nio;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.channel.*;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelException;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelFutureListener;
+import io.netty.channel.ChannelOption;
+import io.netty.channel.ChannelOutboundBuffer;
+import io.netty.channel.ChannelPromise;
+import io.netty.channel.EventLoop;
+import io.netty.channel.FileRegion;
+import io.netty.channel.RecvByteBufAllocator;
 import io.netty.channel.nio.AbstractNioByteChannel;
 import io.netty.channel.socket.DefaultSocketChannelConfig;
 import io.netty.channel.socket.ServerSocketChannel;
@@ -43,8 +52,8 @@ import java.util.concurrent.Executor;
 import static io.netty.channel.internal.ChannelUtils.MAX_BYTES_PER_GATHERING_WRITE_ATTEMPTED_LOW_THRESHOLD;
 
 //NioSocketChannel:
+
 /**
- *
  * {@link io.netty.channel.socket.SocketChannel} which uses NIO selector based implementation.
  */
 public class NioSocketChannel extends AbstractNioByteChannel implements io.netty.channel.socket.SocketChannel {
@@ -446,13 +455,16 @@ public class NioSocketChannel extends AbstractNioByteChannel implements io.netty
     @Override
     protected AbstractNioUnsafe newUnsafe() {
         //客户端流的unsafe.
+        System.out.println("NioSocketChannelUnsafe被调用了");
         return new NioSocketChannelUnsafe();
     }
 
+    //覆盖prepareToClose方法.
     private final class NioSocketChannelUnsafe extends NioByteUnsafe {
         @Override
         protected Executor prepareToClose() {
             try {
+                //open 且.
                 if (javaChannel().isOpen() && config().getSoLinger() > 0) {
                     // We need to cancel this key of the channel so we may not end up in a eventloop spin
                     // because we try to read or write until the actual close happens which may be later due
