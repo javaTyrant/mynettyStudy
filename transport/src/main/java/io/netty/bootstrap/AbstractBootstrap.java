@@ -297,7 +297,7 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
             regFuture.addListener(new ChannelFutureListener() {
                 //完成时调用这个方法.
                 @Override
-                public void operationComplete(ChannelFuture future) throws Exception {
+                public void operationComplete(ChannelFuture future) {
                     Throwable cause = future.cause();
                     if (cause != null) {
                         // Registration on the EventLoop failed so fail the ChannelPromise directly to not cause an

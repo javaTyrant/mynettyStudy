@@ -72,7 +72,7 @@ public class DefaultPromiseTest {
     }
 
     @Test
-    public void testCancelWithListener() throws ExecutionException, InterruptedException {
+    public void testCancelWithListener() {
         ExecutorService service = Executors.newFixedThreadPool(2);
         //mock.
         EventExecutor executor = Mockito.mock(EventExecutor.class);
@@ -114,7 +114,7 @@ public class DefaultPromiseTest {
         Mockito.when(executor.inEventLoop()).thenReturn(false);
 
         Object value = new Object();
-        Promise<Object> promise = new DefaultPromise<Object>(executor);
+        Promise<Object> promise = new DefaultPromise<>(executor);
         promise.setSuccess(value);
         Mockito.verify(executor, Mockito.never()).execute(Mockito.any(Runnable.class));
         assertSame(value, promise.getNow());
@@ -126,7 +126,7 @@ public class DefaultPromiseTest {
         Mockito.when(executor.inEventLoop()).thenReturn(false);
 
         Exception cause = new Exception();
-        Promise<Void> promise = new DefaultPromise<Void>(executor);
+        Promise<Void> promise = new DefaultPromise<>(executor);
         promise.setFailure(cause);
         Mockito.verify(executor, Mockito.never()).execute(Mockito.any(Runnable.class));
         assertSame(cause, promise.cause());
@@ -134,7 +134,7 @@ public class DefaultPromiseTest {
 
     @Test(expected = CancellationException.class)
     public void testCancellationExceptionIsThrownWhenBlockingGet() throws InterruptedException, ExecutionException {
-        final Promise<Void> promise = new DefaultPromise<Void>(ImmediateEventExecutor.INSTANCE);
+        final Promise<Void> promise = new DefaultPromise<>(ImmediateEventExecutor.INSTANCE);
         assertTrue(promise.cancel(false));
         promise.get();
     }

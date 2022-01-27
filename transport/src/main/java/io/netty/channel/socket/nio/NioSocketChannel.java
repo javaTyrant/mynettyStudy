@@ -461,6 +461,7 @@ public class NioSocketChannel extends AbstractNioByteChannel implements io.netty
 
     //覆盖prepareToClose方法.
     private final class NioSocketChannelUnsafe extends NioByteUnsafe {
+        //准备关闭
         @Override
         protected Executor prepareToClose() {
             try {

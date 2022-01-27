@@ -149,7 +149,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
     private volatile int ioRatio = 50;
     //
     private int cancelledKeys;
-    //
+    //是否需要新的selector.
     private boolean needsToSelectAgain;
 
     /**
