@@ -69,11 +69,8 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
     private static final int ST_TERMINATED = 5;
 
     //空任务
-    private static final Runnable NOOP_TASK = new Runnable() {
-        @Override
-        public void run() {
-            // Do nothing.
-        }
+    private static final Runnable NOOP_TASK = () -> {
+        // Do nothing.
     };
 
     //state修改器
@@ -97,7 +94,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
     //threadLock
     private final CountDownLatch threadLock = new CountDownLatch(1);
     //关闭钩子
-    private final Set<Runnable> shutdownHooks = new LinkedHashSet<Runnable>();
+    private final Set<Runnable> shutdownHooks = new LinkedHashSet<>();
     //
     private final boolean addTaskWakesUp;
     //
@@ -209,7 +206,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
      * implementation that does not support blocking operations at all.
      */
     protected Queue<Runnable> newTaskQueue(int maxPendingTasks) {
-        return new LinkedBlockingQueue<Runnable>(maxPendingTasks);
+        return new LinkedBlockingQueue<>(maxPendingTasks);
     }
 
     /**

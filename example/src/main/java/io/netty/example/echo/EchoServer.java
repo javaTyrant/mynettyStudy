@@ -144,7 +144,6 @@ public final class EchoServer {
                             //p.addLast()
                         }
                     });
-
             // Start the server.
             ChannelFuture f = b.bind(PORT).sync();
             // Wait until the server socket is closed.

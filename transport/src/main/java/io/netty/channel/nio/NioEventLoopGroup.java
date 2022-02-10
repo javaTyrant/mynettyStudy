@@ -144,7 +144,7 @@ public class NioEventLoopGroup extends MultithreadEventLoopGroup {
     //主要功能:newChild.
     //返回EventLoop
     @Override
-    protected EventLoop newChild(Executor executor, Object... args) throws Exception {
+    protected EventLoop newChild(Executor executor, Object... args) {
         //获取taskQueueFactory
         EventLoopTaskQueueFactory queueFactory = args.length == 4 ? (EventLoopTaskQueueFactory) args[3] : null;
         //返回一个.按层级一个一个赋值.

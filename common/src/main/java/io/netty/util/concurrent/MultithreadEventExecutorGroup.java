@@ -127,14 +127,11 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
         chooser = chooserFactory.newChooser(children);
 
         //
-        final FutureListener<Object> terminationListener = new FutureListener<Object>() {
-            @Override
-            public void operationComplete(Future<Object> future) throws Exception {
-                //如果都被终止了
-                if (terminatedChildren.incrementAndGet() == children.length) {
-                    //设置终止完成.
-                    terminationFuture.setSuccess(null);
-                }
+        final FutureListener<Object> terminationListener = future -> {
+            //如果都被终止了
+            if (terminatedChildren.incrementAndGet() == children.length) {
+                //设置终止完成.
+                terminationFuture.setSuccess(null);
             }
         };
         //
