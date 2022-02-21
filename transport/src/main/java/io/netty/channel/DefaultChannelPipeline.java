@@ -33,6 +33,7 @@ import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 
 /**
+ * 如何设计?我们要满足什么样的功能.
  * 这个类的设计要好好吃透啊,虽然说是责任链模式,但是细节点太多了.
  * The default {@link ChannelPipeline} implementation.  It is usually created
  * by a {@link Channel} implementation when the {@link Channel} is created.
@@ -42,9 +43,10 @@ public class DefaultChannelPipeline implements ChannelPipeline {
     static final InternalLogger logger = InternalLoggerFactory.getInstance(DefaultChannelPipeline.class);
     //头尾名称
     private static final String HEAD_NAME = generateName0(HeadContext.class);
+    //
     private static final String TAIL_NAME = generateName0(TailContext.class);
 
-    //名称缓存
+    //名称缓存:为什么要用WeakHashMap呢
     private static final FastThreadLocal<Map<Class<?>, String>> nameCaches =
             new FastThreadLocal<Map<Class<?>, String>>() {
                 @Override
@@ -974,7 +976,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
 
     @Override
     public final ChannelFuture bind(SocketAddress localAddress) {
-        //为什么呢
+        //为什么呢.从尾部向头传递,最后由head来实现.
         return tail.bind(localAddress);
     }
 
@@ -1056,8 +1058,10 @@ public class DefaultChannelPipeline implements ChannelPipeline {
         return tail.write(msg, promise);
     }
 
+    //io.netty.channel.DefaultChannelPipeline.writeAndFlush(java.lang.Object, io.netty.channel.ChannelPromise)
     @Override
     public final ChannelFuture writeAndFlush(Object msg, ChannelPromise promise) {
+        //
         return tail.writeAndFlush(msg, promise);
     }
 

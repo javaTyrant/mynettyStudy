@@ -136,6 +136,11 @@ public final class HttpUtil {
         }
     }
 
+    public static void main(String[] args) {
+        DefaultFullHttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, "/");
+        request.headers().add("Content-Length", "foo");
+        System.out.println(HttpUtil.getContentLength(request, 0));
+    }
     /**
      * Returns the length of the content. Please note that this value is
      * not retrieved from {@link HttpContent#content()} but from the

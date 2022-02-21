@@ -212,7 +212,7 @@ public class EmbeddedChannel extends AbstractChannel {
         ChannelPipeline p = pipeline();
         p.addLast(new ChannelInitializer<Channel>() {
             @Override
-            protected void initChannel(Channel ch) throws Exception {
+            protected void initChannel(Channel ch) {
                 ChannelPipeline pipeline = ch.pipeline();
                 for (ChannelHandler h: handlers) {
                     if (h == null) {

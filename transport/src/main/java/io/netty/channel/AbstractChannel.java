@@ -70,7 +70,10 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
      * Cache for the string representation of this channel
      */
     private boolean strValActive;
-    //
+
+    /**
+     *
+     */
     private String strVal;
 
     /**
@@ -81,6 +84,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
     protected AbstractChannel(Channel parent) {
         //父流
         this.parent = parent;
+        //构造id.
         id = newId();
         //构造unsafe.
         unsafe = newUnsafe();
@@ -104,11 +108,15 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
         System.out.println("pipeline创建好了..." + pipeline.getClass().getSimpleName());
     }
 
+    //
     protected final int maxMessagesPerWrite() {
+        //
         ChannelConfig config = config();
+        //
         if (config instanceof DefaultChannelConfig) {
             return ((DefaultChannelConfig) config).getMaxMessagesPerWrite();
         }
+        //
         Integer value = config.getOption(ChannelOption.MAX_MESSAGES_PER_WRITE);
         if (value == null) {
             return Integer.MAX_VALUE;
@@ -508,7 +516,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
             } else {
                 //main方法或者其他
                 try {
-                    //这里开始第一次启动线程.注册注册事件.
+                    //这里开始第一次启动线程.注册注册事件.main线程.
                     eventLoop.execute(new Runnable() {
                         @Override
                         public void run() {
@@ -544,7 +552,6 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
                 neverRegistered = false;
                 //
                 registered = true;
-
                 // Ensure we call handlerAdded(...) before we actually notify the promise. This is needed as the
                 // user may already fire events through the pipeline in the ChannelFutureListener.
                 pipeline.invokeHandlerAddedIfNeeded();
@@ -744,7 +751,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
                     // This means close() was called before so we just register a listener and return
                     closeFuture.addListener(new ChannelFutureListener() {
                         @Override
-                        public void operationComplete(ChannelFuture future) throws Exception {
+                        public void operationComplete(ChannelFuture future) {
                             promise.setSuccess();
                         }
                     });

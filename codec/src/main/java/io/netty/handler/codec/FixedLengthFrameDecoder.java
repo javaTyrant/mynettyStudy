@@ -21,7 +21,9 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 
 import java.util.List;
-
+//固定长度解码器 FixedLengthFrameDecoder 非常简单，直接通过构造函数设置固定长度的大小 frameLength，
+//无论接收方一次获取多大的数据，都会严格按照 frameLength 进行解码。如果累积读取到长度大小为 frameLength 的消息，
+//那么解码器认为已经获取到了一个完整的消息。如果消息长度小于 frameLength，FixedLengthFrameDecoder 解码器会一直等后续数据包的到达，直至获得完整的消息。
 /**
  * A decoder that splits the received {@link ByteBuf}s by the fixed number
  * of bytes. For example, if you received the following four fragmented packets:
@@ -39,7 +41,7 @@ import java.util.List;
  * </pre>
  */
 public class FixedLengthFrameDecoder extends ByteToMessageDecoder {
-
+    //固定长度
     private final int frameLength;
 
     /**
@@ -73,6 +75,7 @@ public class FixedLengthFrameDecoder extends ByteToMessageDecoder {
         if (in.readableBytes() < frameLength) {
             return null;
         } else {
+            //
             return in.readRetainedSlice(frameLength);
         }
     }

@@ -70,7 +70,8 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
     private final String name;
     //
     private final boolean ordered;
-    //掩码运算操作:作用:?
+    //掩码运算操作:作用:?通过使用该属性可以在事件传播时，
+    //快速的判断出该节点中的Handler在inBound方向和outBound方向有没有重载某事件处理逻辑。
     private final int executionMask;
 
     // Will be set to null if no child executor should be used, otherwise it will be set to the
@@ -927,7 +928,7 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
         handlerState = REMOVE_COMPLETE;
     }
 
-    //
+    //修改handlerState.
     final boolean setAddComplete() {
         //死循环
         for (; ; ) {
@@ -955,6 +956,7 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
         // We must call setAddComplete before calling handlerAdded. Otherwise if the handlerAdded method generates
         // any pipeline events ctx.handler() will miss them because the state will not allow it.
         if (setAddComplete()) {
+            //childHandler的内部类.
             handler().handlerAdded(this);
         }
     }

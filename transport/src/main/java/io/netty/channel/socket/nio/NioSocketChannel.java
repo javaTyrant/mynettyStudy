@@ -62,6 +62,7 @@ public class NioSocketChannel extends AbstractNioByteChannel implements io.netty
     //
     private static final SelectorProvider DEFAULT_SELECTOR_PROVIDER = SelectorProvider.provider();
 
+    //SocketChannel
     private static SocketChannel newSocket(SelectorProvider provider) {
         try {
             /**

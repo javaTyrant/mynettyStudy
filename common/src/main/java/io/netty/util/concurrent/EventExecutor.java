@@ -32,11 +32,13 @@ public interface EventExecutor extends EventExecutorGroup {
 
     /**
      * Return the {@link EventExecutorGroup} which is the parent of this {@link EventExecutor},
+     * 获取的是EventExecutorGroup
      */
     EventExecutorGroup parent();
 
     /**
      * Calls {@link #inEventLoop(Thread)} with {@link Thread#currentThread()} as argument
+     *
      */
     boolean inEventLoop();
 

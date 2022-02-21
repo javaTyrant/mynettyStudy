@@ -22,6 +22,7 @@ import io.netty.channel.ChannelPromise;
 import java.net.Socket;
 
 /**
+ * 双工
  * A duplex {@link Channel} that has two sides that can be shutdown independently.
  */
 public interface DuplexChannel extends Channel {
@@ -68,12 +69,14 @@ public interface DuplexChannel extends Channel {
 
     /**
      * Will shutdown the input and output sides of this channel.
+     *
      * @return will be completed when both shutdown operations complete.
      */
     ChannelFuture shutdown();
 
     /**
      * Will shutdown the input and output sides of this channel.
+     *
      * @param promise will be completed when both shutdown operations complete.
      * @return will be completed when both shutdown operations complete.
      */

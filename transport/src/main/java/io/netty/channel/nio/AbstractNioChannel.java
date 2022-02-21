@@ -413,11 +413,13 @@ public abstract class AbstractNioChannel extends AbstractChannel {
 
         final int interestOps = selectionKey.interestOps();
         //意味着:
-        //read    0000 0001b 1
+        //read    0000 0001  1
         //write   0000 0100  4
         //connect 0000 1000  8
         //accept  0001 0000  16
+        //说明没有readInterestOp事件,如果有的话,
         if ((interestOps & readInterestOp) == 0) {
+            //0001 | 0100 = 0101
             selectionKey.interestOps(interestOps | readInterestOp);
             System.out.println("注册了...." + interestOps + "--" + readInterestOp);
         }

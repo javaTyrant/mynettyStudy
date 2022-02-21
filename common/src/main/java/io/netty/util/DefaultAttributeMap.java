@@ -27,11 +27,12 @@ import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
  * copy-on-write approach on the modify path.<br> Attributes lookup and remove exibit {@code O(logn)} time worst-case
  * complexity, hence {@code attribute::set(null)} is to be preferred to {@code remove}.
  */
+@SuppressWarnings("rawtypes")
 public class DefaultAttributeMap implements AttributeMap {
     //
     private static final AtomicReferenceFieldUpdater<DefaultAttributeMap, DefaultAttribute[]> ATTRIBUTES_UPDATER =
             AtomicReferenceFieldUpdater.newUpdater(DefaultAttributeMap.class, DefaultAttribute[].class, "attributes");
-    //
+    //空对象.
     private static final DefaultAttribute[] EMPTY_ATTRIBUTES = new DefaultAttribute[0];
 
     /**
@@ -91,6 +92,7 @@ public class DefaultAttributeMap implements AttributeMap {
         DefaultAttribute newAttribute = null;
         for (; ; ) {
             final DefaultAttribute[] attributes = this.attributes;
+            //二分搜索
             final int index = searchAttributeByKey(attributes, key);
             final DefaultAttribute[] newAttributes;
             if (index >= 0) {
@@ -99,16 +101,16 @@ public class DefaultAttributeMap implements AttributeMap {
                 if (!attribute.isRemoved()) {
                     return attribute;
                 }
-                // let's try replace the removed attribute with a new one
+                // let's try to replace the removed attribute with a new one
                 if (newAttribute == null) {
-                    newAttribute = new DefaultAttribute<T>(this, key);
+                    newAttribute = new DefaultAttribute<>(this, key);
                 }
                 final int count = attributes.length;
                 newAttributes = Arrays.copyOf(attributes, count);
                 newAttributes[index] = newAttribute;
             } else {
                 if (newAttribute == null) {
-                    newAttribute = new DefaultAttribute<T>(this, key);
+                    newAttribute = new DefaultAttribute<>(this, key);
                 }
                 final int count = attributes.length;
                 newAttributes = new DefaultAttribute[count + 1];
@@ -154,7 +156,6 @@ public class DefaultAttributeMap implements AttributeMap {
         }
     }
 
-    @SuppressWarnings("serial")
     private static final class DefaultAttribute<T> extends AtomicReference<T> implements Attribute<T> {
 
         private static final AtomicReferenceFieldUpdater<DefaultAttribute, DefaultAttributeMap> MAP_UPDATER =

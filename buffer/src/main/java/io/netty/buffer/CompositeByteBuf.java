@@ -47,17 +47,21 @@ import static io.netty.util.internal.ObjectUtil.checkNotNull;
  * constructor explicitly.
  */
 public class CompositeByteBuf extends AbstractReferenceCountedByteBuf implements Iterable<ByteBuf> {
-
+    //
     private static final ByteBuffer EMPTY_NIO_BUFFER = Unpooled.EMPTY_BUFFER.nioBuffer();
+    //
     private static final Iterator<ByteBuf> EMPTY_ITERATOR = Collections.<ByteBuf>emptyList().iterator();
-
+    //
     private final ByteBufAllocator alloc;
+    //
     private final boolean direct;
+    //
     private final int maxNumComponents;
-
+    //
     private int componentCount;
+    //
     private Component[] components; // resized when needed
-
+    //
     private boolean freed;
 
     private CompositeByteBuf(ByteBufAllocator alloc, boolean direct, int maxNumComponents, int initSize) {
@@ -415,8 +419,8 @@ public class CompositeByteBuf extends AbstractReferenceCountedByteBuf implements
         }
     }
 
-    private <T> int addComponents0(boolean increaseWriterIndex, int cIndex,
-            ByteWrapper<T> wrapper, T[] buffers, int offset) {
+    private <T> int addComponents0(boolean increaseWriterIndex,
+                                   int cIndex, ByteWrapper<T> wrapper, T[] buffers, int offset) {
         checkComponentIndex(cIndex);
 
         // No need for consolidation

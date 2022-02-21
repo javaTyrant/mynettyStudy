@@ -14,10 +14,12 @@
  * under the License.
  */
 package io.netty.util;
+//绑定在Channel或者ChannelHandlerContext的附件.每一个ChannelHandlerContext都是handler和pipeline之间的桥梁,
+//每一个channelHandlerContext都有自己的上下文,是不共享的.
 
 /**
  * Holds {@link Attribute}s which can be accessed via {@link AttributeKey}.
- *
+ * <p>
  * Implementations must be Thread-safe.
  */
 public interface AttributeMap {

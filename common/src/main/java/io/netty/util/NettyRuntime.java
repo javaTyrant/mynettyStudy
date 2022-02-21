@@ -42,6 +42,7 @@ public final class NettyRuntime {
          */
         synchronized void setAvailableProcessors(final int availableProcessors) {
             ObjectUtil.checkPositive(availableProcessors, "availableProcessors");
+            //只可以设置一次.
             if (this.availableProcessors != 0) {
                 final String message = String.format(
                         Locale.ROOT,

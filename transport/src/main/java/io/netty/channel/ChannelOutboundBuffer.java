@@ -77,7 +77,6 @@ public final class ChannelOutboundBuffer {
 
     // Entry(flushedEntry) --> ... Entry(unflushedEntry) --> ... Entry(tailEntry)
     //三个重要的核心变量
-    //
     //即将被消费的开始节点
     // The Entry that is the first in the linked-list structure that was flushed
     private Entry flushedEntry;
@@ -804,6 +803,7 @@ public final class ChannelOutboundBuffer {
         boolean processMessage(Object msg) throws Exception;
     }
 
+    //
     static final class Entry {
         private static final ObjectPool<Entry> RECYCLER = ObjectPool.newPool(new ObjectCreator<Entry>() {
             @Override

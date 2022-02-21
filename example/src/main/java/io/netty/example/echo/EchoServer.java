@@ -115,6 +115,7 @@ public final class EchoServer {
                     //反射构造channel.
                     //客户端流的创建: buf.add(new NioSocketChannel(this, ch));
                     .channel(NioServerSocketChannel.class)
+                    //SO_BACKLOG:ChannelOption.SO_BACKLOG对应的是tcp/ip协议, listen函数 中的 backlog 参数，用来初始化服务端可连接队列。
                     .option(ChannelOption.SO_BACKLOG, 100)
                     //添加到服务端上的pipeline中.ServerBootstrap#handler设置的ChannelHandler是被添加到ServerChannel的ChannelPipeline中，
                     //而ServerBootstrap#childHandler设置的ChannelHandler是被添加到Channel的ChannelPipeline中
