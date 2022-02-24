@@ -155,8 +155,9 @@ final class PoolThreadCache {
         }
     }
 
-    // val > 0
+    // val > 0.
     static int log2(int val) {
+        //31 -
         return INTEGER_SIZE_MINUS_ONE - Integer.numberOfLeadingZeros(val);
     }
 
@@ -202,6 +203,7 @@ final class PoolThreadCache {
         }
         return cache.add(chunk, nioBuffer, handle, normCapacity);
     }
+
     //
     private MemoryRegionCache<?> cache(PoolArena<?> area, int sizeIdx, SizeClass sizeClass) {
         switch (sizeClass) {
@@ -353,7 +355,7 @@ final class PoolThreadCache {
         }
     }
 
-    //
+    //MemoryRegionCache 实际就是一个队列，当内存释放时，将内存块加入队列当中，下次再分配同样规格的内存时，直接从队列中取出空闲的内存块。
     private abstract static class MemoryRegionCache<T> {
         //
         private final int size;

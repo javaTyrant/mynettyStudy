@@ -19,7 +19,7 @@ import io.netty.util.Recycler;
 
 /**
  * Light-weight object pool.
- *
+ * 轻量级的对象池.
  * @param <T> the type of the pooled object
  */
 public abstract class ObjectPool<T> {
@@ -64,7 +64,7 @@ public abstract class ObjectPool<T> {
      * that should be pooled.
      */
     public static <T> ObjectPool<T> newPool(final ObjectCreator<T> creator) {
-        return new RecyclerObjectPool<T>(ObjectUtil.checkNotNull(creator, "creator"));
+        return new RecyclerObjectPool<>(ObjectUtil.checkNotNull(creator, "creator"));
     }
 
     private static final class RecyclerObjectPool<T> extends ObjectPool<T> {

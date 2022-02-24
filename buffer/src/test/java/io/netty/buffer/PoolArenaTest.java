@@ -20,8 +20,6 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
@@ -35,14 +33,15 @@ public class PoolArenaTest {
 
     @Test
     public void testNormalizeCapacity() {
-        //
+        //看看构造器做了什么.
         PoolArena<ByteBuffer> arena = new PoolArena.DirectArena(null, PAGE_SIZE, PAGE_SHIFTS, CHUNK_SIZE, 0);
         //0, 15, 510, 1024, 1023,
         //16, 16, 512, 1024, 1024,
         int[] reqCapacities = {1025};
         //
         int[] expectedResult = {1280};
-        //
+        //sizeIdx2size:
+        //size2SizeIdx:
         for (int i = 0; i < reqCapacities.length; i++) {
             Assert.assertEquals(expectedResult[i], arena.sizeIdx2size(arena.size2SizeIdx(reqCapacities[i])));
         }

@@ -178,16 +178,23 @@ public class PooledByteBufAllocator extends AbstractByteBufAllocator implements 
 
     public static final PooledByteBufAllocator DEFAULT =
             new PooledByteBufAllocator(PlatformDependent.directBufferPreferred());
-
+    //
     private final PoolArena<byte[]>[] heapArenas;
+    //
     private final PoolArena<ByteBuffer>[] directArenas;
+    //
     private final int smallCacheSize;
+    //
     private final int normalCacheSize;
+    //
     private final List<PoolArenaMetric> heapArenaMetrics;
+    //
     private final List<PoolArenaMetric> directArenaMetrics;
     //线程缓存
     private final PoolThreadLocalCache threadCache;
+    //
     private final int chunkSize;
+    //
     private final PooledByteBufAllocatorMetric metric;
 
     public PooledByteBufAllocator() {
@@ -267,7 +274,9 @@ public class PooledByteBufAllocator extends AbstractByteBufAllocator implements 
         super(preferDirect);
         //初始化
         threadCache = new PoolThreadLocalCache(useCacheForAllThreads);
+        //
         this.smallCacheSize = smallCacheSize;
+        //
         this.normalCacheSize = normalCacheSize;
 
         if (directMemoryCacheAlignment != 0) {
@@ -275,7 +284,6 @@ public class PooledByteBufAllocator extends AbstractByteBufAllocator implements 
                 throw new UnsupportedOperationException("Buffer alignment is not supported. " +
                         "Either Unsafe or ByteBuffer.alignSlice() must be available.");
             }
-
             // Ensure page size is a whole multiple of the alignment, or bump it to the next whole multiple.
             pageSize = (int) PlatformDependent.align(pageSize, directMemoryCacheAlignment);
         }
@@ -294,16 +302,19 @@ public class PooledByteBufAllocator extends AbstractByteBufAllocator implements 
             throw new IllegalArgumentException("directMemoryCacheAlignment: "
                     + directMemoryCacheAlignment + " (expected: power of two)");
         }
-
+        //
         int pageShifts = validateAndCalculatePageShifts(pageSize, directMemoryCacheAlignment);
-
+        //
         if (nHeapArena > 0) {
+            //
             heapArenas = newArenaArray(nHeapArena);
+            //
             List<PoolArenaMetric> metrics = new ArrayList<PoolArenaMetric>(heapArenas.length);
+            //
             for (int i = 0; i < heapArenas.length; i++) {
-                PoolArena.HeapArena arena = new PoolArena.HeapArena(this,
-                        pageSize, pageShifts, chunkSize,
-                        directMemoryCacheAlignment);
+                //
+                PoolArena.HeapArena arena = new PoolArena.HeapArena(this, pageSize,
+                        pageShifts, chunkSize, directMemoryCacheAlignment);
                 heapArenas[i] = arena;
                 metrics.add(arena);
             }

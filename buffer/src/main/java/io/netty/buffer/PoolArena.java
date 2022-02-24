@@ -103,35 +103,41 @@ abstract class PoolArena<T> extends SizeClasses implements PoolArenaMetric {
     // TODO: Test if adding padding helps under contention
     //private long pad0, pad1, pad2, pad3, pad4, pad5, pad6, pad7;
 
+    //
     protected PoolArena(PooledByteBufAllocator parent,
                         int pageSize,
                         int pageShifts,
                         int chunkSize,
                         int cacheAlignment) {
+        //
         super(pageSize, pageShifts, chunkSize, cacheAlignment);
+        //
         this.parent = parent;
+        //
         directMemoryCacheAlignment = cacheAlignment;
-
+        //
         numSmallSubpagePools = nSubpages;
+        //new一个PoolSubpage数组.
         smallSubpagePools = newSubpagePoolArray(numSmallSubpagePools);
+        //构造链表.
         for (int i = 0; i < smallSubpagePools.length; i++) {
             smallSubpagePools[i] = newSubpagePoolHead();
         }
-
+        //使用率
         q100 = new PoolChunkList<T>(this, null, 100, Integer.MAX_VALUE, chunkSize);
         q075 = new PoolChunkList<T>(this, q100, 75, 100, chunkSize);
         q050 = new PoolChunkList<T>(this, q075, 50, 100, chunkSize);
         q025 = new PoolChunkList<T>(this, q050, 25, 75, chunkSize);
         q000 = new PoolChunkList<T>(this, q025, 1, 50, chunkSize);
         qInit = new PoolChunkList<T>(this, q000, Integer.MIN_VALUE, 25, chunkSize);
-
+        //
         q100.prevList(q075);
         q075.prevList(q050);
         q050.prevList(q025);
         q025.prevList(q000);
         q000.prevList(null);
         qInit.prevList(qInit);
-
+        //
         List<PoolChunkListMetric> metrics = new ArrayList<PoolChunkListMetric>(6);
         metrics.add(qInit);
         metrics.add(q000);
@@ -163,8 +169,9 @@ abstract class PoolArena<T> extends SizeClasses implements PoolArenaMetric {
     }
 
     private void allocate(PoolThreadCache cache, PooledByteBuf<T> buf, final int reqCapacity) {
+        //
         final int sizeIdx = size2SizeIdx(reqCapacity);
-
+        //
         if (sizeIdx <= smallMaxSizeIdx) {
             tcacheAllocateSmall(cache, buf, reqCapacity, sizeIdx);
         } else if (sizeIdx < nSizes) {
@@ -179,7 +186,7 @@ abstract class PoolArena<T> extends SizeClasses implements PoolArenaMetric {
 
     private void tcacheAllocateSmall(PoolThreadCache cache, PooledByteBuf<T> buf, final int reqCapacity,
                                      final int sizeIdx) {
-
+        //
         if (cache.allocateSmall(this, buf, reqCapacity, sizeIdx)) {
             // was able to allocate out of the cache so move on
             return;
@@ -190,7 +197,9 @@ abstract class PoolArena<T> extends SizeClasses implements PoolArenaMetric {
          * {@link PoolChunk#free(long)} may modify the doubly linked list as well.
          */
         final PoolSubpage<T> head = smallSubpagePools[sizeIdx];
+        //
         final boolean needsNormalAllocation;
+        //
         synchronized (head) {
             final PoolSubpage<T> s = head.next;
             needsNormalAllocation = s == head;
@@ -201,13 +210,12 @@ abstract class PoolArena<T> extends SizeClasses implements PoolArenaMetric {
                 s.chunk.initBufWithSubpage(buf, null, handle, reqCapacity, cache);
             }
         }
-
+        //
         if (needsNormalAllocation) {
             synchronized (this) {
                 allocateNormal(buf, reqCapacity, sizeIdx, cache);
             }
         }
-
         incSmallAllocation();
     }
 
@@ -226,6 +234,8 @@ abstract class PoolArena<T> extends SizeClasses implements PoolArenaMetric {
     // Method must be called inside synchronized(this) { ... } block
     //还有一点需要注意的是，在分配大于 8K 的内存时，其链表的访问顺序是 q050->q025->q000->qInit->q075，
     //遍历检查 PoolChunkList 中是否有 PoolChunk 可以用于内存分配，源码如下：
+    //为什么会优先选择 q050?可以说这是一个折中的选择，在频繁分配内存的场景下，如果从 q000 开始，会有大部分的 PoolChunk 面临频繁的创建和销毁，造成内存分配的性能降低。
+    //如果从 q050 开始，会使 PoolChunk 的使用率范围保持在中间水平，降低了 PoolChunk 被回收的概率，从而兼顾了性能。
     private void allocateNormal(PooledByteBuf<T> buf, int reqCapacity, int sizeIdx, PoolThreadCache threadCache) {
         if (q050.allocate(buf, reqCapacity, sizeIdx, threadCache) ||
                 q025.allocate(buf, reqCapacity, sizeIdx, threadCache) ||
@@ -234,7 +244,6 @@ abstract class PoolArena<T> extends SizeClasses implements PoolArenaMetric {
                 q075.allocate(buf, reqCapacity, sizeIdx, threadCache)) {
             return;
         }
-
         // Add a new chunk.
         PoolChunk<T> c = newChunk(pageSize, nPSizes, pageShifts, chunkSize);
         boolean success = c.allocate(buf, reqCapacity, sizeIdx, threadCache);
@@ -247,9 +256,13 @@ abstract class PoolArena<T> extends SizeClasses implements PoolArenaMetric {
     }
 
     private void allocateHuge(PooledByteBuf<T> buf, int reqCapacity) {
+        //
         PoolChunk<T> chunk = newUnpooledChunk(reqCapacity);
+        //
         activeBytesHuge.add(chunk.chunkSize());
+        //
         buf.initUnpooled(chunk, reqCapacity);
+        //
         allocationsHuge.increment();
     }
 
@@ -587,6 +600,7 @@ abstract class PoolArena<T> extends SizeClasses implements PoolArenaMetric {
                     directMemoryCacheAlignment);
         }
 
+        //我猜这里是真正的分配内存的方法吧.
         private static byte[] newByteArray(int size) {
             return PlatformDependent.allocateUninitializedArray(size);
         }
@@ -628,6 +642,7 @@ abstract class PoolArena<T> extends SizeClasses implements PoolArenaMetric {
         }
     }
 
+    //
     static final class DirectArena extends PoolArena<ByteBuffer> {
 
         DirectArena(PooledByteBufAllocator parent,
@@ -713,10 +728,5 @@ abstract class PoolArena<T> extends SizeClasses implements PoolArenaMetric {
                 dst.put(src);
             }
         }
-    }
-
-    public static void main(String[] args) {
-
-        System.out.println(Math.abs("837b1a4ef27b4deca6297f662021daf4".hashCode()) % 10);
     }
 }

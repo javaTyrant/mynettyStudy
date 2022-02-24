@@ -37,22 +37,19 @@ final class CleanerJava9 implements Cleaner {
         final Throwable error;
         if (PlatformDependent0.hasUnsafe()) {
             final ByteBuffer buffer = ByteBuffer.allocateDirect(1);
-            Object maybeInvokeMethod = AccessController.doPrivileged(new PrivilegedAction<Object>() {
-                @Override
-                public Object run() {
-                    try {
-                        // See https://bugs.openjdk.java.net/browse/JDK-8171377
-                        Method m = PlatformDependent0.UNSAFE.getClass().getDeclaredMethod(
-                                "invokeCleaner", ByteBuffer.class);
-                        m.invoke(PlatformDependent0.UNSAFE, buffer);
-                        return m;
-                    } catch (NoSuchMethodException e) {
-                        return e;
-                    } catch (InvocationTargetException e) {
-                        return e;
-                    } catch (IllegalAccessException e) {
-                        return e;
-                    }
+            Object maybeInvokeMethod = AccessController.doPrivileged((PrivilegedAction<Object>) () -> {
+                try {
+                    // See https://bugs.openjdk.java.net/browse/JDK-8171377
+                    Method m = PlatformDependent0.UNSAFE.getClass().getDeclaredMethod(
+                            "invokeCleaner", ByteBuffer.class);
+                    m.invoke(PlatformDependent0.UNSAFE, buffer);
+                    return m;
+                } catch (NoSuchMethodException e) {
+                    return e;
+                } catch (InvocationTargetException e) {
+                    return e;
+                } catch (IllegalAccessException e) {
+                    return e;
                 }
             });
 

@@ -28,27 +28,39 @@ import static io.netty.buffer.SizeClasses.LOG2_QUANTUM;
 //总共可以划分为 512B、1024B、2048B、4096B 四种情况。Subpage 没有固定的大小，需要根据用户分配的缓冲区大小决定，
 //例如分配 1K 的内存时，Netty 会把一个 Page 等分为 8 个 1K 的 Subpage。
 final class PoolSubpage<T> implements PoolSubpageMetric {
-
+    //
     final PoolChunk<T> chunk;
+    //
     private final int pageShifts;
+    //
     private final int runOffset;
+    //
     private final int runSize;
+    //bitmap 记录子内存是否已经被使用
     private final long[] bitmap;
-
+    //
     PoolSubpage<T> prev;
+    //
     PoolSubpage<T> next;
-
+    //
     boolean doNotDestroy;
+    //
     int elemSize;
+    //
     private int maxNumElems;
+    //
     private int bitmapLength;
+    // 下一个可以分配的索引?
     private int nextAvail;
+    // 可用于分配的内存块个数
     private int numAvail;
 
     // TODO: Test if adding padding helps under contention
     //private long pad0, pad1, pad2, pad3, pad4, pad5, pad6, pad7;
 
-    /** Special constructor that creates a linked list head */
+    /**
+     * Special constructor that creates a linked list head
+     */
     PoolSubpage() {
         chunk = null;
         pageShifts = -1;
@@ -64,6 +76,7 @@ final class PoolSubpage<T> implements PoolSubpageMetric {
         this.runOffset = runOffset;
         this.runSize = runSize;
         this.elemSize = elemSize;
+        //
         bitmap = new long[runSize >>> 6 + LOG2_QUANTUM]; // runSize / 64 / QUANTUM
 
         doNotDestroy = true;
@@ -72,10 +85,10 @@ final class PoolSubpage<T> implements PoolSubpageMetric {
             nextAvail = 0;
             bitmapLength = maxNumElems >>> 6;
             if ((maxNumElems & 63) != 0) {
-                bitmapLength ++;
+                bitmapLength++;
             }
 
-            for (int i = 0; i < bitmapLength; i ++) {
+            for (int i = 0; i < bitmapLength; i++) {
                 bitmap[i] = 0;
             }
         }
@@ -96,7 +109,7 @@ final class PoolSubpage<T> implements PoolSubpageMetric {
         assert (bitmap[q] >>> r & 1) == 0;
         bitmap[q] |= 1L << r;
 
-        if (-- numAvail == 0) {
+        if (--numAvail == 0) {
             removeFromPool();
         }
 
@@ -105,7 +118,7 @@ final class PoolSubpage<T> implements PoolSubpageMetric {
 
     /**
      * @return {@code true} if this subpage is in use.
-     *         {@code false} if this subpage is not used by its chunk and thus it's OK to be released.
+     * {@code false} if this subpage is not used by its chunk and thus it's OK to be released.
      */
     boolean free(PoolSubpage<T> head, int bitmapIdx) {
         if (elemSize == 0) {
@@ -118,7 +131,7 @@ final class PoolSubpage<T> implements PoolSubpageMetric {
 
         setNextAvail(bitmapIdx);
 
-        if (numAvail ++ == 0) {
+        if (numAvail++ == 0) {
             addToPool(head);
             /* When maxNumElems == 1, the maximum numAvail is also 1.
              * Each of these PoolSubpages will go in here when they do free operation.
@@ -177,7 +190,7 @@ final class PoolSubpage<T> implements PoolSubpageMetric {
     private int findNextAvail() {
         final long[] bitmap = this.bitmap;
         final int bitmapLength = this.bitmapLength;
-        for (int i = 0; i < bitmapLength; i ++) {
+        for (int i = 0; i < bitmapLength; i++) {
             long bits = bitmap[i];
             if (~bits != 0) {
                 return findNextAvail0(i, bits);
@@ -190,7 +203,7 @@ final class PoolSubpage<T> implements PoolSubpageMetric {
         final int maxNumElems = this.maxNumElems;
         final int baseVal = i << 6;
 
-        for (int j = 0; j < 64; j ++) {
+        for (int j = 0; j < 64; j++) {
             if ((bits & 1) == 0) {
                 int val = baseVal | j;
                 if (val < maxNumElems) {
@@ -207,10 +220,10 @@ final class PoolSubpage<T> implements PoolSubpageMetric {
     private long toHandle(int bitmapIdx) {
         int pages = runSize >> pageShifts;
         return (long) runOffset << RUN_OFFSET_SHIFT
-               | (long) pages << SIZE_SHIFT
-               | 1L << IS_USED_SHIFT
-               | 1L << IS_SUBPAGE_SHIFT
-               | bitmapIdx;
+                | (long) pages << SIZE_SHIFT
+                | 1L << IS_USED_SHIFT
+                | 1L << IS_SUBPAGE_SHIFT
+                | bitmapIdx;
     }
 
     @Override
