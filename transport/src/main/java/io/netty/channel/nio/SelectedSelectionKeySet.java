@@ -22,7 +22,7 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 final class SelectedSelectionKeySet extends AbstractSet<SelectionKey> {
-    //
+    //protected Set<SelectionKey> selectedKeys = new HashSet();
     SelectionKey[] keys;
     //
     int size;

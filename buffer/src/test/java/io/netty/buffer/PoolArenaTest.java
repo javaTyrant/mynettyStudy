@@ -171,6 +171,7 @@ public class PoolArenaTest {
 
     @Test
     public void test() {
-
+        PooledByteBufAllocator allocator = PooledByteBufAllocator.DEFAULT;
+        ByteBuf byteBuf = allocator.newHeapBuffer(1024, 2048);
     }
 }

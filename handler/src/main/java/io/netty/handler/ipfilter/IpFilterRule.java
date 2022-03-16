@@ -19,6 +19,7 @@ import java.net.InetSocketAddress;
 
 /**
  * Implement this interface to create new rules.
+ *
  */
 public interface IpFilterRule {
     /**

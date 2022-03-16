@@ -81,25 +81,25 @@ public class HashedWheelTimer implements Timer {
 
     static final InternalLogger logger =
             InternalLoggerFactory.getInstance(HashedWheelTimer.class);
-    //原子Int
+    //实例计数器.
     private static final AtomicInteger INSTANCE_COUNTER = new AtomicInteger();
     //是不是有太多的实例.
     private static final AtomicBoolean WARNED_TOO_MANY_INSTANCES = new AtomicBoolean();
     //最多可以有多少个实例
     private static final int INSTANCE_COUNT_LIMIT = 64;
-    //
+    //1毫秒
     private static final long MILLISECOND_NANOS = TimeUnit.MILLISECONDS.toNanos(1);
     //资源泄露检测器
     private static final ResourceLeakDetector<HashedWheelTimer> leakDetector = ResourceLeakDetectorFactory.instance()
             .newResourceLeakDetector(HashedWheelTimer.class, 1);
-    //
+    //workerState更新.
     private static final AtomicIntegerFieldUpdater<HashedWheelTimer> WORKER_STATE_UPDATER =
             AtomicIntegerFieldUpdater.newUpdater(HashedWheelTimer.class, "workerState");
     //
     private final ResourceLeakTracker<HashedWheelTimer> leak;
     //工作队列
     private final Worker worker = new Worker();
-    //
+    //工作线程.
     private final Thread workerThread;
     //
     public static final int WORKER_STATE_INIT = 0;
@@ -110,7 +110,7 @@ public class HashedWheelTimer implements Timer {
     //
     @SuppressWarnings({"unused", "FieldMayBeFinal"})
     private volatile int workerState; // 0 - init, 1 - started, 2 - shut down
-    //
+    //tickDuration 和 timeUnit 定义了一格的时间长度，默认的就是 100ms。
     private final long tickDuration;
     //内部数据结构
     private final HashedWheelBucket[] wheel;
@@ -435,7 +435,7 @@ public class HashedWheelTimer implements Timer {
                     + pendingTimeoutsCount + ") is greater than or equal to maximum allowed pending "
                     + "timeouts (" + maxPendingTimeouts + ")");
         }
-        //开始
+        //看看是不是要启动workerThread.
         start();
         // Add the timeout to the timeout queue which will be processed on the next tick.
         // During processing all the queued HashedWheelTimeouts will be added to the correct HashedWheelBucket.
@@ -448,7 +448,7 @@ public class HashedWheelTimer implements Timer {
         }
         //deadline传入timeout里.封装一个TimeOut.
         HashedWheelTimeout timeout = new HashedWheelTimeout(this, task, deadline);
-        //timeouts添加.生产任务.看看消费任务的地方.先放入队列里.
+        //timeouts添加.生产任务.看看消费任务的地方.先放入队列里.newMpscQueue.
         timeouts.add(timeout);
         return timeout;
     }
@@ -485,7 +485,6 @@ public class HashedWheelTimer implements Timer {
                 // We use 0 as an indicator for the uninitialized value here, so make sure it's not 0 when initialized.
                 startTime = 1;
             }
-
             // Notify the other threads waiting for the initialization at start().
             startTimeInitialized.countDown();
             //
@@ -493,7 +492,7 @@ public class HashedWheelTimer implements Timer {
                 //等下一次tick.
                 final long deadline = waitForNextTick();
                 if (deadline > 0) {
-                    //位运算why.按位与.
+                    //(hash & (n-1)).
                     int idx = (int) (tick & mask);
                     //处理被取消的任务
                     processCancelledTasks();
@@ -585,34 +584,37 @@ public class HashedWheelTimer implements Timer {
          * current time otherwise (with Long.MIN_VALUE changed by +1)
          */
         private long waitForNextTick() {
-            //
+            //下一次到期的时间.
             long deadline = tickDuration * (tick + 1);
+            System.out.println("deadline:" + deadline);
             //死循环
             for (; ; ) {
-                //当前时间
+                //当前时间.
                 final long currentTime = System.nanoTime() - startTime;
+                //纳秒转换成毫秒.如果deadline - currentTime = 1 那么 也要休眠1毫秒.所以才要加999999
                 long sleepTimeMs = (deadline - currentTime + 999999) / 1000000;
-
+                //需要休眠的时间.
                 if (sleepTimeMs <= 0) {
+                    //
                     if (currentTime == Long.MIN_VALUE) {
                         return -Long.MAX_VALUE;
                     } else {
+                        System.out.println("返回了currentTime" + currentTime);
                         return currentTime;
                     }
                 }
-
                 // Check if we run on windows, as if thats the case we will need
                 // to round the sleepTime as workaround for a bug that only affect
                 // the JVM if it runs on windows.
                 //
                 // See https://github.com/netty/netty/issues/356
                 if (PlatformDependent.isWindows()) {
+                    //舍去个位的数.
                     sleepTimeMs = sleepTimeMs / 10 * 10;
                     if (sleepTimeMs == 0) {
                         sleepTimeMs = 1;
                     }
                 }
-
                 try {
                     Thread.sleep(sleepTimeMs);
                 } catch (InterruptedException ignored) {

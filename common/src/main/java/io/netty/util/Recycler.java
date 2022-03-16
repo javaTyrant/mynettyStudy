@@ -306,10 +306,8 @@ public abstract class Recycler<T> {
     // a queue that makes only moderate guarantees(适度的保证) about visibility: items are seen in the correct order,
     // but we aren't absolutely guaranteed to ever see anything at all, thereby keeping the queue cheap to maintain
     private static final class WeakOrderQueue extends WeakReference<Thread> {
-
         //
         static final WeakOrderQueue DUMMY = new WeakOrderQueue();
-
         //Let Link extend AtomicInteger for intrinsics. The Link itself will be used as writerIndex.
         //每个 WeakOrderQueue 中都包含一个 Link 链表，回收对象都会被存在 Link 链表中的节点上，每个 Link 节点默认存储 16 个对象，
         //当每个 Link 节点存储满了会创建新的 Link 节点放入链表尾部。

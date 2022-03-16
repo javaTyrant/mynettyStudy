@@ -79,7 +79,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
     private static final int MIN_PREMATURE_SELECTOR_RETURNS = 3;
     //
     private static final int SELECTOR_AUTO_REBUILD_THRESHOLD;
-    //
+    //用到的时候再select.
     private final IntSupplier selectNowSupplier = new IntSupplier() {
         @Override
         public int get() throws Exception {
@@ -310,6 +310,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
         return newTaskQueue0(maxPendingTasks);
     }
 
+    //既然在 Reactor 线程内都是串行执行，可以保证线程安全,那为什么还需要 Mpsc Queue
     private static Queue<Runnable> newTaskQueue0(int maxPendingTasks) {
         // This event loop never calls takeTask()
         return maxPendingTasks == Integer.MAX_VALUE ? PlatformDependent.<Runnable>newMpscQueue()
@@ -474,27 +475,35 @@ public final class NioEventLoop extends SingleThreadEventLoop {
     protected void run() {
         //
         int selectCnt = 0;
-        //
+        //死循环.
         for (; ; ) {
             try {
                 //
                 int strategy;
                 try {
-                    //策略是什么意思呢?
+                    //策略是什么意思呢?线程什么时候处理io事件,什么时候处理异步队列事件.
                     strategy = selectStrategy.calculateStrategy(selectNowSupplier, hasTasks());
                     switch (strategy) {
+                        //-2
                         case SelectStrategy.CONTINUE:
                             continue;
                         case SelectStrategy.BUSY_WAIT:
                             // fall-through to SELECT since the busy-wait is not supported with NIO
                         case SelectStrategy.SELECT:
+                            //下一次定时任务的截止日期.
                             long curDeadlineNanos = nextScheduledTaskDeadlineNanos();
                             if (curDeadlineNanos == -1L) {
                                 curDeadlineNanos = NONE; // nothing on the calendar
                             }
+                            //
                             nextWakeupNanos.set(curDeadlineNanos);
                             try {
-                                //
+                                //如果当前 NioEventLoop 线程存在异步任务，会通过 selectSupplier.get() 最终调用到 selectNow() 方法，selectNow() 是非阻塞，执行后立即返回。
+                                // 如果存在就绪的 I/O 事件，那么会走到 default 分支后直接跳出，然后执行 I/O 事件处理 processSelectedKeys 和异步任务队列处理 runAllTasks 的逻辑。
+                                // 所以在存在异步任务的场景，NioEventLoop 会优先保证 CPU 能够及时处理异步任务。
+
+                                //如果没有任务.why?因为select是阻塞的,如果线程阻塞了,异步线程的任务如何处理呢?
+                                //高啊,高啊!!
                                 if (!hasTasks()) {
                                     System.out.println("监听线程启动threadname is:" + Thread.currentThread().getName());
                                     //最终会在这里等待连接.有连接之后,会接着下面的处理.
@@ -517,14 +526,18 @@ public final class NioEventLoop extends SingleThreadEventLoop {
                     handleLoopException(e);
                     continue;
                 }
-
+                //
                 selectCnt++;
+                //
                 cancelledKeys = 0;
+                //
                 needsToSelectAgain = false;
+                //
                 final int ioRatio = this.ioRatio;
                 boolean ranTasks;
                 if (ioRatio == 100) {
                     try {
+                        //有就绪的事件,再处理.
                         if (strategy > 0) {
                             processSelectedKeys();
                         }
@@ -532,7 +545,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
                         // Ensure we always run tasks.执行是什么任务呢?
                         ranTasks = runAllTasks();
                     }
-                } else if (strategy > 0) {
+                } else if (strategy > 0) {//
                     final long ioStartTime = System.nanoTime();
                     try {
                         processSelectedKeys();
@@ -546,7 +559,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
                     //第一次:strategy = 0.
                     ranTasks = runAllTasks(0); // This will run the minimum number of tasks
                 }
-
+                //
                 if (ranTasks || strategy > 0) {
                     if (selectCnt > MIN_PREMATURE_SELECTOR_RETURNS && logger.isDebugEnabled()) {
                         logger.debug("Selector.select() returned prematurely {} times in a row for Selector {}.",
@@ -693,6 +706,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
 
     //优化过的,所以从数组里取SelectionKey
     private void processSelectedKeysOptimized() {
+        //
         for (int i = 0; i < selectedKeys.size; ++i) {
             final SelectionKey k = selectedKeys.keys[i];
             // null out entry in the array to allow to have it GC'ed once the Channel close
@@ -721,6 +735,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
     }
 
     //如果记不清楚说明还没有真正的理解.
+    //现在有点眉目了.
     private void processSelectedKey(SelectionKey k, AbstractNioChannel ch) {
         //从channel获取unsafe.不同unsafe的赋值在哪里呢?
         final AbstractNioChannel.NioUnsafe unsafe = ch.unsafe();
@@ -852,8 +867,11 @@ public final class NioEventLoop extends SingleThreadEventLoop {
         }
     }
 
+    //唤醒正在select的selector.
     @Override
     protected void wakeup(boolean inEventLoop) {
+        //1.inEventLoop==false, 即调用wakeup()的方法应该是外部线程
+        //2.nextWakeupNanos不为AWAKE.
         if (!inEventLoop && nextWakeupNanos.getAndSet(AWAKE) != AWAKE) {
             selector.wakeup();
         }
@@ -875,12 +893,17 @@ public final class NioEventLoop extends SingleThreadEventLoop {
         return unwrappedSelector;
     }
 
+    //1.The number of keys, possibly zero, whose ready-operation sets were updated by the selection operation
     int selectNow() throws IOException {
         return selector.selectNow();
     }
 
     //调用jdk的select的方法.select注册什么兴趣的事件,就监听什么.
     private int select(long deadlineNanos) throws IOException {
+        //NioEventLoop 通过核心方法 select() 不断轮询注册的 I/O 事件。
+        //当没有 I/O 事件产生时，为了避免 NioEventLoop 线程一直循环空转，在获取 I/O 事件或者异步任务时需要阻塞线程，等待 I/O 事件就绪或者异步任务产生后才唤醒线程。
+        //NioEventLoop 使用 wakeUp 变量表示是否唤醒 selector，Netty 在每一次执行新的一轮循环之前，都会将 wakeUp 设置为 false。
+        //NODE:Long.MAX_VALUE
         if (deadlineNanos == NONE) {
             return selector.select();
         }

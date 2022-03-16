@@ -116,6 +116,7 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
 
     @Override
     public EventExecutor executor() {
+        //如果为空,冲channel里获取.
         if (executor == null) {
             return channel().eventLoop();
         } else {

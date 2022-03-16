@@ -24,12 +24,20 @@ import java.util.NoSuchElementException;
 import static io.netty.util.internal.PriorityQueueNode.INDEX_NOT_IN_QUEUE;
 
 /**
+ * 按照时间进行排序.
+ * 并不是线程安全的,那么netty是如何保证线程安全的.
+ * <p>重要.
+ * 但是 DefaultPriorityQueue 是非线程安全的，如果是 Reactor 线程内部调用，因为是串行执行，所以不会有线程安全问题。如果是外部线程添加定时任务，
+ * 我们发现 Netty 把添加定时任务的操作又再次封装成一个任务交由 executeScheduledRunnable() 处理，
+ * 而 executeScheduledRunnable() 中又再次调用了普通任务的 execute() 的方法，
+ * 巧妙地借助普通任务场景中 Mpsc Queue 解决了外部线程添加定时任务的线程安全问题。
  * A priority queue which uses natural ordering of elements. Elements are also required to be of type
  * {@link PriorityQueueNode} for the purpose of maintaining the index in the priority queue.
+ *
  * @param <T> The object that is maintained in the queue.
  */
 public final class DefaultPriorityQueue<T extends PriorityQueueNode> extends AbstractQueue<T>
-                                                                     implements PriorityQueue<T> {
+        implements PriorityQueue<T> {
     private static final PriorityQueueNode[] EMPTY_ARRAY = new PriorityQueueNode[0];
     private final Comparator<T> comparator;
     private T[] queue;
@@ -94,8 +102,8 @@ public final class DefaultPriorityQueue<T extends PriorityQueueNode> extends Abs
             // Use a policy which allows for a 0 initial capacity. Same policy as JDK's priority queue, double when
             // "small", then grow by 50% when "large".
             queue = Arrays.copyOf(queue, queue.length + ((queue.length < 64) ?
-                                                         (queue.length + 2) :
-                                                         (queue.length >>> 1)));
+                    (queue.length + 2) :
+                    (queue.length >>> 1)));
         }
 
         bubbleUp(size++, e);

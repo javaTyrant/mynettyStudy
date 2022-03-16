@@ -28,7 +28,7 @@ import java.util.PriorityQueue;
  * > page  - a page is the smallest unit of memory chunk that can be allocated(最小的可分配单位.)
  * > run   - a run is a collection of pages(page的集合)
  * > chunk - a chunk is a collection of runs(run的集合)
- *
+ * <p>
  * > in this code chunkSize = maxPages * pageSize
  * <p>
  * To begin we allocate a byte array of size = chunkSize
@@ -133,16 +133,23 @@ import java.util.PriorityQueue;
 //Netty 内存的分配和回收都是基于 PoolChunk 完成的，PoolChunk 是真正存储内存数据的地方
 //Netty 向操作系统申请内存的单位，所有的内存分配操作也是基于 Chunk 完成的，Chunk 可以理解为 Page 的集合，每个 Chunk 默认大小为 16M。
 final class PoolChunk<T> implements PoolChunkMetric {
-    private static final int SIZE_BIT_LENGTH = 15;
-    private static final int INUSED_BIT_LENGTH = 1;
-    private static final int SUBPAGE_BIT_LENGTH = 1;
-    private static final int BITMAP_IDX_BIT_LENGTH = 32;
-
-    static final int IS_SUBPAGE_SHIFT = BITMAP_IDX_BIT_LENGTH;
-    static final int IS_USED_SHIFT = SUBPAGE_BIT_LENGTH + IS_SUBPAGE_SHIFT;
-    static final int SIZE_SHIFT = INUSED_BIT_LENGTH + IS_USED_SHIFT;
-    static final int RUN_OFFSET_SHIFT = SIZE_BIT_LENGTH + SIZE_SHIFT;
     //
+    private static final int SIZE_BIT_LENGTH = 15;
+    //
+    private static final int INUSED_BIT_LENGTH = 1;
+    //
+    private static final int SUBPAGE_BIT_LENGTH = 1;
+    //
+    private static final int BITMAP_IDX_BIT_LENGTH = 32;
+    //
+    static final int IS_SUBPAGE_SHIFT = BITMAP_IDX_BIT_LENGTH;
+    //
+    static final int IS_USED_SHIFT = SUBPAGE_BIT_LENGTH + IS_SUBPAGE_SHIFT;
+    //
+    static final int SIZE_SHIFT = INUSED_BIT_LENGTH + IS_USED_SHIFT;
+    //
+    static final int RUN_OFFSET_SHIFT = SIZE_BIT_LENGTH + SIZE_SHIFT;
+    //属于哪个PoolArea的.
     final PoolArena<T> arena;
     //
     final Object base;
@@ -158,7 +165,6 @@ final class PoolChunk<T> implements PoolChunkMetric {
 
     /**
      * manage all avail runs
-     *
      */
     private final LongPriorityQueue[] runsAvail;
 
@@ -185,7 +191,9 @@ final class PoolChunk<T> implements PoolChunkMetric {
     int freeBytes;
 
     PoolChunkList<T> parent;
+    //
     PoolChunk<T> prev;
+    //
     PoolChunk<T> next;
 
     // TODO: Test if adding padding helps under contention
@@ -214,7 +222,7 @@ final class PoolChunk<T> implements PoolChunkMetric {
         //
         insertAvailRun(0, pages, initHandle);
         //
-        cachedNioBuffers = new ArrayDeque<ByteBuffer>(8);
+        cachedNioBuffers = new ArrayDeque<>(8);
     }
 
     /**
@@ -234,6 +242,7 @@ final class PoolChunk<T> implements PoolChunkMetric {
         cachedNioBuffers = null;
     }
 
+    //这个是存放什么的呢?
     private static LongPriorityQueue[] newRunsAvailqueueArray(int size) {
         LongPriorityQueue[] queueArray = new LongPriorityQueue[size];
         for (int i = 0; i < queueArray.length; i++) {
@@ -410,16 +419,13 @@ final class PoolChunk<T> implements PoolChunkMetric {
 
         if (remPages > 0) {
             int runOffset = runOffset(handle);
-
             // keep track of trailing unused pages for later use
             int availOffset = runOffset + needPages;
             long availRun = toRunHandle(availOffset, remPages, 0);
             insertAvailRun(availOffset, remPages, availRun);
-
             // not avail
             return toRunHandle(runOffset, needPages, 1);
         }
-
         //mark it as used
         handle |= 1L << IS_USED_SHIFT;
         return handle;

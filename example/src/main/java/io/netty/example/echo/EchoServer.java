@@ -142,7 +142,6 @@ public final class EchoServer {
                             p.addLast(new SampleInBoundHandler("SampleInBoundHandlerA", true))
                                     .addLast(new SampleInBoundHandler("SampleInBoundHandlerB", true))
                                     .addLast(new SampleInBoundHandler("SampleInBoundHandlerC", true));
-                            //p.addLast()
                         }
                     });
             // Start the server.

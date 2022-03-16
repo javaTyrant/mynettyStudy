@@ -42,8 +42,9 @@ import java.util.List;
  */
 @Sharable
 public class RuleBasedIpFilter extends AbstractRemoteAddressFilter<InetSocketAddress> {
-
+    //
     private final boolean acceptIfNotFound;
+    //规则列表
     private final List<IpFilterRule> rules;
 
     /**
@@ -71,7 +72,7 @@ public class RuleBasedIpFilter extends AbstractRemoteAddressFilter<InetSocketAdd
 
         this.acceptIfNotFound = acceptIfNotFound;
         this.rules = new ArrayList<IpFilterRule>(rules.length);
-
+        //添加规则.
         for (IpFilterRule rule : rules) {
             if (rule != null) {
                 this.rules.add(rule);
@@ -86,7 +87,6 @@ public class RuleBasedIpFilter extends AbstractRemoteAddressFilter<InetSocketAdd
                 return rule.ruleType() == IpFilterRuleType.ACCEPT;
             }
         }
-
         return acceptIfNotFound;
     }
 }

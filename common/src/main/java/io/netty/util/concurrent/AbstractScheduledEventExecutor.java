@@ -30,18 +30,10 @@ import java.util.concurrent.TimeUnit;
  * Abstract base class for {@link EventExecutor}s that want to support scheduling.
  */
 public abstract class AbstractScheduledEventExecutor extends AbstractEventExecutor {
-    private static final Comparator<ScheduledFutureTask<?>> SCHEDULED_FUTURE_TASK_COMPARATOR =
-            new Comparator<ScheduledFutureTask<?>>() {
-                @Override
-                public int compare(ScheduledFutureTask<?> o1, ScheduledFutureTask<?> o2) {
-                    return o1.compareTo(o2);
-                }
-            };
+    private static final Comparator<ScheduledFutureTask<?>> SCHEDULED_FUTURE_TASK_COMPARATOR = ScheduledFutureTask::compareTo;
 
-    static final Runnable WAKEUP_TASK = new Runnable() {
-        @Override
-        public void run() {
-        } // Do nothing
+    // Do nothing.
+    static final Runnable WAKEUP_TASK = () -> {
     };
     //定时任务队列
     PriorityQueue<ScheduledFutureTask<?>> scheduledTaskQueue;
@@ -82,7 +74,7 @@ public abstract class AbstractScheduledEventExecutor extends AbstractEventExecut
 
     PriorityQueue<ScheduledFutureTask<?>> scheduledTaskQueue() {
         if (scheduledTaskQueue == null) {
-            scheduledTaskQueue = new DefaultPriorityQueue<ScheduledFutureTask<?>>(
+            scheduledTaskQueue = new DefaultPriorityQueue<>(
                     SCHEDULED_FUTURE_TASK_COMPARATOR,
                     // Use same initial capacity as java.util.PriorityQueue
                     11);
@@ -155,7 +147,9 @@ public abstract class AbstractScheduledEventExecutor extends AbstractEventExecut
      * if no task is scheduled.
      */
     protected final long nextScheduledTaskDeadlineNanos() {
+        //偷看下最先过期的任务.
         ScheduledFutureTask<?> scheduledTask = peekScheduledTask();
+        //获取任务的截止时间.
         return scheduledTask != null ? scheduledTask.deadlineNanos() : -1;
     }
 
@@ -196,7 +190,7 @@ public abstract class AbstractScheduledEventExecutor extends AbstractEventExecut
         }
         validateScheduled0(delay, unit);
 
-        return schedule(new ScheduledFutureTask<V>(this, callable, deadlineNanos(unit.toNanos(delay))));
+        return schedule(new ScheduledFutureTask<>(this, callable, deadlineNanos(unit.toNanos(delay))));
     }
 
     @Override
@@ -262,13 +256,14 @@ public abstract class AbstractScheduledEventExecutor extends AbstractEventExecut
     //调度.
     private <V> ScheduledFuture<V> schedule(final ScheduledFutureTask<V> task) {
         //当前的线程是否eventLoop里的线程.
-        if (inEventLoop()) {
+        if (inEventLoop()) {//Reactor 线程内部
             scheduleFromEventLoop(task);
-        } else {//什么时候会出现执行的线程跟绑定的线程不一致呢?
+        } else {//外部线程调用.
             //获取deadline
             final long deadlineNanos = task.deadlineNanos();
             // task will add itself to scheduled task queue when run if not expired
             if (beforeScheduledTaskSubmitted(deadlineNanos)) {
+                //了普通任务的 execute() 的方法，巧妙地借助普通任务场景中 Mpsc Queue 解决了外部线程添加定时任务的线程安全问题。
                 execute(task);
             } else {
                 lazyExecute(task);

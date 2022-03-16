@@ -46,7 +46,10 @@ public class DefaultChannelPipeline implements ChannelPipeline {
     //
     private static final String TAIL_NAME = generateName0(TailContext.class);
 
-    //名称缓存:为什么要用WeakHashMap呢
+    //名称缓存:为什么要用WeakHashMap呢:Hash table based implementation of the Map interface, with weak keys.
+    //An entry in a WeakHashMap will automatically be removed when its key is no longer in ordinary use.
+    //More precisely, the presence of a mapping for a given key will not prevent the key from being discarded
+    //by the garbage collector, that is, made finalizable, finalized, and then reclaimed.
     private static final FastThreadLocal<Map<Class<?>, String>> nameCaches =
             new FastThreadLocal<Map<Class<?>, String>>() {
                 @Override
@@ -54,6 +57,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
                     return new WeakHashMap<Class<?>, String>();
                 }
             };
+
     //netty用了AtomicReferenceFieldUpdater.那么是不是应该仔细的了解下呢?
     private static final AtomicReferenceFieldUpdater<DefaultChannelPipeline, MessageSizeEstimator.Handle> ESTIMATOR =
             AtomicReferenceFieldUpdater.newUpdater(DefaultChannelPipeline.class,
@@ -168,6 +172,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
     public final ChannelPipeline addFirst(EventExecutorGroup group, String name, ChannelHandler handler) {
         //新的上下文.从上下文中获取executor.
         final AbstractChannelHandlerContext newCtx;
+        //
         synchronized (this) {
             checkMultiplicity(handler);
             name = filterName(name, handler);
@@ -175,7 +180,6 @@ public class DefaultChannelPipeline implements ChannelPipeline {
             newCtx = newContext(group, name, handler);
             //
             addFirst0(newCtx);
-
             // If the registered is false it means that the channel was not registered on an eventLoop yet.
             // In this case we add the context to the pipeline and add a task that will call
             // ChannelHandler.handlerAdded(...) once the channel is registered.
@@ -184,7 +188,6 @@ public class DefaultChannelPipeline implements ChannelPipeline {
                 callHandlerCallbackLater(newCtx, true);
                 return this;
             }
-
             EventExecutor executor = newCtx.executor();
             if (!executor.inEventLoop()) {
                 callHandlerAddedInEventLoop(newCtx, executor);
@@ -236,7 +239,6 @@ public class DefaultChannelPipeline implements ChannelPipeline {
                 callHandlerCallbackLater(newCtx, true);
                 return this;
             }
-
             EventExecutor executor = newCtx.executor();
             if (!executor.inEventLoop()) {
                 callHandlerAddedInEventLoop(newCtx, executor);
@@ -324,18 +326,19 @@ public class DefaultChannelPipeline implements ChannelPipeline {
                                           String baseName,
                                           String name,
                                           ChannelHandler handler) {
+        //
         final AbstractChannelHandlerContext newCtx;
+        //
         final AbstractChannelHandlerContext ctx;
-
+        //
         synchronized (this) {
             checkMultiplicity(handler);
             name = filterName(name, handler);
             ctx = getContextOrDie(baseName);
-
+            //
             newCtx = newContext(group, name, handler);
-
+            //
             addAfter0(ctx, newCtx);
-
             // If the registered is false it means that the channel was not registered on an eventLoop yet.
             // In this case we remove the context from the pipeline and add a task that will call
             // ChannelHandler.handlerRemoved(...) once the channel is registered.
@@ -656,7 +659,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
                     logger.warn("Failed to remove a handler: " + ctx.name(), t2);
                 }
             }
-
+            //
             if (removed) {
                 fireExceptionCaught(new ChannelPipelineException(
                         ctx.handler().getClass().getName() +
