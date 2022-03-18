@@ -101,9 +101,9 @@ public class DefaultChannelPipeline implements ChannelPipeline {
     protected DefaultChannelPipeline(Channel channel) {
         //设置属于的channel.
         this.channel = ObjectUtil.checkNotNull(channel, "channel");
-        //channel保存到CompleteChannelFuture里.
+        //channel保存到CompleteChannelFuture里.executor赋值.
         succeededFuture = new SucceededChannelFuture(channel, null);
-        //
+        //是否要触发异常.
         voidPromise = new VoidChannelPromise(channel, true);
         //这个处理逻辑要仔细看看.两个哨兵.
         tail = new TailContext(this);

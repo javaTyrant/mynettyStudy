@@ -890,8 +890,9 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
                 }
             }
         }
-        //添加了任务要唤醒工作队列.唤醒阻塞的select操作?
+        //添加了任务要唤醒工作队列.唤醒阻塞的select操作.
         if (!addTaskWakesUp && immediate) {
+            //如何唤醒的.
             wakeup(inEventLoop);
         }
     }

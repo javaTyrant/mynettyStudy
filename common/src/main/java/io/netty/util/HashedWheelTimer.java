@@ -472,7 +472,7 @@ public class HashedWheelTimer implements Timer {
     //都是核心.
     private final class Worker implements Runnable {
         //
-        private final Set<Timeout> unprocessedTimeouts = new HashSet<Timeout>();
+        private final Set<Timeout> unprocessedTimeouts = new HashSet<>();
         //
         private long tick;
 
@@ -539,6 +539,7 @@ public class HashedWheelTimer implements Timer {
                     // all processed
                     break;
                 }
+                //过滤掉取消的任务.
                 if (timeout.state() == HashedWheelTimeout.ST_CANCELLED) {
                     // Was cancelled in the meantime.
                     continue;

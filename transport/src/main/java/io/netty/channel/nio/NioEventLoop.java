@@ -482,6 +482,8 @@ public final class NioEventLoop extends SingleThreadEventLoop {
                 int strategy;
                 try {
                     //策略是什么意思呢?线程什么时候处理io事件,什么时候处理异步队列事件.
+                    //select方法返回值.(The number of keys, possibly zero
+                    //whose ready-operation sets were updated by the selection operation)
                     strategy = selectStrategy.calculateStrategy(selectNowSupplier, hasTasks());
                     switch (strategy) {
                         //-2
@@ -499,9 +501,8 @@ public final class NioEventLoop extends SingleThreadEventLoop {
                             nextWakeupNanos.set(curDeadlineNanos);
                             try {
                                 //如果当前 NioEventLoop 线程存在异步任务，会通过 selectSupplier.get() 最终调用到 selectNow() 方法，selectNow() 是非阻塞，执行后立即返回。
-                                // 如果存在就绪的 I/O 事件，那么会走到 default 分支后直接跳出，然后执行 I/O 事件处理 processSelectedKeys 和异步任务队列处理 runAllTasks 的逻辑。
-                                // 所以在存在异步任务的场景，NioEventLoop 会优先保证 CPU 能够及时处理异步任务。
-
+                                //如果存在就绪的 I/O 事件，那么会走到 default 分支后直接跳出，然后执行 I/O 事件处理 processSelectedKeys 和异步任务队列处理 runAllTasks 的逻辑。
+                                //所以在存在异步任务的场景，NioEventLoop 会优先保证 CPU 能够及时处理异步任务。
                                 //如果没有任务.why?因为select是阻塞的,如果线程阻塞了,异步线程的任务如何处理呢?
                                 //高啊,高啊!!
                                 if (!hasTasks()) {
@@ -552,7 +553,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
                     } finally {
                         // Ensure we always run tasks.
                         final long ioTime = System.nanoTime() - ioStartTime;
-                        //runAllTasks有哪些任务.
+                        //runAllTasks有哪些任务.入参:处理任务的时间.
                         ranTasks = runAllTasks(ioTime * (100 - ioRatio) / ioRatio);
                     }
                 } else {
