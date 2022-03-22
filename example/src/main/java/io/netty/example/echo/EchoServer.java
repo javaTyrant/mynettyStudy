@@ -146,7 +146,7 @@ public final class EchoServer {
                     });
             // Start the server.
             ChannelFuture f = b.bind(PORT).sync();
-            // Wait until the server socket is closed.
+            // Wait until the server socket is closed.直到服务端的流被关闭了.
             f.channel().closeFuture().sync();
         } finally {
             // Shut down all event loops to terminate all threads.
