@@ -314,6 +314,7 @@ public class HashedWheelTimer implements Timer {
     }
 
     private static HashedWheelBucket[] createWheel(int ticksPerWheel) {
+        //极端值校验
         if (ticksPerWheel <= 0) {
             throw new IllegalArgumentException(
                     "ticksPerWheel must be greater than 0: " + ticksPerWheel);
@@ -322,7 +323,7 @@ public class HashedWheelTimer implements Timer {
             throw new IllegalArgumentException(
                     "ticksPerWheel may not be greater than 2^30: " + ticksPerWheel);
         }
-
+        //
         ticksPerWheel = normalizeTicksPerWheel(ticksPerWheel);
         //初始化bucket
         HashedWheelBucket[] wheel = new HashedWheelBucket[ticksPerWheel];
@@ -332,6 +333,7 @@ public class HashedWheelTimer implements Timer {
         return wheel;
     }
 
+    //返回大于这个数的最小的2的n次方.
     private static int normalizeTicksPerWheel(int ticksPerWheel) {
         int normalizedTicksPerWheel = 1;
         while (normalizedTicksPerWheel < ticksPerWheel) {
@@ -899,6 +901,7 @@ public class HashedWheelTimer implements Timer {
     }
 
     public static void main(String[] args) {
+        System.out.println(normalizeTicksPerWheel(3));
         HashedWheelTimer timer = new HashedWheelTimer();
         timer.newTimeout(new Task(), 20, TimeUnit.SECONDS);
     }
